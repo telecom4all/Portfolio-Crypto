@@ -10,6 +10,7 @@ COPY ../portfolio_crypto_addon/run.sh /app/run.sh
 
 # Install dependencies
 RUN pip install --no-cache-dir -r requirements.txt
+RUN pip list  # Ajoutez cette ligne pour lister les modules installés
 
 # Make run.sh executable
 RUN chmod +x /app/run.sh
@@ -19,3 +20,6 @@ EXPOSE 5000
 
 # Command to run the application
 CMD ["/app/run.sh"]
+
+
+#CMD ["/app/run.sh"]
