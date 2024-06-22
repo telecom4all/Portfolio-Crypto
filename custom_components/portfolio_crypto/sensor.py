@@ -135,7 +135,7 @@ class TotalInvestmentSensor(Entity):
             response = await self.hass.async_add_executor_job(
                 requests.get, 'http://localhost:5000/profit_loss'
             )
-            if response.status_code == 200:
+            if response.status_code == 200):
                 data = response.json()
                 self._state = data['summary']['total_investment']
                 _LOGGER.debug(f"Total Investment Sensor updated: {self._state}")
