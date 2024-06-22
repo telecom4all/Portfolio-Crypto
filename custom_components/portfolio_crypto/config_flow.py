@@ -9,7 +9,7 @@ _LOGGER = logging.getLogger(__name__)
 @config_entries.HANDLERS.register(DOMAIN)
 class PortfolioCryptoConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     VERSION = 1
-    CONNECTION_CLASS = config_entries.CONN_CLASS_CLOUD_POLLING
+    CONNECTION_CLASS = config_entries.CONN_CLASS_CLOUD_POLL
 
     async def async_step_user(self, user_input=None):
         if user_input is not None:
