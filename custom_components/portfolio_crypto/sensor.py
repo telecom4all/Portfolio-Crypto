@@ -20,7 +20,8 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     entities.append(PortfolioCryptoSensor(coordinator, config_entry, "total_value"))
 
     # Add sensors for each cryptocurrency in the portfolio
-    for crypto in config_entry.data.get("cryptos", []):
+    cryptos = config_entry.data.get("cryptos", [])
+    for crypto in cryptos:
         entities.append(CryptoSensor(coordinator, config_entry, crypto, "transactions"))
         entities.append(CryptoSensor(coordinator, config_entry, crypto, "total_investment"))
         entities.append(CryptoSensor(coordinator, config_entry, crypto, "total_profit_loss"))

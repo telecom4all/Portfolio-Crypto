@@ -29,7 +29,6 @@ class PortfolioCryptoConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             crypto_name = user_input["crypto_name"]
             crypto_id = await self.fetch_crypto_id(crypto_name)
             if not crypto_id:
-                # Fetch possible matches
                 matches = await self.search_crypto(crypto_name)
                 return self.async_show_form(
                     step_id="select_crypto",
@@ -86,3 +85,53 @@ class PortfolioCryptoOptionsFlowHandler(config_entries.OptionsFlow):
         return self.async_show_form(
             step_id="init", data_schema=vol.Schema({"option1": str})
         )
+
+    async def async_step_add_crypto(self, user_input=None):
+        if user_input is not None:
+            crypto_name = user_input["crypto_name"]
+            crypto_id = await self.fetch_crypto_id(crypto_name)
+            if not crypto_id:
+                matches = await self.search_crypto(crypto_name)
+                return self.async_show_form(
+                    step_id="select_crypto",
+                    data_schema=vol.Schema({
+                        vol.Required("crypto_id"): vol.In({c['id']: c['name'] for c in matches})
+                    })
+                )
+            else:
+                self.hass.config_entries.async_update_entry(self.config_entry, data={**self.config_entry.data, "crypto_id": crypto_id})
+                return self.async_create_entry(title=crypto_name, data={"crypto_id": crypto_id})
+
+        return self.async_show_form(
+            step_id="add_crypto", data_schema=vol.Schema({"crypto_name": str})
+        )
+
+    async def async_step_select_crypto(self, user_input=None):
+        if user_input is not None:
+            self.hass.config_entries.async_update_entry(self.config_entry, data={**self.config_entry.data, "crypto_id": user_input["crypto_id"]})
+            return self.async_create_entry(title=user_input["crypto_id"], data=user_input)
+
+    async def fetch_crypto_id(self, crypto_name):
+        async with aiohttp.ClientSession() as session:
+            try:
+                with async_timeout.timeout(10):
+                    async with session.get(COINGECKO_API_URL) as response:
+                        result = await response.json()
+                        for coin in result:
+                            if coin['name'].lower() == crypto_name.lower():
+                                return coin['id']
+            except (aiohttp.ClientError, asyncio.TimeoutError):
+                _LOGGER.error("Error fetching CoinGecko data")
+        return None
+
+    async def search_crypto(self, crypto_name):
+        async with aiohttp.ClientSession() as session:
+            try:
+                with async_timeout.timeout(10):
+                    async with session.get(COINGECKO_API_URL) as response:
+                        result = await response.json()
+                        matches = [coin for coin in result if crypto_name.lower() in coin['name'].lower()]
+                        return matches
+            except (aiohttp.ClientError, asyncio.TimeoutError):
+                _LOGGER.error("Error fetching CoinGecko data")
+        return []
