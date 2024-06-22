@@ -7,7 +7,7 @@ WORKDIR /app
 COPY portfolio_crypto_addon/portfolio_crypto /app/portfolio_crypto
 COPY portfolio_crypto_addon/requirements.txt /app/requirements.txt
 COPY portfolio_crypto_addon/run.sh /app/run.sh
-#COPY portfolio_crypto_addon/portfolio_crypto /app/portfolio_crypto
+COPY custom_components/portfolio_crypto /app/custom_components\portfolio_crypto
 
 # Install dependencies
 RUN pip install --no-cache-dir -r requirements.txt
