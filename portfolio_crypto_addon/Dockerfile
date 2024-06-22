@@ -4,9 +4,9 @@ FROM python:3.9-slim
 WORKDIR /app
 
 # Copy source code
-COPY portfolio_crypto /app/portfolio_crypto
-COPY requirements.txt /app/requirements.txt
-COPY run.sh /app/run.sh
+COPY ../portfolio_crypto /app/portfolio_crypto
+COPY ../portfolio_crypto_addon/requirements.txt /app/requirements.txt
+COPY ../portfolio_crypto_addon/run.sh /app/run.sh
 
 # Install dependencies
 RUN pip install --no-cache-dir -r requirements.txt

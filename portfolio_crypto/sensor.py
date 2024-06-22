@@ -10,7 +10,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     """Setup sensor platform."""
     # Initialize the main sensors
     async_add_entities([
-        CryptoTransactionsSensor(hass, config_entry.entry_id),
+        PortfolioCryptoTransactionsSensor(hass, config_entry.entry_id),
         TotalInvestmentSensor(hass, config_entry.entry_id),
         TotalValueSensor(hass, config_entry.entry_id),
         TotalProfitLossSensor(hass, config_entry.entry_id),
@@ -18,7 +18,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     ])
 
     # Initialize the list of crypto sensors
-    hass.data.setdefault('crypto_sensors', {})
+    hass.data.setdefault('portfolio_crypto_sensors', {})
 
     # Fetch and add individual crypto sensors
     await update_individual_crypto_sensors(hass, config_entry, async_add_entities)
@@ -35,7 +35,7 @@ async def update_individual_crypto_sensors(hass, config_entry, async_add_entitie
         if response.status_code == 200:
             data = response.json()
             new_sensors = []
-            existing_sensors = hass.data['crypto_sensors']
+            existing_sensors = hass.data['portfolio_crypto_sensors']
 
             for detail in data['details']:
                 sensor_id = f"{config_entry.entry_id}_{detail['crypto_id']}_investment"
@@ -50,7 +50,7 @@ async def update_individual_crypto_sensors(hass, config_entry, async_add_entitie
             if new_sensors:
                 async_add_entities(new_sensors)
                 for sensor in new_sensors:
-                    hass.data['crypto_sensors'][sensor.unique_id] = sensor
+                    hass.data['portfolio_crypto_sensors'][sensor.unique_id] = sensor
 
             await remove_unused_sensors(hass, config_entry, data['details'])
 
@@ -62,16 +62,16 @@ async def remove_unused_sensors(hass, config_entry, current_details):
     current_crypto_ids = {detail['crypto_id'] for detail in current_details}
     sensors_to_remove = []
 
-    for sensor_id, sensor in hass.data.get('crypto_sensors', {}).items():
+    for sensor_id, sensor in hass.data.get('portfolio_crypto_sensors', {}).items():
         if sensor._crypto_id not in current_crypto_ids:
             sensors_to_remove.append(sensor)
 
     if sensors_to_remove:
         for sensor in sensors_to_remove:
             await sensor.async_remove()
-            hass.data['crypto_sensors'].pop(sensor.unique_id)
+            hass.data['portfolio_crypto_sensors'].pop(sensor.unique_id)
 
-class CryptoTransactionsSensor(Entity):
+class PortfolioCryptoTransactionsSensor(Entity):
     def __init__(self, hass, entry_id):
         self._state = None
         self._attributes = {}
@@ -80,7 +80,7 @@ class CryptoTransactionsSensor(Entity):
 
     @property
     def name(self):
-        return 'Crypto Transactions'
+        return 'Portfolio Crypto Transactions'
 
     @property
     def state(self):
@@ -88,27 +88,27 @@ class CryptoTransactionsSensor(Entity):
 
     @property
     def unique_id(self):
-        return f"{self._entry_id}_crypto_transactions"
+        return f"{self._entry_id}_portfolio_crypto_transactions"
 
     @property
     def extra_state_attributes(self):
         return self._attributes
 
     async def async_update(self):
-        _LOGGER.debug("Updating Crypto Transactions Sensor")
+        _LOGGER.debug("Updating Portfolio Crypto Transactions Sensor")
         try:
             response = await self.hass.async_add_executor_job(
                 requests.get, 'http://localhost:5000/transactions'
             )
-            if response.status_code == 200):
+            if response.status_code == 200:
                 data = response.json()
                 self._state = len(data)
                 self._attributes = {"transactions": data}
-                _LOGGER.debug(f"Crypto Transactions Sensor updated: {data}")
+                _LOGGER.debug(f"Portfolio Crypto Transactions Sensor updated: {data}")
             else:
                 _LOGGER.error(f"Error fetching data: {response.status_code}")
         except Exception as e:
-            _LOGGER.error(f"Exception in CryptoTransactionsSensor: {e}")
+            _LOGGER.error(f"Exception in PortfolioCryptoTransactionsSensor: {e}")
 
 # Define additional sensor classes
 class TotalInvestmentSensor(Entity):
@@ -135,7 +135,7 @@ class TotalInvestmentSensor(Entity):
             response = await self.hass.async_add_executor_job(
                 requests.get, 'http://localhost:5000/profit_loss'
             )
-            if response.status_code == 200):
+            if response.status_code == 200:
                 data = response.json()
                 self._state = data['summary']['total_investment']
                 _LOGGER.debug(f"Total Investment Sensor updated: {self._state}")

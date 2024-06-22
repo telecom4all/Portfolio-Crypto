@@ -1,18 +1,17 @@
 {
-    "name": "Portfolio Crypto",
-    "version": "1.0",
-    "slug": "portfolio_crypto",
-    "description": "An addon to manage and monitor your crypto investments",
-    "arch": ["armhf", "armv7", "aarch64", "amd64", "i386"],
-    "startup": "services",
-    "boot": "auto",
-    "host_network": true,
-    "options": {},
-    "schema": {},
-    "image": "local/portfolio_crypto",
-    "ports": {
-      "5000/tcp": 5000
-    },
-    "map": ["config:rw", "ssl"]
-  }
-  
+  "name": "Portfolio Crypto",
+  "version": "1.0",
+  "slug": "portfolio_crypto",
+  "description": "An addon to manage and monitor your crypto investments",
+  "arch": ["armhf", "armv7", "aarch64", "amd64", "i386"],
+  "startup": "services",
+  "boot": "auto",
+  "host_network": true,
+  "options": {},
+  "schema": {},
+  "image": "local/portfolio_crypto",
+  "ports": {
+    "5000/tcp": 5000
+  },
+  "map": ["config:rw", "ssl"]
+}
