@@ -58,7 +58,10 @@ class PortfolioCryptoOptionsFlowHandler(config_entries.OptionsFlow):
                 cryptos = self.config_entry.data.get("cryptos", [])
                 cryptos.append({"name": crypto_name, "id": crypto_id})
                 self.hass.config_entries.async_update_entry(self.config_entry, data={**self.config_entry.data, "cryptos": cryptos})
-                return self.async_show_form(step_id="init")
+                return self.async_show_menu(
+                    step_id="init",
+                    menu_options=["Ajouter une autre cryptomonnaie", "Terminer"]
+                )
 
         return self.async_show_form(
             step_id="add_crypto", data_schema=vol.Schema({"crypto_name": str})
@@ -69,7 +72,10 @@ class PortfolioCryptoOptionsFlowHandler(config_entries.OptionsFlow):
             cryptos = self.config_entry.data.get("cryptos", [])
             cryptos.append({"name": user_input["crypto_id"], "id": user_input["crypto_id"]})
             self.hass.config_entries.async_update_entry(self.config_entry, data={**self.config_entry.data, "cryptos": cryptos})
-            return self.async_show_form(step_id="init")
+            return self.async_show_menu(
+                step_id="init",
+                menu_options=["Ajouter une autre cryptomonnaie", "Terminer"]
+            )
 
     async def fetch_crypto_id(self, crypto_name):
         async with aiohttp.ClientSession() as session:
