@@ -10,6 +10,7 @@ COPY portfolio_crypto_addon/run.sh /app/run.sh
 
 # Install dependencies
 RUN pip install --no-cache-dir -r requirements.txt
+RUN pip list
 
 # Make run.sh executable
 RUN chmod +x /app/run.sh

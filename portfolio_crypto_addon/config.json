@@ -13,5 +13,11 @@
   "ports": {
     "5000/tcp": 5000
   },
-  "map": ["config:rw", "ssl"]
+  "map": ["config:rw", "ssl"],
+  "privileged": ["SYS_ADMIN"],
+  "host_dbus": true,
+  "full_access": true,
+  "hassio_api": true,
+  "hassio_role": "default",
+  "homeassistant_api": true
 }
