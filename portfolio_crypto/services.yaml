@@ -1,0 +1,53 @@
+add_transaction:
+  description: "Add a new crypto transaction"
+  fields:
+    crypto_name:
+      description: "Name of the cryptocurrency"
+      example: "Ethereum"
+    quantity:
+      description: "Quantity of the cryptocurrency"
+      example: 0.1
+    price_usd:
+      description: "Price in USD"
+      example: 200
+    transaction_type:
+      description: "Type of transaction (buy/sell)"
+      example: "buy"
+    location:
+      description: "Location of the transaction (e.g., Binance)"
+      example: "Binance"
+    date:
+      description: "Date of the transaction (YYYY-MM-DD)"
+      example: "2023-01-01"
+
+delete_transaction:
+  description: "Delete an existing crypto transaction"
+  fields:
+    transaction_id:
+      description: "ID of the transaction to delete"
+      example: 1
+
+update_transaction:
+  description: "Update an existing crypto transaction"
+  fields:
+    transaction_id:
+      description: "ID of the transaction to update"
+      example: 1
+    crypto_name:
+      description: "Name of the cryptocurrency"
+      example: "Ethereum"
+    quantity:
+      description: "Quantity of the cryptocurrency"
+      example: 0.2
+    price_usd:
+      description: "Price in USD"
+      example: 250
+    transaction_type:
+      description: "Type of transaction (buy/sell)"
+      example: "buy"
+    location:
+      description: "Location of the transaction (e.g., Binance)"
+      example: "Binance"
+    date:
+      description: "Date of the transaction (YYYY-MM-DD)"
+      example: "2023-01-01"
