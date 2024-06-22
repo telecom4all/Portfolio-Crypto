@@ -1,10 +1,11 @@
 import sqlite3
 import os
 
-DATABASE = os.path.join(os.getenv('HASS_CONFIG', '.'), 'portfolio_crypto.db')
+def get_database_path(entry_id):
+    return os.path.join(os.getenv('HASS_CONFIG', '.'), f'portfolio_crypto_{entry_id}.db')
 
-def create_table():
-    conn = sqlite3.connect(DATABASE)
+def create_table(entry_id):
+    conn = sqlite3.connect(get_database_path(entry_id))
     cursor = conn.cursor()
     cursor.execute('''
         CREATE TABLE IF NOT EXISTS transactions (
@@ -22,8 +23,8 @@ def create_table():
     conn.commit()
     conn.close()
 
-def add_transaction(crypto_name, crypto_id, quantity, price_usd, transaction_type, location, date, historical_price):
-    conn = sqlite3.connect(DATABASE)
+def add_transaction(entry_id, crypto_name, crypto_id, quantity, price_usd, transaction_type, location, date, historical_price):
+    conn = sqlite3.connect(get_database_path(entry_id))
     cursor = conn.cursor()
     cursor.execute('''
         INSERT INTO transactions (crypto_name, crypto_id, quantity, price_usd, transaction_type, location, date, historical_price)
@@ -32,23 +33,23 @@ def add_transaction(crypto_name, crypto_id, quantity, price_usd, transaction_typ
     conn.commit()
     conn.close()
 
-def get_transactions():
-    conn = sqlite3.connect(DATABASE)
+def get_transactions(entry_id):
+    conn = sqlite3.connect(get_database_path(entry_id))
     cursor = conn.cursor()
     cursor.execute('SELECT * FROM transactions')
     transactions = cursor.fetchall()
     conn.close()
     return transactions
 
-def delete_transaction(transaction_id):
-    conn = sqlite3.connect(DATABASE)
+def delete_transaction(entry_id, transaction_id):
+    conn = sqlite3.connect(get_database_path(entry_id))
     cursor = conn.cursor()
     cursor.execute('DELETE FROM transactions WHERE id = ?', (transaction_id,))
     conn.commit()
     conn.close()
 
-def update_transaction(transaction_id, crypto_name, crypto_id, quantity, price_usd, transaction_type, location, date, historical_price):
-    conn = sqlite3.connect(DATABASE)
+def update_transaction(entry_id, transaction_id, crypto_name, crypto_id, quantity, price_usd, transaction_type, location, date, historical_price):
+    conn = sqlite3.connect(get_database_path(entry_id))
     cursor = conn.cursor()
     cursor.execute('''
         UPDATE transactions
@@ -58,12 +59,12 @@ def update_transaction(transaction_id, crypto_name, crypto_id, quantity, price_u
     conn.commit()
     conn.close()
 
-def get_crypto_transactions(crypto_name):
-    conn = sqlite3.connect(DATABASE)
+def get_crypto_transactions(entry_id, crypto_name):
+    conn = sqlite3.connect(get_database_path(entry_id))
     cursor = conn.cursor()
     cursor.execute('SELECT * FROM transactions WHERE crypto_name = ?', (crypto_name,))
     transactions = cursor.fetchall()
     conn.close()
     return transactions
 
-create_table()
+# Appel à create_table pour chaque entry_id lors de l'initialisation

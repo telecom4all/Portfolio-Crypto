@@ -4,9 +4,10 @@ FROM python:3.9-slim
 WORKDIR /app
 
 # Copy source code
-COPY custom_components/portfolio_crypto /app/portfolio_crypto
+COPY portfolio_crypto_addon/portfolio_crypto /app/portfolio_crypto
 COPY portfolio_crypto_addon/requirements.txt /app/requirements.txt
 COPY portfolio_crypto_addon/run.sh /app/run.sh
+#COPY portfolio_crypto_addon/portfolio_crypto /app/portfolio_crypto
 
 # Install dependencies
 RUN pip install --no-cache-dir -r requirements.txt
@@ -17,6 +18,9 @@ RUN chmod +x /app/run.sh
 
 # Expose port
 EXPOSE 5000
+
+# Ensure /app is in the PYTHONPATH
+#ENV PYTHONPATH="/app"
 
 # Command to run the application
 CMD ["/app/run.sh"]
