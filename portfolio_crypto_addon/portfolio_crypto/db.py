@@ -41,6 +41,18 @@ def get_transactions(entry_id):
     conn.close()
     return transactions
 
+def get_all_transactions():
+    databases = [f for f in os.listdir(os.getenv('HASS_CONFIG', '.')) if f.startswith('portfolio_crypto_') and f.endswith('.db')]
+    all_transactions = []
+    for db in databases:
+        conn = sqlite3.connect(os.path.join(os.getenv('HASS_CONFIG', '.'), db))
+        cursor = conn.cursor()
+        cursor.execute('SELECT * FROM transactions')
+        transactions = cursor.fetchall()
+        all_transactions.extend(transactions)
+        conn.close()
+    return all_transactions
+
 def delete_transaction(entry_id, transaction_id):
     conn = sqlite3.connect(get_database_path(entry_id))
     cursor = conn.cursor()

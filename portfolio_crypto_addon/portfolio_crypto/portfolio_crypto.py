@@ -137,6 +137,18 @@ def list_transactions(entry_id):
     logging.info(f"Fetched transactions for entry {entry_id}: {transactions}")
     return jsonify(transactions)
 
+@app.route('/all_transactions', methods=['GET'])
+def all_transactions():
+    # Here, we assume that get_transactions() can be called without an entry_id to fetch all transactions
+    # If get_transactions() requires an entry_id, you will need to modify this function accordingly
+    entry_ids = []  # Replace this with a way to get all entry_ids if necessary
+    all_transactions = []
+    for entry_id in entry_ids:
+        transactions = get_transactions(entry_id)
+        all_transactions.extend(transactions)
+    logging.info(f"Fetched all transactions: {all_transactions}")
+    return jsonify(all_transactions)
+
 @app.route('/profit_loss/<entry_id>', methods=['GET'])
 def profit_loss(entry_id):
     result = calculate_profit_loss(entry_id)
