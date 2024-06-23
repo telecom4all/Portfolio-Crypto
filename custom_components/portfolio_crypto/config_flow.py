@@ -35,11 +35,8 @@ class PortfolioCryptoOptionsFlowHandler(config_entries.OptionsFlow):
         self.config_entry = config_entry
 
     async def async_step_init(self, user_input=None):
-        if user_input is not None:
-            return await self.async_step_add_crypto()
-
         return self.async_show_form(
-            step_id="init", data_schema=vol.Schema({})
+            step_id="add_crypto", data_schema=vol.Schema({"crypto_name": str})
         )
 
     async def async_step_add_crypto(self, user_input=None):
