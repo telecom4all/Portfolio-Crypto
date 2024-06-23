@@ -2,6 +2,7 @@ import logging
 from datetime import timedelta
 from homeassistant.components.sensor import SensorEntity
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, CoordinatorEntity
+from homeassistant.helpers.entity import DeviceInfo
 from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
@@ -105,6 +106,15 @@ class PortfolioCryptoSensor(CoordinatorEntity, SensorEntity):
     def unique_id(self):
         return f"{self.config_entry.entry_id}_{self._sensor_type}"
 
+    @property
+    def device_info(self):
+        return DeviceInfo(
+            identifiers={(DOMAIN, self.config_entry.entry_id)},
+            name=self.config_entry.title,
+            manufacturer="Custom",
+            model="Portfolio Crypto",
+        )
+
 class CryptoSensor(CoordinatorEntity, SensorEntity):
     def __init__(self, coordinator, config_entry, crypto, sensor_type):
         super().__init__(coordinator)
@@ -125,3 +135,12 @@ class CryptoSensor(CoordinatorEntity, SensorEntity):
     @property
     def unique_id(self):
         return f"{self.config_entry.entry_id}_{self._crypto['id']}_{self._sensor_type}"
+
+    @property
+    def device_info(self):
+        return DeviceInfo(
+            identifiers={(DOMAIN, self.config_entry.entry_id)},
+            name=self.config_entry.title,
+            manufacturer="Custom",
+            model="Portfolio Crypto",
+        )
