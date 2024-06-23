@@ -15,10 +15,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     coordinator = PortfolioCryptoCoordinator(hass, entry)
     hass.data[DOMAIN][entry.entry_id] = coordinator
 
-    if not hass.config_entries.async_forward_entry_setup(entry, "sensor"):
-        hass.async_create_task(
-            hass.config_entries.async_forward_entry_setup(entry, "sensor")
-        )
+    # Utiliser await pour appeler async_forward_entry_setup
+    await hass.config_entries.async_forward_entry_setup(entry, "sensor")
 
     async def async_add_crypto_service(call):
         name = call.data.get("crypto_name")
