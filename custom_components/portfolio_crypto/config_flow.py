@@ -37,13 +37,13 @@ class PortfolioCryptoOptionsFlowHandler(config_entries.OptionsFlow):
     async def async_step_init(self, user_input=None):
         return self.async_show_menu(
             step_id="menu",
-            menu_options=["add_crypto"]
+            menu_options=["add_crypto", "finish"]
         )
 
     async def async_step_menu(self, user_input=None):
         if user_input == "add_crypto":
             return await self.async_step_add_crypto()
-        else:
+        elif user_input == "finish":
             return self.async_create_entry(title="", data={})
 
     async def async_step_add_crypto(self, user_input=None):
