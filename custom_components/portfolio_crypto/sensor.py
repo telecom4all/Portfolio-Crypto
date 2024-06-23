@@ -5,7 +5,7 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, Coor
 from homeassistant.helpers.entity import DeviceInfo
 import aiohttp
 import async_timeout
-import asyncio  # Ajoutez cette ligne
+import asyncio
 from .const import DOMAIN, COINGECKO_API_URL
 
 _LOGGER = logging.getLogger(__name__)
