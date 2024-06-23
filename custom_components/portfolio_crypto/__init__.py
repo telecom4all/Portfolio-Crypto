@@ -11,11 +11,15 @@ async def async_setup(hass: HomeAssistant, config: dict):
     return True
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
-    hass.data.setdefault(DOMAIN, {})
+    if DOMAIN not in hass.data:
+        hass.data[DOMAIN] = {}
+
+    if entry.entry_id in hass.data[DOMAIN]:
+        return False  # Entry already set up
+
     coordinator = PortfolioCryptoCoordinator(hass, entry)
     hass.data[DOMAIN][entry.entry_id] = coordinator
 
-    # Utiliser await pour appeler async_forward_entry_setup
     await hass.config_entries.async_forward_entry_setup(entry, "sensor")
 
     async def async_add_crypto_service(call):
@@ -31,6 +35,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     return True
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
-    await hass.config_entries.async_forward_entry_unload(entry, "sensor")
-    hass.services.async_remove(DOMAIN, "add_crypto")
+    if entry.entry_id in hass.data[DOMAIN]:
+        await hass.config_entries.async_forward_entry_unload(entry, "sensor")
+        hass.services.async_remove(DOMAIN, "add_crypto")
+        hass.data[DOMAIN].pop(entry.entry_id)
+
     return True
