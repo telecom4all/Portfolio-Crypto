@@ -44,7 +44,10 @@ class PortfolioCryptoOptionsFlowHandler(config_entries.OptionsFlow):
         if user_input == "add_crypto":
             return await self.async_step_add_crypto()
         elif user_input == "finish":
-            return self.async_create_entry(title="", data={})
+            return self.async_step_finish()
+
+    async def async_step_finish(self, user_input=None):
+        return self.async_create_entry(title="", data={})
 
     async def async_step_add_crypto(self, user_input=None):
         if user_input is not None:

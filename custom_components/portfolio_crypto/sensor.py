@@ -3,7 +3,10 @@ from datetime import timedelta
 from homeassistant.components.sensor import SensorEntity
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, CoordinatorEntity
 from homeassistant.helpers.entity import DeviceInfo
-from .const import DOMAIN
+import aiohttp
+import async_timeout
+import asyncio  # Ajoutez cette ligne
+from .const import DOMAIN, COINGECKO_API_URL
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -85,6 +88,33 @@ class PortfolioCryptoCoordinator(DataUpdateCoordinator):
             "total_profit_loss_percent": 0,
             "total_value": 0
         }
+
+    async def add_crypto(self, crypto_name):
+        crypto_id = await self.fetch_crypto_id(crypto_name)
+        if crypto_id:
+            cryptos = self.config_entry.data.get("cryptos", [])
+            cryptos.append({"name": crypto_name, "id": crypto_id})
+            self.hass.config_entries.async_update_entry(self.config_entry, data={**self.config_entry.data, "cryptos": cryptos})
+
+            # Create entities for the new crypto
+            self.hass.async_add_job(
+                self.hass.config_entries.async_forward_entry_setup(self.config_entry, "sensor")
+            )
+            return True
+        return False
+
+    async def fetch_crypto_id(self, crypto_name):
+        async with aiohttp.ClientSession() as session:
+            try:
+                with async_timeout.timeout(10):
+                    async with session.get(COINGECKO_API_URL) as response:
+                        result = await response.json()
+                        for coin in result:
+                            if coin['name'].lower() == crypto_name.lower():
+                                return coin['id']
+            except (aiohttp.ClientError, asyncio.TimeoutError):
+                _LOGGER.error("Error fetching CoinGecko data")
+        return None
 
 class PortfolioCryptoSensor(CoordinatorEntity, SensorEntity):
     def __init__(self, coordinator, config_entry, sensor_type):
