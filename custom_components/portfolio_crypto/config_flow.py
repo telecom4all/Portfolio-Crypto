@@ -5,7 +5,7 @@ from homeassistant.core import callback
 from homeassistant.helpers import aiohttp_client
 import aiohttp
 import async_timeout
-import asyncio  # Ajoutez cette ligne
+import asyncio
 from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
@@ -35,9 +35,16 @@ class PortfolioCryptoOptionsFlowHandler(config_entries.OptionsFlow):
         self.config_entry = config_entry
 
     async def async_step_init(self, user_input=None):
-        return self.async_show_form(
-            step_id="add_crypto", data_schema=vol.Schema({"crypto_name": str})
+        return self.async_show_menu(
+            step_id="menu",
+            menu_options=["add_crypto"]
         )
+
+    async def async_step_menu(self, user_input=None):
+        if user_input == "add_crypto":
+            return await self.async_step_add_crypto()
+        else:
+            return self.async_create_entry(title="", data={})
 
     async def async_step_add_crypto(self, user_input=None):
         if user_input is not None:
@@ -56,8 +63,8 @@ class PortfolioCryptoOptionsFlowHandler(config_entries.OptionsFlow):
                 cryptos.append({"name": crypto_name, "id": crypto_id})
                 self.hass.config_entries.async_update_entry(self.config_entry, data={**self.config_entry.data, "cryptos": cryptos})
                 return self.async_show_menu(
-                    step_id="init",
-                    menu_options=["Ajouter une autre cryptomonnaie", "Terminer"]
+                    step_id="menu",
+                    menu_options=["add_crypto", "finish"]
                 )
 
         return self.async_show_form(
@@ -70,8 +77,8 @@ class PortfolioCryptoOptionsFlowHandler(config_entries.OptionsFlow):
             cryptos.append({"name": user_input["crypto_id"], "id": user_input["crypto_id"]})
             self.hass.config_entries.async_update_entry(self.config_entry, data={**self.config_entry.data, "cryptos": cryptos})
             return self.async_show_menu(
-                step_id="init",
-                menu_options=["Ajouter une autre cryptomonnaie", "Terminer"]
+                step_id="menu",
+                menu_options=["add_crypto", "finish"]
             )
 
     async def fetch_crypto_id(self, crypto_name):

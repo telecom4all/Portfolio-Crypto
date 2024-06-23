@@ -42,7 +42,48 @@ class PortfolioCryptoCoordinator(DataUpdateCoordinator):
 
     async def _async_update_data(self):
         # Fetch data from API or database
-        return {}
+        data = {}
+        # Update data for main portfolio
+        data["transactions"] = await self.fetch_transactions()
+        data["total_investment"] = await self.fetch_total_investment()
+        data["total_profit_loss"] = await self.fetch_total_profit_loss()
+        data["total_profit_loss_percent"] = await self.fetch_total_profit_loss_percent()
+        data["total_value"] = await self.fetch_total_value()
+        # Update data for each crypto
+        for crypto in self.config_entry.data.get("cryptos", []):
+            crypto_data = await self.fetch_crypto_data(crypto["id"])
+            data[crypto["id"]] = crypto_data
+        return data
+
+    async def fetch_transactions(self):
+        # Fetch transactions data
+        return []
+
+    async def fetch_total_investment(self):
+        # Fetch total investment data
+        return 0
+
+    async def fetch_total_profit_loss(self):
+        # Fetch total profit/loss data
+        return 0
+
+    async def fetch_total_profit_loss_percent(self):
+        # Fetch total profit/loss percent data
+        return 0
+
+    async def fetch_total_value(self):
+        # Fetch total value data
+        return 0
+
+    async def fetch_crypto_data(self, crypto_id):
+        # Fetch data for a specific crypto
+        return {
+            "transactions": [],
+            "total_investment": 0,
+            "total_profit_loss": 0,
+            "total_profit_loss_percent": 0,
+            "total_value": 0
+        }
 
 class PortfolioCryptoSensor(CoordinatorEntity, SensorEntity):
     def __init__(self, coordinator, config_entry, sensor_type):
