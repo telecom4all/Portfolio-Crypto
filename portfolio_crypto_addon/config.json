@@ -9,7 +9,7 @@
   "host_network": true,
   "options": {},
   "schema": {},
-  "image": "local/portfolio_crypto",
+  "image": "telecom4all/portfolio_crypto",
   "ports": {
     "5000/tcp": 5000
   },
