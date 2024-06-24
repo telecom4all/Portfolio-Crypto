@@ -5,7 +5,7 @@ from homeassistant.helpers import service
 from .sensor import PortfolioCryptoCoordinator
 from .const import DOMAIN
 import aiohttp
-import os  # Ajouter cet import
+import os
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -30,15 +30,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
                 "Authorization": f"Bearer {supervisor_token}",
                 "Content-Type": "application/json",
             }
-            async with session.post(
-                f"http://supervisor/core/api/services/portfolio_crypto/initialize",
-                json={"entry_id": entry.entry_id},
-                headers=headers
-            ) as response:
+            url = "http://supervisor/addons/local_portfolio_crypto/addon/portfolio_crypto/initialize"
+            async with session.post(url, json={"entry_id": entry.entry_id}, headers=headers) as response:
                 if response.status == 200:
                     _LOGGER.info(f"Successfully initialized database for entry ID: {entry.entry_id}")
                 else:
-                    _LOGGER.error(f"Failed to initialize database for entry ID: {entry.entry_id}, status code: {response.status}")
+                    _LOGGER.error(f"Failed to initialize database for entry ID: {entry.entry_id}, status code: {response.status}, response text: {await response.text()}")
     except Exception as e:
         _LOGGER.error(f"Exception occurred while initializing database for entry ID: {entry.entry_id}: {e}")
 
