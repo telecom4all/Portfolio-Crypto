@@ -26,11 +26,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     try:
         async with aiohttp.ClientSession() as session:
             supervisor_token = os.getenv("SUPERVISOR_TOKEN")
+            LOGGER.info(f"supervisor_token {supervisor_token} ")
             headers = {
                 "Authorization": f"Bearer {supervisor_token}",
                 "Content-Type": "application/json",
             }
-            url = "http://supervisor/addons/local_portfolio_crypto/services/initialize"
+            addon_name = "local_portfolio_crypto"  # Nom de l'addon tel que défini dans config.json
+            url = f"http://supervisor/addons/{addon_name}/services/initialize"
             _LOGGER.info(f"Calling URL {url} with entry ID: {entry.entry_id}")
             async with session.post(url, json={"entry_id": entry.entry_id}, headers=headers) as response:
                 response_text = await response.text()
