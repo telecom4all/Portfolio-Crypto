@@ -30,7 +30,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
                 "Authorization": f"Bearer {supervisor_token}",
                 "Content-Type": "application/json",
             }
-            url = "http://supervisor/addons/local_portfolio_crypto/addon/portfolio_crypto/initialize"
+            url = "http://supervisor/core/addons/local_portfolio_crypto/services/initialize"
             async with session.post(url, json={"entry_id": entry.entry_id}, headers=headers) as response:
                 if response.status == 200:
                     _LOGGER.info(f"Successfully initialized database for entry ID: {entry.entry_id}")
