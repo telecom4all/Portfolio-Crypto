@@ -26,7 +26,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     try:
         async with aiohttp.ClientSession() as session:
             supervisor_token = os.getenv("SUPERVISOR_TOKEN")
-            _LOGGER.info(f"supervisor_token {supervisor_token} ")
             headers = {
                 "Authorization": f"Bearer {supervisor_token}",
                 "Content-Type": "application/json",
@@ -36,6 +35,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
             _LOGGER.info(f"Calling URL {url} with entry ID: {entry.entry_id}")
             async with session.post(url, json={"entry_id": entry.entry_id}, headers=headers) as response:
                 response_text = await response.text()
+                _LOGGER.info(f"Response status: {response.status}, Response text: {response_text}")
                 if response.status == 200:
                     _LOGGER.info(f"Successfully initialized database for entry ID: {entry.entry_id}")
                 else:

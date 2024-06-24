@@ -9,7 +9,7 @@
   "host_network": true,
   "options": {},
   "schema": {},
-  "image": "telecom4all/portfolio_crypto",
+  "image": "local/portfolio_crypto",
   "ports": {
     "5000/tcp": 5000
   },
@@ -18,6 +18,5 @@
   "host_dbus": true,
   "full_access": true,
   "hassio_api": true,
-  "hassio_role": "default",
   "homeassistant_api": true
 }
