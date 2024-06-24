@@ -4,6 +4,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import service
 from .sensor import PortfolioCryptoCoordinator
 from .const import DOMAIN
+from .portfolio_crypto import initialize_new_portfolio
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -19,6 +20,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
 
     coordinator = PortfolioCryptoCoordinator(hass, entry)
     hass.data[DOMAIN][entry.entry_id] = coordinator
+
+    # Initialize the database for the new portfolio
+    initialize_new_portfolio(entry.entry_id)
 
     await hass.config_entries.async_forward_entry_setup(entry, "sensor")
 

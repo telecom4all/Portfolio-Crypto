@@ -5,7 +5,7 @@ from datetime import datetime, timedelta
 import logging
 import time
 from flask import Flask, jsonify, request
-from .db import add_transaction, get_transactions, delete_transaction, update_transaction, get_crypto_transactions
+from .db import add_transaction, get_transactions, delete_transaction, update_transaction, get_crypto_transactions, create_table
 import os
 
 # Configure logging
@@ -224,6 +224,10 @@ def update_transaction_endpoint(entry_id, transaction_id):
     except Exception as e:
         logging.error(f"Error updating transaction: {e}")
         return jsonify({"error": "Internal Server Error"}), 500
+
+def initialize_new_portfolio(entry_id):
+    create_table(entry_id)
+    logging.info(f"Initialized new portfolio with entry ID: {entry_id}")
 
 def run_flask_app():
     app.run(host='0.0.0.0', port=5000)

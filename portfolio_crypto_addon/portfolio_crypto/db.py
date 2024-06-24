@@ -1,27 +1,38 @@
 import sqlite3
 import os
+import logging
+
+# Configure logging
+logging.basicConfig(level=logging.INFO)
 
 def get_database_path(entry_id):
-    return os.path.join(os.getenv('HASS_CONFIG', '.'), f'portfolio_crypto_{entry_id}.db')
+    db_path = os.path.join(os.getenv('HASS_CONFIG', '.'), f'portfolio_crypto_{entry_id}.db')
+    logging.info(f"Database path for entry {entry_id}: {db_path}")
+    return db_path
 
 def create_table(entry_id):
-    conn = sqlite3.connect(get_database_path(entry_id))
-    cursor = conn.cursor()
-    cursor.execute('''
-        CREATE TABLE IF NOT EXISTS transactions (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            crypto_name TEXT,
-            crypto_id TEXT,
-            quantity REAL,
-            price_usd REAL,
-            transaction_type TEXT,
-            location TEXT,
-            date TEXT,
-            historical_price REAL
-        )
-    ''')
-    conn.commit()
-    conn.close()
+    db_path = get_database_path(entry_id)
+    try:
+        conn = sqlite3.connect(db_path)
+        cursor = conn.cursor()
+        cursor.execute('''
+            CREATE TABLE IF NOT EXISTS transactions (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                crypto_name TEXT,
+                crypto_id TEXT,
+                quantity REAL,
+                price_usd REAL,
+                transaction_type TEXT,
+                location TEXT,
+                date TEXT,
+                historical_price REAL
+            )
+        ''')
+        conn.commit()
+        conn.close()
+        logging.info(f"Table 'transactions' created successfully for entry {entry_id}")
+    except Exception as e:
+        logging.error(f"Error creating table for entry {entry_id}: {e}")
 
 def add_transaction(entry_id, crypto_name, crypto_id, quantity, price_usd, transaction_type, location, date, historical_price):
     conn = sqlite3.connect(get_database_path(entry_id))
