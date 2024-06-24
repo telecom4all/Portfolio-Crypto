@@ -30,7 +30,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
                 "Authorization": f"Bearer {supervisor_token}",
                 "Content-Type": "application/json",
             }
-            addon_name = "local_portfolio_crypto"  # Nom de l'addon tel que défini dans config.json
+            addon_name = "portfolio_crypto"  # Nom de l'addon tel que défini dans config.json
             url = f"http://supervisor/addons/{addon_name}/services/initialize"
             _LOGGER.info(f"Calling URL {url} with entry ID: {entry.entry_id}")
             async with session.post(url, json={"entry_id": entry.entry_id}, headers=headers) as response:
