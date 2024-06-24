@@ -238,10 +238,6 @@ def update_transaction_endpoint(entry_id, transaction_id):
         logging.error(f"Error updating transaction: {e}")
         return jsonify({"error": "Internal Server Error"}), 500
 
-def initialize_new_portfolio(entry_id):
-    create_table(entry_id)
-    logging.info(f"Initialized new portfolio with entry ID: {entry_id}")
-
 def run_flask_app():
     app.run(host='0.0.0.0', port=5000)
 
