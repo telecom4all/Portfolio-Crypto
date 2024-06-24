@@ -4,7 +4,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import service
 from .sensor import PortfolioCryptoCoordinator
 from .const import DOMAIN
-from .portfolio_crypto import initialize_new_portfolio
+from .portfolio_crypto import initialize_new_portfolio  # Assurez-vous que ce module est disponible
 
 _LOGGER = logging.getLogger(__name__)
 
