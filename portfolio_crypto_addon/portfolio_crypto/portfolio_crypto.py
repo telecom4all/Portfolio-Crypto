@@ -39,8 +39,8 @@ def get_data_with_retry(url, retries=5, backoff_factor=1.0):
             return response.json()
         except requests.exceptions.RequestException as e:
             if response.status_code == 429:  # Too Many Requests
-                wait time = backoff_factor * (2 ** i)
-                logging.warning(f"Rate limit exceeded. Waiting for {wait time} seconds.")
+                wait_time = backoff_factor * (2 ** i)  # Correction de la syntaxe
+                logging.warning(f"Rate limit exceeded. Waiting for {wait_time} seconds.")
                 time.sleep(wait_time)
             else:
                 raise e
@@ -158,7 +158,7 @@ def all_transactions():
     all_transactions = []
     for entry_id in entry_ids:
         transactions = get_transactions(entry_id)
-        all_transactions extend(transactions)
+        all_transactions.extend(transactions)
     logging.info(f"Fetched all transactions: {all_transactions}")
     return jsonify(all_transactions)
 

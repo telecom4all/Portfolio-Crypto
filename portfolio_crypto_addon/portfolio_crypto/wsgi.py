@@ -11,10 +11,8 @@ def initialize():
         return jsonify({"error": "entry_id is required"}), 400
     try:
         create_table(entry_id)
-        logging.info(f"Initialized new portfolio with entry ID: {entry_id}")
         return jsonify({"message": "Database initialized"}), 200
     except Exception as e:
-        logging.error(f"Error initializing database for entry ID {entry_id}: {e}")
         return jsonify({"error": str(e)}), 500
 
 @app.route('/transactions', methods=['GET'])
