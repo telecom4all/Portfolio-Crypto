@@ -26,7 +26,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     try:
         async with aiohttp.ClientSession() as session:
             supervisor_token = os.getenv("SUPERVISOR_TOKEN")
-            LOGGER.info(f"supervisor_token {supervisor_token} ")
+            _LOGGER.info(f"supervisor_token {supervisor_token} ")
             headers = {
                 "Authorization": f"Bearer {supervisor_token}",
                 "Content-Type": "application/json",
