@@ -1,8 +1,21 @@
 from flask import Flask, request, jsonify
-from .db import add_transaction, get_transactions, update_transaction, delete_transaction
+from .db import add_transaction, get_transactions, update_transaction, delete_transaction, create_table
 from .portfolio_crypto import calculate_profit_loss, get_crypto_id, get_historical_price
 
 app = Flask(__name__)
+
+@app.route('/initialize', methods=['POST'])
+def initialize():
+    entry_id = request.json.get('entry_id')
+    if not entry_id:
+        return jsonify({"error": "entry_id is required"}), 400
+    try:
+        create_table(entry_id)
+        logging.info(f"Initialized new portfolio with entry ID: {entry_id}")
+        return jsonify({"message": "Database initialized"}), 200
+    except Exception as e:
+        logging.error(f"Error initializing database for entry ID {entry_id}: {e}")
+        return jsonify({"error": str(e)}), 500
 
 @app.route('/transactions', methods=['GET'])
 def list_transactions():
