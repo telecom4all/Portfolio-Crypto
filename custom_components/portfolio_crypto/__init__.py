@@ -5,6 +5,7 @@ from homeassistant.helpers import service
 from .sensor import PortfolioCryptoCoordinator
 from .const import DOMAIN
 import aiohttp
+import os  # Ajouter cet import
 
 _LOGGER = logging.getLogger(__name__)
 
