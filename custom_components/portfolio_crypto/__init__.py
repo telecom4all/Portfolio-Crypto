@@ -31,11 +31,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
                 "Content-Type": "application/json",
             }
             url = "http://supervisor/addons/local_portfolio_crypto/services/initialize"
+            _LOGGER.info(f"Calling URL {url} with entry ID: {entry.entry_id}")
             async with session.post(url, json={"entry_id": entry.entry_id}, headers=headers) as response:
+                response_text = await response.text()
                 if response.status == 200:
                     _LOGGER.info(f"Successfully initialized database for entry ID: {entry.entry_id}")
                 else:
-                    _LOGGER.error(f"Failed to initialize database for entry ID: {entry.entry_id}, status code: {response.status}, response text: {await response.text()}")
+                    _LOGGER.error(f"Failed to initialize database for entry ID: {entry.entry_id}, status code: {response.status}, response text: {response_text}")
     except Exception as e:
         _LOGGER.error(f"Exception occurred while initializing database for entry ID: {entry.entry_id}: {e}")
 
