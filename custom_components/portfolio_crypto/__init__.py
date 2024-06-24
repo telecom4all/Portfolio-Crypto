@@ -4,29 +4,8 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import service
 from .sensor import PortfolioCryptoCoordinator
 from .const import DOMAIN
-import requests
-import os
 
 _LOGGER = logging.getLogger(__name__)
-
-def initialize_db_request(entry_id):
-    try:
-        supervisor_token = os.getenv("SUPERVISOR_TOKEN")
-        headers = {
-            "Authorization": f"Bearer {supervisor_token}",
-            "Content-Type": "application/json",
-        }
-        response = requests.post(
-            f"http://supervisor/core/api/services/portfolio_crypto/initialize",
-            json={"entry_id": entry_id},
-            headers=headers
-        )
-        if response.status_code == 200:
-            _LOGGER.info(f"Successfully initialized database for entry ID: {entry_id}")
-        else:
-            _LOGGER.error(f"Failed to initialize database for entry ID: {entry_id}, status code: {response.status_code}")
-    except Exception as e:
-        _LOGGER.error(f"Exception occurred while initializing database for entry ID: {entry_id}: {e}")
 
 async def async_setup(hass: HomeAssistant, config: dict):
     return True
@@ -41,8 +20,18 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     coordinator = PortfolioCryptoCoordinator(hass, entry)
     hass.data[DOMAIN][entry.entry_id] = coordinator
 
-    # Initialize the database for the new portfolio by sending a request to the addon
-    await hass.async_add_executor_job(initialize_db_request, entry.entry_id)
+    # Initialize the database for the new portfolio by calling the service via Home Assistant API
+    try:
+        await hass.services.async_call(
+            "portfolio_crypto",
+            "initialize",
+            {"entry_id": entry.entry_id},
+            blocking=True,
+            context={"source": "initialize_db"}
+        )
+        _LOGGER.info(f"Successfully initialized database for entry ID: {entry.entry_id}")
+    except Exception as e:
+        _LOGGER.error(f"Exception occurred while initializing database for entry ID: {entry.entry_id}: {e}")
 
     await hass.config_entries.async_forward_entry_setup(entry, "sensor")
 
