@@ -20,7 +20,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     coordinator = PortfolioCryptoCoordinator(hass, entry)
     hass.data[DOMAIN][entry.entry_id] = coordinator
 
-    # Initialize the database for the new portfolio by calling the service via Home Assistant API
+    # Initialize the database for the new portfolio by calling the addon service
     try:
         await hass.services.async_call(
             "portfolio_crypto",

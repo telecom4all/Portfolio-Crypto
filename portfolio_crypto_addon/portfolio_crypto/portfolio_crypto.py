@@ -18,6 +18,19 @@ requests_cache.install_cache('coingecko_cache', expire_after=expire_after)
 # Flask app setup
 app = Flask(__name__)
 
+@app.route('/initialize', methods=['POST'])
+def initialize():
+    entry_id = request.json.get('entry_id')
+    if not entry_id:
+        return jsonify({"error": "entry_id is required"}), 400
+    try:
+        create_table(entry_id)
+        logging.info(f"Initialized new portfolio with entry ID: {entry_id}")
+        return jsonify({"message": "Database initialized"}), 200
+    except Exception as e:
+        logging.error(f"Error initializing database for entry ID {entry_id}: {e}")
+        return jsonify({"error": str(e)}), 500
+
 def get_data_with_retry(url, retries=5, backoff_factor=1.0):
     for i in range(retries):
         try:
