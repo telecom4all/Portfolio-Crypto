@@ -5,6 +5,7 @@ from homeassistant.helpers import service
 from .sensor import PortfolioCryptoCoordinator
 from .const import DOMAIN
 import requests
+import os
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -24,10 +25,17 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     # Initialize the database for the new portfolio by sending a request to the addon
     async def initialize_db():
         try:
+            # Get the Supervisor token from the environment
+            supervisor_token = os.getenv("SUPERVISOR_TOKEN")
+            headers = {
+                "Authorization": f"Bearer {supervisor_token}",
+                "Content-Type": "application/json",
+            }
             response = await hass.async_add_executor_job(
                 requests.post,
                 f"http://supervisor/core/api/services/portfolio_crypto/initialize",
-                {"entry_id": entry.entry_id}
+                json={"entry_id": entry.entry_id},
+                headers=headers
             )
             if response.status_code == 200:
                 _LOGGER.info(f"Successfully initialized database for entry ID: {entry.entry_id}")
