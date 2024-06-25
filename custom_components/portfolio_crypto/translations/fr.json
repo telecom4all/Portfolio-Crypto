@@ -18,15 +18,10 @@
                     "update_interval": "Intervalle de mise à jour (minutes)"
                 }
             },
-            "menu": {
-                "update_interval": "Intervalle de mise à jour",
-                "add_crypto": "Ajouter une cryptomonnaie",
-                "finish": "Terminer"
-            },
             "update_interval": {
                 "title": "Intervalle de mise à jour",
                 "data": {
-                    "update_interval": "Sélectionnez l'intervalle de mise à jour"
+                    "update_interval": "Sélectionnez l'intervalle de mise à jour en minutes"
                 }
             }
         }
