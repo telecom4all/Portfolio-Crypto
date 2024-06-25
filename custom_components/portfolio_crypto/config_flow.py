@@ -25,15 +25,6 @@ class PortfolioCryptoConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             step_id="user", data_schema=vol.Schema({"name": str})
         )
 
-    async def async_step_update_interval(self, user_input=None):
-        if user_input is not None:
-            update_interval = user_input.get("update_interval", 1)
-            return self.async_create_entry(title=self.config_entry.title, data={**self.config_entry.data, "update_interval": update_interval})
-
-        return self.async_show_form(
-            step_id="update_interval", data_schema=vol.Schema({"update_interval": vol.All(vol.Coerce(int), vol.Range(min=1))})
-        )
-
     @staticmethod
     @callback
     def async_get_options_flow(config_entry):
@@ -57,6 +48,19 @@ class PortfolioCryptoOptionsFlowHandler(config_entries.OptionsFlow):
         elif user_input == "update_interval":
             return await self.async_step_update_interval()
 
+    async def async_step_update_interval(self, user_input=None):
+        if user_input is not None:
+            update_interval = user_input.get("update_interval", 1)
+            self.hass.config_entries.async_update_entry(
+                self.config_entry, options={**self.config_entry.options, "update_interval": update_interval}
+            )
+            return self.async_create_entry(title="", data={})
+
+        return self.async_show_form(
+            step_id="update_interval",
+            data_schema=vol.Schema({"update_interval": vol.All(vol.Coerce(int), vol.Range(min=1))})
+        )
+
     async def async_step_finish(self, user_input=None):
         return self.async_create_entry(title="", data={})
 
@@ -73,9 +77,11 @@ class PortfolioCryptoOptionsFlowHandler(config_entries.OptionsFlow):
                     })
                 )
             else:
-                cryptos = self.config_entry.data.get("cryptos", [])
+                cryptos = self.config_entry.options.get("cryptos", [])
                 cryptos.append({"name": crypto_name, "id": crypto_id})
-                self.hass.config_entries.async_update_entry(self.config_entry, data={**self.config_entry.data, "cryptos": cryptos})
+                self.hass.config_entries.async_update_entry(
+                    self.config_entry, options={**self.config_entry.options, "cryptos": cryptos}
+                )
                 return self.async_show_menu(
                     step_id="menu",
                     menu_options=["add_crypto", "finish"]
@@ -87,9 +93,11 @@ class PortfolioCryptoOptionsFlowHandler(config_entries.OptionsFlow):
 
     async def async_step_select_crypto(self, user_input=None):
         if user_input is not None:
-            cryptos = self.config_entry.data.get("cryptos", [])
+            cryptos = self.config_entry.options.get("cryptos", [])
             cryptos.append({"name": user_input["crypto_id"], "id": user_input["crypto_id"]})
-            self.hass.config_entries.async_update_entry(self.config_entry, data={**self.config_entry.data, "cryptos": cryptos})
+            self.hass.config_entries.async_update_entry(
+                self.config_entry, options={**self.config_entry.options, "cryptos": cryptos}
+            )
             return self.async_show_menu(
                 step_id="menu",
                 menu_options=["add_crypto", "finish"]

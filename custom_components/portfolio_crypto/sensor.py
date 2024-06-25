@@ -11,7 +11,7 @@ from .const import DOMAIN, COINGECKO_API_URL
 _LOGGER = logging.getLogger(__name__)
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
-    update_interval = config_entry.data.get("update_interval", 1)
+    update_interval = config_entry.options.get("update_interval", 1)
     coordinator = PortfolioCryptoCoordinator(hass, config_entry, update_interval)
     await coordinator.async_config_entry_first_refresh()
 
@@ -25,7 +25,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     entities.append(PortfolioCryptoSensor(coordinator, config_entry, "total_value"))
 
     # Add sensors for each cryptocurrency in the portfolio
-    cryptos = config_entry.data.get("cryptos", [])
+    cryptos = config_entry.options.get("cryptos", [])
     for crypto in cryptos:
         entities.append(CryptoSensor(coordinator, config_entry, crypto, "transactions"))
         entities.append(CryptoSensor(coordinator, config_entry, crypto, "total_investment"))
@@ -55,7 +55,7 @@ class PortfolioCryptoCoordinator(DataUpdateCoordinator):
         data["total_profit_loss_percent"] = await self.fetch_total_profit_loss_percent()
         data["total_value"] = await self.fetch_total_value()
         # Update data for each crypto
-        for crypto in self.config_entry.data.get("cryptos", []):
+        for crypto in self.config_entry.options.get("cryptos", []):
             crypto_data = await self.fetch_crypto_data(crypto["id"])
             data[crypto["id"]] = crypto_data
         return data
@@ -93,9 +93,9 @@ class PortfolioCryptoCoordinator(DataUpdateCoordinator):
     async def add_crypto(self, crypto_name):
         crypto_id = await self.fetch_crypto_id(crypto_name)
         if crypto_id:
-            cryptos = self.config_entry.data.get("cryptos", [])
+            cryptos = self.config_entry.options.get("cryptos", [])
             cryptos.append({"name": crypto_name, "id": crypto_id})
-            self.hass.config_entries.async_update_entry(self.config_entry, data={**self.config_entry.data, "cryptos": cryptos})
+            self.hass.config_entries.async_update_entry(self.config_entry, options={**self.config_entry.options, "cryptos": cryptos})
 
             # Create entities for the new crypto
             self.hass.async_add_job(

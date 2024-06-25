@@ -15,7 +15,7 @@
             "init": {
                 "title": "Options du Portfolio Crypto",
                 "data": {
-                    "option1": "Option 1"
+                    "update_interval": "Intervalle de mise à jour (minutes)"
                 }
             }
         }
