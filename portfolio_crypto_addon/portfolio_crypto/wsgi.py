@@ -1,4 +1,4 @@
-from portfolio_crypto import app
+from portfolio_crypto.portfolio_crypto import app
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=5000)

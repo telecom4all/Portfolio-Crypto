@@ -38,7 +38,7 @@ def get_data_with_retry(url, retries=5, backoff_factor=1.0):
             response.raise_for_status()
             return response.json()
         except requests.exceptions.RequestException as e:
-            if e.response and e.response.status_code == 429:  # Too Many Requests
+            if response.status_code == 429:  # Too Many Requests
                 wait_time = backoff_factor * (2 ** i)
                 logging.warning(f"Rate limit exceeded. Waiting for {wait_time} seconds.")
                 time.sleep(wait_time)
@@ -235,3 +235,6 @@ def update_transaction_endpoint(entry_id, transaction_id):
     except Exception as e:
         logging.error(f"Error updating transaction: {e}")
         return jsonify({"error": "Internal Server Error"}), 500
+
+if __name__ == "__main__":
+    app.run(host="0.0.0.0", port=5000)
