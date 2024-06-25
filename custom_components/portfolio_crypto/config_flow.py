@@ -49,7 +49,6 @@ class PortfolioCryptoOptionsFlowHandler(config_entries.OptionsFlow):
         return self.async_show_form(
             step_id="update_interval",
             data_schema=vol.Schema({
-                "update_interval": vol.In([1, 5, 10, 30])
-            }),
-            description_placeholders={"update_interval": current_interval}
+                vol.Required("update_interval", default=current_interval): vol.In([1, 5, 10, 30])
+            })
         )
