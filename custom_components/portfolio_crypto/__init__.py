@@ -19,7 +19,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     if entry.entry_id in hass.data[DOMAIN]:
         return False  # Entry already set up
 
-    coordinator = PortfolioCryptoCoordinator(hass, entry)
+    update_interval = entry.data.get("update_interval", 1)
+    coordinator = PortfolioCryptoCoordinator(hass, entry, update_interval)
     hass.data[DOMAIN][entry.entry_id] = coordinator
 
     # Initialize the database for the new portfolio by calling the addon service
@@ -30,7 +31,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
                 "Authorization": f"Bearer {supervisor_token}",
                 "Content-Type": "application/json",
             }
-            url = "http://localhost:5000/initialize"  # Corrected URL
+            url = "http://localhost:5000/initialize"
             _LOGGER.info(f"Calling URL {url} with entry ID: {entry.entry_id}")
             async with session.post(url, json={"entry_id": entry.entry_id}, headers=headers) as response:
                 response_text = await response.text()
@@ -46,9 +47,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
 
     async def async_add_crypto_service(call):
         name = call.data.get("crypto_name")
-        success = await coordinator.add_crypto(name)
-        if not success:
-            _LOGGER.error(f"Crypto {name} not found")
+        entry_id = call.data.get("entry_id")
+        coordinator = hass.data[DOMAIN].get(entry_id)
+        if coordinator:
+            success = await coordinator.add_crypto(name)
+            if not success:
+                _LOGGER.error(f"Crypto {name} not found")
 
     hass.services.async_register(
         DOMAIN, "add_crypto", async_add_crypto_service

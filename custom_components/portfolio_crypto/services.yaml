@@ -4,3 +4,16 @@ add_crypto:
     crypto_name:
       description: "Nom de la cryptomonnaie"
       example: "Bitcoin"
+    entry_id:
+      description: "ID de l'entrée"
+      example: "entry_id"
+
+update_interval:
+  description: "Mettre à jour l'intervalle de mise à jour"
+  fields:
+    update_interval:
+      description: "Intervalle de mise à jour (minutes)"
+      example: 1
+    entry_id:
+      description: "ID de l'entrée"
+      example: "entry_id"

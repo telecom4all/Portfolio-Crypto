@@ -13,5 +13,15 @@
   "dependencies": [],
   "codeowners": ["@AngelZ"],
   "iot_class": "cloud_polling",
-  "config_flow": true
+  "config_flow": true,
+  "options": {
+    "step": {
+      "init": {
+        "title": "Options du Portfolio Crypto",
+        "data": {
+          "update_interval": "Intervalle de mise à jour (minutes)"
+        }
+      }
+    }
+  }
 }

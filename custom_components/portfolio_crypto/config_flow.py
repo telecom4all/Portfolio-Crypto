@@ -19,10 +19,19 @@ class PortfolioCryptoConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_user(self, user_input=None):
         if user_input is not None:
-            return self.async_create_entry(title=user_input["name"], data={"name": user_input["name"], "cryptos": []})
+            return self.async_create_entry(title=user_input["name"], data={"name": user_input["name"], "cryptos": [], "update_interval": 1})
 
         return self.async_show_form(
             step_id="user", data_schema=vol.Schema({"name": str})
+        )
+
+    async def async_step_update_interval(self, user_input=None):
+        if user_input is not None:
+            update_interval = user_input.get("update_interval", 1)
+            return self.async_create_entry(title=self.config_entry.title, data={**self.config_entry.data, "update_interval": update_interval})
+
+        return self.async_show_form(
+            step_id="update_interval", data_schema=vol.Schema({"update_interval": vol.All(vol.Coerce(int), vol.Range(min=1))})
         )
 
     @staticmethod
@@ -37,7 +46,7 @@ class PortfolioCryptoOptionsFlowHandler(config_entries.OptionsFlow):
     async def async_step_init(self, user_input=None):
         return self.async_show_menu(
             step_id="menu",
-            menu_options=["add_crypto", "finish"]
+            menu_options=["update_interval", "add_crypto", "finish"]
         )
 
     async def async_step_menu(self, user_input=None):
@@ -45,6 +54,8 @@ class PortfolioCryptoOptionsFlowHandler(config_entries.OptionsFlow):
             return await self.async_step_add_crypto()
         elif user_input == "finish":
             return self.async_step_finish()
+        elif user_input == "update_interval":
+            return await self.async_step_update_interval()
 
     async def async_step_finish(self, user_input=None):
         return self.async_create_entry(title="", data={})
