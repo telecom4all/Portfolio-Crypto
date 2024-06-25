@@ -162,6 +162,9 @@ class PortfolioCryptoSensor(CoordinatorEntity, SensorEntity):
             model="Portfolio Crypto",
         )
 
+    async def async_update(self):
+        await self.coordinator.async_request_refresh()
+
 class CryptoSensor(CoordinatorEntity, SensorEntity):
     def __init__(self, coordinator, config_entry, crypto, sensor_type):
         super().__init__(coordinator)
@@ -191,3 +194,6 @@ class CryptoSensor(CoordinatorEntity, SensorEntity):
             manufacturer="Custom",
             model="Portfolio Crypto",
         )
+
+    async def async_update(self):
+        await self.coordinator.async_request_refresh()
