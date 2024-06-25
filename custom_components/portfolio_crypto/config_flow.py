@@ -19,7 +19,7 @@ class PortfolioCryptoConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_user(self, user_input=None):
         if user_input is not None:
-            return self.async_create_entry(title=user_input["name"], data={"name": user_input["name"], "cryptos": [], "update_interval": 10})
+            return self.async_create_entry(title=user_input["name"], data={"name": user_input["name"], "cryptos": [], "update_interval": 10, "initialized": False})
 
         return self.async_show_form(
             step_id="user", data_schema=vol.Schema({"name": str})
@@ -53,4 +53,3 @@ class PortfolioCryptoOptionsFlowHandler(config_entries.OptionsFlow):
                 vol.Required("update_interval", default=current_interval): vol.In([1, 5, 10, 30])
             })
         )
-

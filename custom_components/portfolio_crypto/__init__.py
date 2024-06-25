@@ -24,24 +24,26 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     hass.data[DOMAIN][entry.entry_id] = coordinator
 
     # Initialize the database for the new portfolio by calling the addon service
-    try:
-        async with aiohttp.ClientSession() as session:
-            supervisor_token = os.getenv("SUPERVISOR_TOKEN")
-            headers = {
-                "Authorization": f"Bearer {supervisor_token}",
-                "Content-Type": "application/json",
-            }
-            url = "http://localhost:5000/initialize"
-            _LOGGER.info(f"Calling URL {url} with entry ID: {entry.entry_id}")
-            async with session.post(url, json={"entry_id": entry.entry_id}, headers=headers) as response:
-                response_text = await response.text()
-                _LOGGER.info(f"Response status: {response.status}, Response text: {response_text}")
-                if response.status == 200:
-                    _LOGGER.info(f"Successfully initialized database for entry ID: {entry.entry_id}")
-                else:
-                    _LOGGER.error(f"Failed to initialize database for entry ID: {entry.entry_id}, status code: {response.status}, response text: {response_text}")
-    except Exception as e:
-        _LOGGER.error(f"Exception occurred while initializing database for entry ID: {entry.entry_id}: {e}")
+    if not entry.options.get("initialized", False):
+        try:
+            async with aiohttp.ClientSession() as session:
+                supervisor_token = os.getenv("SUPERVISOR_TOKEN")
+                headers = {
+                    "Authorization": f"Bearer {supervisor_token}",
+                    "Content-Type": "application/json",
+                }
+                url = "http://localhost:5000/initialize"
+                _LOGGER.info(f"Calling URL {url} with entry ID: {entry.entry_id}")
+                async with session.post(url, json={"entry_id": entry.entry_id}, headers=headers) as response:
+                    response_text = await response.text()
+                    _LOGGER.info(f"Response status: {response.status}, Response text: {response_text}")
+                    if response.status == 200:
+                        _LOGGER.info(f"Successfully initialized database for entry ID: {entry.entry_id}")
+                        hass.config_entries.async_update_entry(entry, options={**entry.options, "initialized": True})
+                    else:
+                        _LOGGER.error(f"Failed to initialize database for entry ID: {entry.entry_id}, status code: {response.status}, response text: {response_text}")
+        except Exception as e:
+            _LOGGER.error(f"Exception occurred while initializing database for entry ID: {entry.entry_id}: {e}")
 
     await hass.config_entries.async_forward_entry_setup(entry, "sensor")
 
