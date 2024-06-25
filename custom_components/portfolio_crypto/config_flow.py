@@ -2,11 +2,9 @@ import logging
 import voluptuous as vol
 from homeassistant import config_entries
 from homeassistant.core import callback
-from .const import DOMAIN
+from .const import DOMAIN, COINGECKO_API_URL
 
 _LOGGER = logging.getLogger(__name__)
-
-COINGECKO_API_URL = "https://api.coingecko.com/api/v3/coins/list"
 
 @config_entries.HANDLERS.register(DOMAIN)
 class PortfolioCryptoConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
