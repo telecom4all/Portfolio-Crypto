@@ -8,5 +8,6 @@ cp -r /app/custom_components/portfolio_crypto/* /config/custom_components/portfo
 
 # Démarrez l'application Flask avec Gunicorn
 #exec gunicorn --bind 0.0.0.0:5000 portfolio_crypto.wsgi:app
-exec gunicorn --bind 0.0.0.0:5000 portfolio_crypto:wsgi
+exec gunicorn --bind 0.0.0.0:5000 portfolio_crypto:app
+
 #exec gunicorn --bind 0.0.0.0:5000 wsgi:app
