@@ -1,5 +1,5 @@
 import logging
-from datetime import timedelta
+from datetime import timedelta, datetime
 from homeassistant.components.sensor import SensorEntity
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, CoordinatorEntity
 from homeassistant.helpers.entity import DeviceInfo
@@ -11,7 +11,7 @@ from .const import DOMAIN, COINGECKO_API_URL
 _LOGGER = logging.getLogger(__name__)
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
-    update_interval = config_entry.options.get("update_interval", 1)
+    update_interval = config_entry.options.get("update_interval", 10)
     coordinator = PortfolioCryptoCoordinator(hass, config_entry, update_interval)
     await coordinator.async_config_entry_first_refresh()
 
@@ -44,8 +44,15 @@ class PortfolioCryptoCoordinator(DataUpdateCoordinator):
             update_interval=timedelta(minutes=update_interval),
         )
         self.config_entry = config_entry
+        self._last_update = None
 
     async def _async_update_data(self):
+        now = datetime.now()
+        if self._last_update is not None:
+            elapsed = now - self._last_update
+            _LOGGER.info(f"Data updated. {elapsed.total_seconds() / 60:.2f} minutes elapsed since last update.")
+        self._last_update = now
+        
         # Fetch data from API or database
         data = {}
         # Update data for main portfolio
