@@ -52,19 +52,22 @@ class PortfolioCryptoCoordinator(DataUpdateCoordinator):
             elapsed = now - self._last_update
             _LOGGER.info(f"Data updated. {elapsed.total_seconds() / 60:.2f} minutes elapsed since last update.")
         self._last_update = now
+
+        _LOGGER.info("Fetching new data from API/database")
         
         # Fetch data from API or database
         data = {}
-        # Update data for main portfolio
         data["transactions"] = await self.fetch_transactions()
         data["total_investment"] = await self.fetch_total_investment()
         data["total_profit_loss"] = await self.fetch_total_profit_loss()
         data["total_profit_loss_percent"] = await self.fetch_total_profit_loss_percent()
         data["total_value"] = await self.fetch_total_value()
-        # Update data for each crypto
+
         for crypto in self.config_entry.options.get("cryptos", []):
             crypto_data = await self.fetch_crypto_data(crypto["id"])
             data[crypto["id"]] = crypto_data
+
+        _LOGGER.info("New data fetched successfully")
         return data
 
     async def fetch_transactions(self):

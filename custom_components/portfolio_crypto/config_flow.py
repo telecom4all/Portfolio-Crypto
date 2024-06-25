@@ -43,6 +43,7 @@ class PortfolioCryptoOptionsFlowHandler(config_entries.OptionsFlow):
             self.hass.config_entries.async_update_entry(
                 self.config_entry, options={**self.config_entry.options, "update_interval": update_interval}
             )
+            await self.hass.config_entries.async_reload(self.config_entry.entry_id)
             return self.async_create_entry(title="", data={})
 
         current_interval = self.config_entry.options.get("update_interval", 10)
