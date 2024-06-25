@@ -11,8 +11,7 @@ from .const import DOMAIN, COINGECKO_API_URL
 _LOGGER = logging.getLogger(__name__)
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
-    update_interval = config_entry.options.get("update_interval", 10)
-    coordinator = PortfolioCryptoCoordinator(hass, config_entry, update_interval)
+    coordinator = PortfolioCryptoCoordinator(hass, config_entry, update_interval=1)  # Fixing update interval to 1 minute
     await coordinator.async_config_entry_first_refresh()
 
     entities = []
@@ -45,7 +44,7 @@ class PortfolioCryptoCoordinator(DataUpdateCoordinator):
         )
         self.config_entry = config_entry
         self._last_update = None
-        _LOGGER.info(f"Coordinator initialized with update interval: {update_interval} minutes")
+        _LOGGER.info(f"Coordinator initialized with update interval: {update_interval} minute(s)")
         
     async def _async_update_data(self):
         now = datetime.now()
@@ -70,7 +69,6 @@ class PortfolioCryptoCoordinator(DataUpdateCoordinator):
 
         _LOGGER.info("New data fetched successfully")
         return data
-
 
     async def fetch_transactions(self):
         # Fetch transactions data

@@ -19,8 +19,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     if entry.entry_id in hass.data[DOMAIN]:
         return False  # Entry already set up
 
-    update_interval = entry.options.get("update_interval", 10)
-    coordinator = PortfolioCryptoCoordinator(hass, entry, update_interval)
+    coordinator = PortfolioCryptoCoordinator(hass, entry, update_interval=1)  # Fixing update interval to 1 minute
     hass.data[DOMAIN][entry.entry_id] = coordinator
 
     # Initialize the database for the new portfolio by calling the addon service
