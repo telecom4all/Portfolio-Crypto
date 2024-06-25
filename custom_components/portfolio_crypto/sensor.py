@@ -71,26 +71,32 @@ class PortfolioCryptoCoordinator(DataUpdateCoordinator):
         return data
 
     async def fetch_transactions(self):
+        _LOGGER.info("Fetching transactions data")
         # Fetch transactions data
         return []
 
     async def fetch_total_investment(self):
+        _LOGGER.info("Fetching total investment data")
         # Fetch total investment data
         return 0
 
     async def fetch_total_profit_loss(self):
+        _LOGGER.info("Fetching total profit/loss data")
         # Fetch total profit/loss data
         return 0
 
     async def fetch_total_profit_loss_percent(self):
+        _LOGGER.info("Fetching total profit/loss percent data")
         # Fetch total profit/loss percent data
         return 0
 
     async def fetch_total_value(self):
+        _LOGGER.info("Fetching total value data")
         # Fetch total value data
         return 0
 
     async def fetch_crypto_data(self, crypto_id):
+        _LOGGER.info(f"Fetching data for crypto ID: {crypto_id}")
         # Fetch data for a specific crypto
         return {
             "transactions": [],
