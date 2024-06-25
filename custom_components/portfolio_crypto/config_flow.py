@@ -53,3 +53,4 @@ class PortfolioCryptoOptionsFlowHandler(config_entries.OptionsFlow):
                 vol.Required("update_interval", default=current_interval): vol.In([1, 5, 10, 30])
             })
         )
+

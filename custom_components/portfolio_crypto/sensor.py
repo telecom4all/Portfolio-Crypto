@@ -45,16 +45,17 @@ class PortfolioCryptoCoordinator(DataUpdateCoordinator):
         )
         self.config_entry = config_entry
         self._last_update = None
-
+        _LOGGER.info(f"Coordinator initialized with update interval: {update_interval} minutes")
+        
     async def _async_update_data(self):
         now = datetime.now()
         if self._last_update is not None:
             elapsed = now - self._last_update
             _LOGGER.info(f"Data updated. {elapsed.total_seconds() / 60:.2f} minutes elapsed since last update.")
         self._last_update = now
-
-        _LOGGER.info("Fetching new data from API/database")
         
+        _LOGGER.info("Fetching new data from API/database")
+
         # Fetch data from API or database
         data = {}
         data["transactions"] = await self.fetch_transactions()
@@ -69,6 +70,7 @@ class PortfolioCryptoCoordinator(DataUpdateCoordinator):
 
         _LOGGER.info("New data fetched successfully")
         return data
+
 
     async def fetch_transactions(self):
         # Fetch transactions data
