@@ -38,8 +38,8 @@ def get_data_with_retry(url, retries=5, backoff_factor=1.0):
             response.raise_for_status()
             return response.json()
         except requests.exceptions.RequestException as e:
-            if response.status_code == 429:  # Too Many Requests
-                wait_time = backoff_factor * (2 ** i)  # Correction de la syntaxe
+            if e.response and e.response.status_code == 429:  # Too Many Requests
+                wait_time = backoff_factor * (2 ** i)
                 logging.warning(f"Rate limit exceeded. Waiting for {wait_time} seconds.")
                 time.sleep(wait_time)
             else:
@@ -152,8 +152,6 @@ def list_transactions(entry_id):
 
 @app.route('/all_transactions', methods=['GET'])
 def all_transactions():
-    # Here, we assume that get_transactions() can be called without an entry_id to fetch all transactions
-    # If get_transactions() requires an entry_id, you will need to modify this function accordingly
     entry_ids = []  # Replace this with a way to get all entry_ids if necessary
     all_transactions = []
     for entry_id in entry_ids:
@@ -237,9 +235,3 @@ def update_transaction_endpoint(entry_id, transaction_id):
     except Exception as e:
         logging.error(f"Error updating transaction: {e}")
         return jsonify({"error": "Internal Server Error"}), 500
-
-def run_flask_app():
-    app.run(host='0.0.0.0', port=5000)
-
-if __name__ == '__main__':
-    run_flask_app()
