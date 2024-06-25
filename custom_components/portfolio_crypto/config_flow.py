@@ -2,10 +2,6 @@ import logging
 import voluptuous as vol
 from homeassistant import config_entries
 from homeassistant.core import callback
-from homeassistant.helpers import aiohttp_client
-import aiohttp
-import async_timeout
-import asyncio
 from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
@@ -43,6 +39,7 @@ class PortfolioCryptoOptionsFlowHandler(config_entries.OptionsFlow):
             self.hass.config_entries.async_update_entry(
                 self.config_entry, options={**self.config_entry.options, "update_interval": update_interval}
             )
+            # Recharger l'entrée pour appliquer les modifications
             await self.hass.config_entries.async_reload(self.config_entry.entry_id)
             return self.async_create_entry(title="", data={})
 
