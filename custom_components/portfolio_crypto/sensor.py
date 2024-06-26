@@ -155,8 +155,6 @@ class PortfolioCryptoSensor(CoordinatorEntity, SensorEntity):
             name=self.config_entry.title,
             manufacturer="Custom",
             model="Portfolio Crypto",
-            # Ajoutez les attributs ici
-            configuration_url=f"/config/integrations/integration/{self.config_entry.entry_id}",
             sw_version="1.0",
             via_device=(DOMAIN, self.config_entry.entry_id),
         )
@@ -198,7 +196,6 @@ class CryptoSensor(CoordinatorEntity, SensorEntity):
             name=self._crypto['name'],
             manufacturer="Custom",
             model="Portfolio Crypto",
-            configuration_url=f"/config/integrations/integration/{self.config_entry.entry_id}",
             sw_version="1.0",
             via_device=(DOMAIN, self.config_entry.entry_id),
         )
