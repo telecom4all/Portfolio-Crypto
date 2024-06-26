@@ -15,13 +15,14 @@
             "init": {
                 "title": "Options du Portfolio Crypto",
                 "data": {
-                    "update_interval": "Intervalle de mise à jour (minutes)"
+                    "crypto_name_or_id": "Nom ou ID de la cryptomonnaie"
                 }
             },
-            "update_interval": {
-                "title": "Intervalle de mise à jour",
+            "add_crypto": {
+                "title": "Ajouter une cryptomonnaie",
                 "data": {
-                    "update_interval": "Sélectionnez l'intervalle de mise à jour en minutes"
+                    "crypto_name": "Nom de la cryptomonnaie",
+                    "crypto_id": "ID de la cryptomonnaie"
                 }
             }
         }
