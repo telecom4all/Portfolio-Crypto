@@ -9,6 +9,11 @@ cp -r /app/custom_components/portfolio_crypto/* /config/custom_components/portfo
 # Copier le fichier JavaScript pour la carte Lovelace personnalisée
 cp /app/www/crypto-transactions-card.js /config/www/
 
+# Vérifier si ui-lovelace.yaml existe, sinon le créer
+if [ ! -f /config/ui-lovelace.yaml ]; then
+    touch /config/ui-lovelace.yaml
+fi
+
 # Vérifier et ajouter la ressource Lovelace si elle n'est pas déjà présente
 if ! grep -q 'crypto-transactions-card.js' /config/ui-lovelace.yaml; then
     echo 'resources:' >> /config/ui-lovelace.yaml
