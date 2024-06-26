@@ -2,12 +2,22 @@
 #Ce fichier décrit les services personnalisés pour l'intégration Portfolio Crypto.
 
 
+search_crypto_id:
+  description: "Rechercher l'ID d'une cryptomonnaie"
+  fields:
+    crypto_name:
+      description: "Nom de la cryptomonnaie"
+      example: "Bitcoin"
+
 add_crypto:
   description: "Ajouter une nouvelle cryptomonnaie"
   fields:
     crypto_name:
       description: "Nom de la cryptomonnaie"
       example: "Bitcoin"
+    crypto_id:
+      description: "ID de la cryptomonnaie"
+      example: "bitcoin"
     entry_id:
       description: "ID de l'entrée"
       example: "entry_id"
