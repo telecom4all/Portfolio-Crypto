@@ -21,8 +21,6 @@ COPY portfolio_crypto_addon/crypto-transactions-card.js /app/www/
 RUN pip install --no-cache-dir -r requirements.txt
 RUN pip list
 
-# Installer curl
-RUN apt-get update && apt-get install -y curl
 
 # Rendre run.sh exécutable
 RUN chmod +x /app/run.sh

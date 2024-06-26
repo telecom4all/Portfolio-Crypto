@@ -27,19 +27,8 @@ gunicorn --bind 0.0.0.0:5000 portfolio_crypto.portfolio_crypto:app &
 # Attendre que l'application Flask démarre correctement
 sleep 5
 
-# Debug: afficher le token et l'URL
-echo "Token: $SUPERVISOR_TOKEN"
-echo "Restarting Home Assistant..."
-
-# Redémarrer Home Assistant
-response=$(curl -s -o /dev/null -w "%{http_code}" -X POST -H "Authorization: Bearer $SUPERVISOR_TOKEN" -H "Content-Type: application/json" http://supervisor/core/restart)
-
-# Debug: vérifier le statut de la requête curl
-if [ "$response" -ne 200 ]; then
-    echo "Erreur lors du redémarrage de Home Assistant. Code de réponse: $response"
-else
-    echo "Home Assistant redémarré avec succès."
-fi
+# Afficher un message à l'utilisateur pour redémarrer Home Assistant
+echo "L'installation est terminée. Veuillez redémarrer Home Assistant pour terminer la configuration."
 
 # Continuer à exécuter Gunicorn en premier plan
 wait
