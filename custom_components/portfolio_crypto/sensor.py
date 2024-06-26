@@ -26,7 +26,6 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     # Add sensors for each cryptocurrency in the portfolio
     cryptos = config_entry.options.get("cryptos", [])
     for crypto in cryptos:
-        # Create a new device for each cryptocurrency
         entities.append(CryptoSensor(coordinator, config_entry, crypto, "transactions"))
         entities.append(CryptoSensor(coordinator, config_entry, crypto, "total_investment"))
         entities.append(CryptoSensor(coordinator, config_entry, crypto, "total_profit_loss"))
@@ -157,6 +156,12 @@ class PortfolioCryptoSensor(CoordinatorEntity, SensorEntity):
             model="Portfolio Crypto",
         )
 
+    @property
+    def extra_state_attributes(self):
+        return {
+            "entry_id": self.config_entry.entry_id
+        }
+
     async def async_update(self):
         await self.coordinator.async_request_refresh()
 
@@ -190,6 +195,13 @@ class CryptoSensor(CoordinatorEntity, SensorEntity):
             model="Portfolio Crypto",
             via_device=(DOMAIN, self.config_entry.entry_id)
         )
+
+    @property
+    def extra_state_attributes(self):
+        return {
+            "crypto_id": self._crypto['id'],
+            "crypto_name": self._crypto['name']
+        }
 
     async def async_update(self):
         await self.coordinator.async_request_refresh()
