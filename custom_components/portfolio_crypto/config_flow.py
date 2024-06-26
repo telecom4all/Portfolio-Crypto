@@ -47,12 +47,16 @@ class PortfolioCryptoOptionsFlowHandler(config_entries.OptionsFlow):
             async with session.get(f"{COINGECKO_API_URL}?query={crypto_name}") as response:
                 if response.status == 200:
                     data = await response.json()
-                    for coin in data['coins']:
-                        if coin['name'].lower() == crypto_name.lower():
-                            crypto_id = coin['id']
-                            break
+                    if isinstance(data, list):
+                        for coin in data:
+                            if coin['name'].lower() == crypto_name.lower():
+                                crypto_id = coin['id']
+                                break
+                        else:
+                            crypto_id = None
                     else:
                         crypto_id = None
+
                     if crypto_id:
                         return self.async_show_form(
                             step_id="confirm_add_crypto",
