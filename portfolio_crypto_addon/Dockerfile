@@ -13,6 +13,9 @@ COPY portfolio_crypto_addon/requirements.txt /app/requirements.txt
 COPY portfolio_crypto_addon/run.sh /app/run.sh
 COPY custom_components/portfolio_crypto /app/custom_components/portfolio_crypto
 COPY portfolio_crypto_addon/portfolio_crypto/wsgi.py /app/wsgi.py
+# Copier le fichier JavaScript pour la carte Lovelace personnalisée
+COPY portfolio_crypto_addon/crypto-transactions-card.js /app/www/
+
 
 # Installer les dépendances
 RUN pip install --no-cache-dir -r requirements.txt
