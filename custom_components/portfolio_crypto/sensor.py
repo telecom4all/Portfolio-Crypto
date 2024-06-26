@@ -1,8 +1,3 @@
-"""
-Fichier sensor.py
-Ce fichier gère les entités de capteur pour l'intégration Portfolio Crypto dans Home Assistant.
-"""
-
 import logging
 from datetime import timedelta, datetime
 from homeassistant.components.sensor import SensorEntity
@@ -16,20 +11,19 @@ from .const import DOMAIN, COINGECKO_API_URL
 _LOGGER = logging.getLogger(__name__)
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
-    """Configurer les capteurs pour une entrée configurée"""
-    coordinator = PortfolioCryptoCoordinator(hass, config_entry, update_interval=1)  # Fixe l'intervalle de mise à jour à 1 minute
+    coordinator = PortfolioCryptoCoordinator(hass, config_entry, update_interval=1)  # Fixing update interval to 1 minute
     await coordinator.async_config_entry_first_refresh()
 
     entities = []
 
-    # Ajouter les capteurs principaux du portfolio
+    # Add main portfolio sensors
     entities.append(PortfolioCryptoSensor(coordinator, config_entry, "transactions"))
     entities.append(PortfolioCryptoSensor(coordinator, config_entry, "total_investment"))
     entities.append(PortfolioCryptoSensor(coordinator, config_entry, "total_profit_loss"))
     entities.append(PortfolioCryptoSensor(coordinator, config_entry, "total_profit_loss_percent"))
     entities.append(PortfolioCryptoSensor(coordinator, config_entry, "total_value"))
 
-    # Ajouter les capteurs pour chaque cryptomonnaie dans le portfolio
+    # Add sensors for each cryptocurrency in the portfolio
     cryptos = config_entry.options.get("cryptos", [])
     for crypto in cryptos:
         entities.append(CryptoSensor(coordinator, config_entry, crypto, "transactions"))
@@ -133,7 +127,6 @@ class PortfolioCryptoCoordinator(DataUpdateCoordinator):
         return None
 
 class PortfolioCryptoSensor(CoordinatorEntity, SensorEntity):
-    """Entité de capteur pour les données de portfolio crypto"""
     def __init__(self, coordinator, config_entry, sensor_type):
         super().__init__(coordinator)
         self.coordinator = coordinator
@@ -163,11 +156,9 @@ class PortfolioCryptoSensor(CoordinatorEntity, SensorEntity):
         )
 
     async def async_update(self):
-        """Mettre à jour les données du capteur"""
         await self.coordinator.async_request_refresh()
 
 class CryptoSensor(CoordinatorEntity, SensorEntity):
-    """Entité de capteur pour les données de crypto-monnaie spécifique"""
     def __init__(self, coordinator, config_entry, crypto, sensor_type):
         super().__init__(coordinator)
         self.coordinator = coordinator
@@ -198,5 +189,4 @@ class CryptoSensor(CoordinatorEntity, SensorEntity):
         )
 
     async def async_update(self):
-        """Mettre à jour les données du capteur"""
         await self.coordinator.async_request_refresh()
