@@ -1,21 +1,19 @@
-"""
-Fichier __init__.py
-Ce fichier initialise l'intégration de Portfolio Crypto dans Home Assistant et configure les services.
-"""
-
 import logging
+from logging.handlers import RotatingFileHandler
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import service
-from .sensor import PortfolioCryptoCoordinator
 from .const import DOMAIN
-import aiohttp
-import os
 
 _LOGGER = logging.getLogger(__name__)
 
+# Configurer la journalisation pour écrire dans un fichier
+log_handler = RotatingFileHandler('/config/logs/integration.log', maxBytes=1000000, backupCount=3)
+log_handler.setLevel(logging.DEBUG)
+log_formatter = logging.Formatter('%(asctime)s %(levelname)s: %(message)s [in %(pathname)s:%(lineno)d]')
+log_handler.setFormatter(log_formatter)
+_LOGGER.addHandler(log_handler)
+
 async def async_setup(hass: HomeAssistant, config: dict):
-    """Configurer l'intégration via le fichier configuration.yaml (non utilisé ici)"""
     return True
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
@@ -28,7 +26,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     coordinator = PortfolioCryptoCoordinator(hass, entry, update_interval=1)  # Update interval is set to 1 minute
     hass.data[DOMAIN][entry.entry_id] = coordinator
 
-    # Check if the initialization process for the database is successful
     if not entry.options.get("initialized", False):
         try:
             async with aiohttp.ClientSession() as session:
@@ -66,8 +63,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     )
     
     return True
+
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
-    """Décharger une entrée configurée"""
     if entry.entry_id in hass.data[DOMAIN]:
         await hass.config_entries.async_forward_entry_unload(entry, "sensor")
         hass.services.async_remove(DOMAIN, "add_crypto")
