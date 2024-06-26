@@ -1,16 +1,23 @@
+"""
+Fichier db.py
+Ce fichier gère les opérations de base de données pour l'addon Portfolio Crypto.
+"""
+
 import sqlite3
 import os
 import logging
 
-# Configure logging
+# Configurer les logs
 logging.basicConfig(level=logging.INFO)
 
 def get_database_path(entry_id):
+    """Récupérer le chemin de la base de données pour un ID d'entrée donné"""
     db_path = os.path.join(os.getenv('HASS_CONFIG', '.'), f'portfolio_crypto_{entry_id}.db')
-    logging.info(f"Database path for entry {entry_id}: {db_path}")
+    logging.info(f"Chemin de la base de données pour l'entrée {entry_id}: {db_path}")
     return db_path
 
 def create_table(entry_id):
+    """Créer la table des transactions si elle n'existe pas déjà pour un ID d'entrée donné"""
     db_path = get_database_path(entry_id)
     try:
         conn = sqlite3.connect(db_path)
@@ -30,11 +37,12 @@ def create_table(entry_id):
         ''')
         conn.commit()
         conn.close()
-        logging.info(f"Table 'transactions' created successfully for entry {entry_id}")
+        logging.info(f"Table 'transactions' créée avec succès pour l'entrée {entry_id}")
     except Exception as e:
-        logging.error(f"Error creating table for entry {entry_id}: {e}")
+        logging.error(f"Erreur lors de la création de la table pour l'entrée {entry_id}: {e}")
 
 def add_transaction(entry_id, crypto_name, crypto_id, quantity, price_usd, transaction_type, location, date, historical_price):
+    """Ajouter une transaction à la base de données"""
     conn = sqlite3.connect(get_database_path(entry_id))
     cursor = conn.cursor()
     cursor.execute('''
@@ -45,6 +53,7 @@ def add_transaction(entry_id, crypto_name, crypto_id, quantity, price_usd, trans
     conn.close()
 
 def get_transactions(entry_id):
+    """Récupérer toutes les transactions pour un ID d'entrée donné"""
     conn = sqlite3.connect(get_database_path(entry_id))
     cursor = conn.cursor()
     cursor.execute('SELECT * FROM transactions')
@@ -53,6 +62,7 @@ def get_transactions(entry_id):
     return transactions
 
 def get_all_transactions():
+    """Récupérer toutes les transactions de toutes les bases de données"""
     databases = [f for f in os.listdir(os.getenv('HASS_CONFIG', '.')) if f.startswith('portfolio_crypto_') and f.endswith('.db')]
     all_transactions = []
     for db in databases:
@@ -65,6 +75,7 @@ def get_all_transactions():
     return all_transactions
 
 def delete_transaction(entry_id, transaction_id):
+    """Supprimer une transaction de la base de données"""
     conn = sqlite3.connect(get_database_path(entry_id))
     cursor = conn.cursor()
     cursor.execute('DELETE FROM transactions WHERE id = ?', (transaction_id,))
@@ -72,6 +83,7 @@ def delete_transaction(entry_id, transaction_id):
     conn.close()
 
 def update_transaction(entry_id, transaction_id, crypto_name, crypto_id, quantity, price_usd, transaction_type, location, date, historical_price):
+    """Mettre à jour une transaction dans la base de données"""
     conn = sqlite3.connect(get_database_path(entry_id))
     cursor = conn.cursor()
     cursor.execute('''
@@ -83,6 +95,7 @@ def update_transaction(entry_id, transaction_id, crypto_name, crypto_id, quantit
     conn.close()
 
 def get_crypto_transactions(entry_id, crypto_name):
+    """Récupérer les transactions d'une crypto-monnaie spécifique pour un ID d'entrée donné"""
     conn = sqlite3.connect(get_database_path(entry_id))
     cursor = conn.cursor()
     cursor.execute('SELECT * FROM transactions WHERE crypto_name = ?', (crypto_name,))

@@ -1,3 +1,8 @@
+"""
+Fichier portfolio_crypto.py
+Ce fichier gère l'application Flask et les routes API pour l'addon Portfolio Crypto.
+"""
+
 import json
 import requests
 import requests_cache
@@ -8,45 +13,48 @@ from flask import Flask, jsonify, request
 from .db import add_transaction, get_transactions, delete_transaction, update_transaction, get_crypto_transactions, create_table
 import os
 
-# Configure logging
+# Configurer les logs
 logging.basicConfig(level=logging.INFO)
 
-# Configure caching
+# Configurer le cache
 expire_after = timedelta(minutes=10)
 requests_cache.install_cache('coingecko_cache', expire_after=expire_after)
 
-# Flask app setup
+# Configuration de l'application Flask
 app = Flask(__name__)
 
 @app.route('/initialize', methods=['POST'])
 def initialize():
+    """Initialiser la base de données pour un nouveau portfolio"""
     entry_id = request.json.get('entry_id')
     if not entry_id:
         return jsonify({"error": "entry_id is required"}), 400
     try:
         create_table(entry_id)
-        logging.info(f"Initialized new portfolio with entry ID: {entry_id}")
+        logging.info(f"Portfolio initialisé avec succès pour l'ID d'entrée: {entry_id}")
         return jsonify({"message": "Database initialized"}), 200
     except Exception as e:
-        logging.error(f"Error initializing database for entry ID {entry_id}: {e}")
+        logging.error(f"Erreur lors de l'initialisation de la base de données pour l'ID d'entrée {entry_id}: {e}")
         return jsonify({"error": str(e)}), 500
 
 def get_data_with_retry(url, retries=5, backoff_factor=1.0):
+    """Récupérer les données depuis une URL avec des tentatives de réessai en cas d'échec"""
     for i in range(retries):
         try:
             response = requests.get(url)
             response.raise_for_status()
             return response.json()
         except requests.exceptions.RequestException as e:
-            if response.status_code == 429:  # Too Many Requests
+            if response.status_code == 429:  # Trop de requêtes
                 wait_time = backoff_factor * (2 ** i)
-                logging.warning(f"Rate limit exceeded. Waiting for {wait_time} seconds.")
+                logging.warning(f"Limite de taux dépassée. Attente de {wait_time} secondes.")
                 time.sleep(wait_time)
             else:
                 raise e
-    raise requests.exceptions.RequestException(f"Failed to get data from {url} after {retries} retries")
+    raise requests.exceptions.RequestException(f"Échec de la récupération des données depuis {url} après {retries} tentatives")
 
 def get_crypto_id(name):
+    """Récupérer l'ID d'une crypto-monnaie en fonction de son nom"""
     url = f"https://api.coingecko.com/api/v3/search?query={name}"
     data = get_data_with_retry(url)
     for coin in data['coins']:
@@ -55,15 +63,17 @@ def get_crypto_id(name):
     return None
 
 def get_crypto_price(crypto_id):
+    """Récupérer le prix actuel d'une crypto-monnaie"""
     url = f"https://api.coingecko.com/api/v3/simple/price?ids={crypto_id}&vs_currencies=usd"
     data = get_data_with_retry(url)
     if crypto_id in data:
         return data[crypto_id]['usd']
     else:
-        logging.error(f"Price data for {crypto_id} not found.")
+        logging.error(f"Données de prix pour {crypto_id} introuvables.")
         return 0
 
 def get_historical_price(crypto_id, date):
+    """Récupérer le prix historique d'une crypto-monnaie pour une date donnée"""
     url = f"https://api.coingecko.com/api/v3/coins/{crypto_id}/history?date={date}"
     data = get_data_with_retry(url)
     try:
@@ -72,6 +82,7 @@ def get_historical_price(crypto_id, date):
         return None
 
 def calculate_profit_loss(entry_id):
+    """Calculer le profit/perte pour un ID d'entrée donné"""
     transactions = get_transactions(entry_id)
     crypto_groups = {}
     for transaction in transactions:
@@ -121,6 +132,7 @@ def calculate_profit_loss(entry_id):
     return {"details": results, "summary": summary}
 
 def calculate_crypto_profit_loss(entry_id, crypto_name):
+    """Calculer le profit/perte pour une crypto-monnaie spécifique et un ID d'entrée donné"""
     transactions = get_crypto_transactions(entry_id, crypto_name)
     current_price = get_crypto_price(crypto_name)
     investment = 0
@@ -146,42 +158,47 @@ def calculate_crypto_profit_loss(entry_id, crypto_name):
 
 @app.route('/transactions/<entry_id>', methods=['GET'])
 def list_transactions(entry_id):
+    """Lister toutes les transactions pour un ID d'entrée donné"""
     transactions = get_transactions(entry_id)
-    logging.info(f"Fetched transactions for entry {entry_id}: {transactions}")
+    logging.info(f"Transactions récupérées pour l'entrée {entry_id}: {transactions}")
     return jsonify(transactions)
 
 @app.route('/all_transactions', methods=['GET'])
 def all_transactions():
-    entry_ids = []  # Replace this with a way to get all entry_ids if necessary
+    """Lister toutes les transactions pour tous les portfolios"""
+    entry_ids = []  # Remplacer par une méthode pour récupérer tous les ID d'entrée si nécessaire
     all_transactions = []
     for entry_id in entry_ids:
         transactions = get_transactions(entry_id)
         all_transactions.extend(transactions)
-    logging.info(f"Fetched all transactions: {all_transactions}")
+    logging.info(f"Toutes les transactions récupérées: {all_transactions}")
     return jsonify(all_transactions)
 
 @app.route('/profit_loss/<entry_id>', methods=['GET'])
 def profit_loss(entry_id):
+    """Calculer et retourner le profit/perte pour un ID d'entrée donné"""
     result = calculate_profit_loss(entry_id)
-    logging.info(f"Calculated profit/loss for entry {entry_id}: {result}")
+    logging.info(f"Profit/perte calculé pour l'entrée {entry_id}: {result}")
     return jsonify(result)
 
 @app.route('/crypto_profit_loss/<entry_id>/<crypto_name>', methods=['GET'])
 def crypto_profit_loss(entry_id, crypto_name):
+    """Calculer et retourner le profit/perte pour une crypto-monnaie spécifique et un ID d'entrée donné"""
     result = calculate_crypto_profit_loss(entry_id, crypto_name)
-    logging.info(f"Calculated profit/loss for {crypto_name} in entry {entry_id}: {result}")
+    logging.info(f"Profit/perte calculé pour {crypto_name} dans l'entrée {entry_id}: {result}")
     return jsonify(result)
 
 @app.route('/transaction/<entry_id>', methods=['POST'])
 def create_transaction(entry_id):
+    """Créer une nouvelle transaction pour un ID d'entrée donné"""
     try:
         data = request.json
-        logging.info(f"Received data for new transaction in entry {entry_id}: {data}")
+        logging.info(f"Données reçues pour une nouvelle transaction dans l'entrée {entry_id}: {data}")
         crypto_name = data['crypto_name']
         crypto_id = get_crypto_id(crypto_name)
         if not crypto_id:
-            logging.error("Cryptocurrency not found")
-            return jsonify({"error": "Cryptocurrency not found"}), 404
+            logging.error("Cryptomonnaie introuvable")
+            return jsonify({"error": "Cryptomonnaie introuvable"}), 404
         quantity = data['quantity']
         price_usd = data['price_usd']
         transaction_type = data['transaction_type']
@@ -193,33 +210,35 @@ def create_transaction(entry_id):
 
         add_transaction(entry_id, crypto_name, crypto_id, quantity, price_usd, transaction_type, location, date, historical_price)
 
-        logging.info(f"Added transaction: {crypto_name}, {crypto_id}, {quantity}, {price_usd}, {transaction_type}, {location}, {date}, {historical_price}")
-        return jsonify({"message": "Transaction added"}), 201
+        logging.info(f"Transaction ajoutée: {crypto_name}, {crypto_id}, {quantity}, {price_usd}, {transaction_type}, {location}, {date}, {historical_price}")
+        return jsonify({"message": "Transaction ajoutée"}), 201
     except Exception as e:
-        logging.error(f"Error adding transaction: {e}")
-        return jsonify({"error": "Internal Server Error"}), 500
+        logging.error(f"Erreur lors de l'ajout de la transaction: {e}")
+        return jsonify({"error": "Erreur Interne"}), 500
 
 @app.route('/transaction/<entry_id>/<int:transaction_id>', methods=['DELETE'])
 def delete_transaction_endpoint(entry_id, transaction_id):
+    """Supprimer une transaction pour un ID d'entrée donné"""
     try:
-        logging.info(f"Attempting to delete transaction with ID: {transaction_id} in entry {entry_id}")
+        logging.info(f"Tentative de suppression de la transaction avec ID: {transaction_id} dans l'entrée {entry_id}")
         delete_transaction(entry_id, transaction_id)
-        logging.info(f"Deleted transaction with ID: {transaction_id} in entry {entry_id}")
-        return jsonify({"message": "Transaction deleted"}), 200
+        logging.info(f"Transaction avec ID: {transaction_id} supprimée dans l'entrée {entry_id}")
+        return jsonify({"message": "Transaction supprimée"}), 200
     except Exception as e:
-        logging.error(f"Error deleting transaction: {e}")
-        return jsonify({"error": "Internal Server Error"}), 500
+        logging.error(f"Erreur lors de la suppression de la transaction: {e}")
+        return jsonify({"error": "Erreur Interne"}), 500
 
 @app.route('/transaction/<entry_id>/<int:transaction_id>', methods=['PUT'])
 def update_transaction_endpoint(entry_id, transaction_id):
+    """Mettre à jour une transaction pour un ID d'entrée donné"""
     try:
         data = request.json
-        logging.info(f"Received data for updating transaction in entry {entry_id}: {data}")
+        logging.info(f"Données reçues pour la mise à jour de la transaction dans l'entrée {entry_id}: {data}")
         crypto_name = data['crypto_name']
         crypto_id = get_crypto_id(crypto_name)
         if not crypto_id:
-            logging.error("Cryptocurrency not found")
-            return jsonify({"error": "Cryptocurrency not found"}), 404
+            logging.error("Cryptomonnaie introuvable")
+            return jsonify({"error": "Cryptomonnaie introuvable"}), 404
         quantity = data['quantity']
         price_usd = data['price_usd']
         transaction_type = data['transaction_type']
@@ -230,11 +249,11 @@ def update_transaction_endpoint(entry_id, transaction_id):
             historical_price = price_usd / quantity
 
         update_transaction(entry_id, transaction_id, crypto_name, crypto_id, quantity, price_usd, transaction_type, location, date, historical_price)
-        logging.info(f"Updated transaction with ID: {transaction_id} in entry {entry_id}")
-        return jsonify({"message": "Transaction updated"}), 200
+        logging.info(f"Transaction mise à jour avec ID: {transaction_id} dans l'entrée {entry_id}")
+        return jsonify({"message": "Transaction mise à jour"}), 200
     except Exception as e:
-        logging.error(f"Error updating transaction: {e}")
-        return jsonify({"error": "Internal Server Error"}), 500
+        logging.error(f"Erreur lors de la mise à jour de la transaction: {e}")
+        return jsonify({"error": "Erreur Interne"}), 500
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=5000)

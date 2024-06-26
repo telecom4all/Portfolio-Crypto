@@ -1,3 +1,7 @@
+#Fichier services.yaml
+#Ce fichier décrit les services personnalisés pour l'intégration Portfolio Crypto.
+
+
 add_crypto:
   description: "Ajouter une nouvelle cryptomonnaie"
   fields:

@@ -1,24 +1,28 @@
+#Fichier Dockerfile
+#Ce fichier configure l'image Docker pour l'addon Portfolio Crypto.
+
+
 FROM python:3.9-slim
 
-# Set working directory
+# Définir le répertoire de travail
 WORKDIR /app
 
-# Copy source code
+# Copier le code source
 COPY portfolio_crypto_addon/portfolio_crypto /app/portfolio_crypto
 COPY portfolio_crypto_addon/requirements.txt /app/requirements.txt
 COPY portfolio_crypto_addon/run.sh /app/run.sh
 COPY custom_components/portfolio_crypto /app/custom_components/portfolio_crypto
 COPY portfolio_crypto_addon/portfolio_crypto/wsgi.py /app/wsgi.py
 
-# Install dependencies
+# Installer les dépendances
 RUN pip install --no-cache-dir -r requirements.txt
 RUN pip list
 
-# Make run.sh executable
+# Rendre run.sh exécutable
 RUN chmod +x /app/run.sh
 
-# Expose port
+# Exposer le port
 EXPOSE 5000
 
-# Command to run the application
+# Commande pour exécuter l'application
 CMD ["/app/run.sh"]
