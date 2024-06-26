@@ -167,6 +167,9 @@ class PortfolioCryptoSensor(CoordinatorEntity, SensorEntity):
         return self._attributes
 
     async def async_update(self):
+        self._attributes = {
+            "entry_id": self.config_entry.entry_id,
+        }
         await self.coordinator.async_request_refresh()
 
 class CryptoSensor(CoordinatorEntity, SensorEntity):
@@ -210,4 +213,8 @@ class CryptoSensor(CoordinatorEntity, SensorEntity):
         return self._attributes
 
     async def async_update(self):
+        self._attributes = {
+            "crypto_id": self._crypto['id'],
+            "crypto_name": self._crypto['name'],
+        }
         await self.coordinator.async_request_refresh()
