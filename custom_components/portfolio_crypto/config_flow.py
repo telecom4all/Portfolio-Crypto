@@ -35,22 +35,24 @@ class PortfolioCryptoOptionsFlowHandler(config_entries.OptionsFlow):
         return self.async_show_form(
             step_id="init",
             data_schema=vol.Schema({
-                vol.Required("crypto_name", description="Nom de la cryptomonnaie"): str,
+                vol.Required("crypto_name_or_id", description="Nom ou ID de la cryptomonnaie"): str,
             }),
             errors={},
         )
 
     async def async_step_add_crypto(self, user_input=None):
         if user_input is not None:
-            crypto_name = user_input.get("crypto_name")
+            crypto_name_or_id = user_input.get("crypto_name_or_id")
             session = async_get_clientsession(self.hass)
-            async with session.get(f"{COINGECKO_API_URL}?query={crypto_name}") as response:
+            async with session.get(f"{COINGECKO_API_URL}?query={crypto_name_or_id}") as response:
                 if response.status == 200:
                     data = await response.json()
                     crypto_id = None
+                    crypto_name = None
                     for coin in data:
-                        if coin['name'].lower() == crypto_name.lower():
+                        if coin['name'].lower() == crypto_name_or_id.lower() or coin['id'].lower() == crypto_name_or_id.lower():
                             crypto_id = coin['id']
+                            crypto_name = coin['name']
                             break
                     if crypto_id:
                         return self.async_show_form(
@@ -65,7 +67,7 @@ class PortfolioCryptoOptionsFlowHandler(config_entries.OptionsFlow):
                         return self.async_show_form(
                             step_id="init",
                             data_schema=vol.Schema({
-                                vol.Required("crypto_name", description="Nom de la cryptomonnaie"): str,
+                                vol.Required("crypto_name_or_id", description="Nom ou ID de la cryptomonnaie"): str,
                             }),
                             errors={"base": "crypto_not_found"},
                         )
@@ -73,7 +75,7 @@ class PortfolioCryptoOptionsFlowHandler(config_entries.OptionsFlow):
                     return self.async_show_form(
                         step_id="init",
                         data_schema=vol.Schema({
-                            vol.Required("crypto_name", description="Nom de la cryptomonnaie"): str,
+                            vol.Required("crypto_name_or_id", description="Nom ou ID de la cryptomonnaie"): str,
                         }),
                         errors={"base": "api_error"},
                     )
