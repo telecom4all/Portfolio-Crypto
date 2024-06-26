@@ -26,6 +26,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     # Add sensors for each cryptocurrency in the portfolio
     cryptos = config_entry.options.get("cryptos", [])
     for crypto in cryptos:
+        # Create a new device for each cryptocurrency
         entities.append(CryptoSensor(coordinator, config_entry, crypto, "transactions"))
         entities.append(CryptoSensor(coordinator, config_entry, crypto, "total_investment"))
         entities.append(CryptoSensor(coordinator, config_entry, crypto, "total_profit_loss"))
@@ -121,7 +122,7 @@ class PortfolioCryptoCoordinator(DataUpdateCoordinator):
                     async with session.get(COINGECKO_API_URL) as response:
                         result = await response.json()
                         for coin in result:
-                            if coin['name'].lower() == crypto_name.lower():
+                            if coin['name'].lower() == crypto_name.lower() or coin['id'].lower() == crypto_name.lower():
                                 return coin['id']
             except (aiohttp.ClientError, asyncio.TimeoutError):
                 _LOGGER.error("Error fetching CoinGecko data")
@@ -154,6 +155,7 @@ class PortfolioCryptoSensor(CoordinatorEntity, SensorEntity):
             name=self.config_entry.title,
             manufacturer="Custom",
             model="Portfolio Crypto",
+            entry_id=self.config_entry.entry_id  # Ajout de l'entry_id ici
         )
 
     @property
@@ -193,7 +195,9 @@ class CryptoSensor(CoordinatorEntity, SensorEntity):
             name=self._crypto['name'],
             manufacturer="Custom",
             model="Portfolio Crypto",
-            via_device=(DOMAIN, self.config_entry.entry_id)
+            via_device=(DOMAIN, self.config_entry.entry_id),
+            crypto_id=self._crypto['id'],  # Ajout du crypto_id ici
+            crypto_name=self._crypto['name']  # Ajout du crypto_name ici
         )
 
     @property
