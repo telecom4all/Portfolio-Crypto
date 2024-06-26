@@ -107,9 +107,10 @@ class PortfolioCryptoCoordinator(DataUpdateCoordinator):
             cryptos.append({"name": crypto_name, "id": crypto_id})
             self.hass.config_entries.async_update_entry(self.config_entry, options={**self.config_entry.options, "cryptos": cryptos})
 
-            self.hass.async_add_job(
-                self.hass.config_entries.async_forward_entry_setup(self.config_entry, "sensor")
-            )
+            # Reconfigurer les entités pour ajouter les nouvelles cryptomonnaies
+            await self.hass.config_entries.async_forward_entry_unload(self.config_entry, "sensor")
+            await self.hass.config_entries.async_forward_entry_setup(self.config_entry, "sensor")
+
             return True
         return False
 
