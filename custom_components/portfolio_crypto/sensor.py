@@ -135,6 +135,9 @@ class PortfolioCryptoSensor(CoordinatorEntity, SensorEntity):
         self.config_entry = config_entry
         self._sensor_type = sensor_type
         self._name = f"{config_entry.title} {sensor_type}"
+        self._attributes = {
+            "entry_id": config_entry.entry_id,
+        }
 
     @property
     def name(self):
@@ -161,9 +164,7 @@ class PortfolioCryptoSensor(CoordinatorEntity, SensorEntity):
 
     @property
     def extra_state_attributes(self):
-        return {
-            "entry_id": self.config_entry.entry_id
-        }
+        return self._attributes
 
     async def async_update(self):
         await self.coordinator.async_request_refresh()
@@ -176,6 +177,10 @@ class CryptoSensor(CoordinatorEntity, SensorEntity):
         self._crypto = crypto
         self._sensor_type = sensor_type
         self._name = f"{crypto['name']} {sensor_type}"
+        self._attributes = {
+            "crypto_id": crypto['id'],
+            "crypto_name": crypto['name'],
+        }
 
     @property
     def name(self):
@@ -202,10 +207,7 @@ class CryptoSensor(CoordinatorEntity, SensorEntity):
 
     @property
     def extra_state_attributes(self):
-        return {
-            "crypto_id": self._crypto['id'],
-            "crypto_name": self._crypto['name']
-        }
+        return self._attributes
 
     async def async_update(self):
         await self.coordinator.async_request_refresh()
