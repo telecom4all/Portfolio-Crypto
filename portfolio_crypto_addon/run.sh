@@ -2,23 +2,32 @@
 
 # Créez le répertoire si nécessaire
 mkdir -p /config/custom_components/portfolio_crypto
+mkdir -p /config/www
 
 # Copiez le composant personnalisé dans le répertoire custom_components de Home Assistant
 cp -r /app/custom_components/portfolio_crypto/* /config/custom_components/portfolio_crypto/
 
-# Copier le fichier JavaScript pour la carte Lovelace personnalisée
-cp /app/www/crypto-transactions-card.js /config/www/
+# Copiez le fichier JavaScript du panneau personnalisé dans le répertoire www de Home Assistant
+cp /app/crypto-transactions-panel.js /config/www/
 
-# Vérifier si ui-lovelace.yaml existe, sinon le créer
-if [ ! -f /config/ui-lovelace.yaml ]; then
-    touch /config/ui-lovelace.yaml
-fi
+# Ajouter la configuration du panneau personnalisé dans configuration.yaml
+CONFIG_FILE="/config/configuration.yaml"
+PANEL_CONFIG="
+panel_custom:
+  - name: crypto-transactions-panel
+    sidebar_title: 'Transactions Crypto'
+    sidebar_icon: 'mdi:currency-usd'
+    js_url: '/local/crypto-transactions-panel.js'
+    config:
+      entry_id: your_entry_id
+      crypto_id: your_crypto_id
+      crypto_name: your_crypto_name
+"
 
-# Vérifier et ajouter la ressource Lovelace si elle n'est pas déjà présente
-if ! grep -q 'crypto-transactions-card.js' /config/ui-lovelace.yaml; then
-    echo 'resources:' >> /config/ui-lovelace.yaml
-    echo '  - url: /local/crypto-transactions-card.js' >> /config/ui-lovelace.yaml
-    echo '    type: module' >> /config/ui-lovelace.yaml
+if ! grep -q "panel_custom:" "$CONFIG_FILE"; then
+    echo "$PANEL_CONFIG" >> "$CONFIG_FILE"
+else
+    echo "La configuration du panneau personnalisé existe déjà dans configuration.yaml"
 fi
 
 # Démarrer l'application Flask avec Gunicorn
