@@ -11,22 +11,22 @@ from .const import DOMAIN, COINGECKO_API_URL
 _LOGGER = logging.getLogger(__name__)
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
-    coordinator = PortfolioCryptoCoordinator(hass, config_entry, update_interval=1)  # Fixer l'intervalle de mise à jour à 1 minute
+    coordinator = PortfolioCryptoCoordinator(hass, config_entry, update_interval=1)  # Fixing update interval to 1 minute
     await coordinator.async_config_entry_first_refresh()
 
     entities = []
 
-    # Ajouter les capteurs principaux du portfolio
+    # Add main portfolio sensors
     entities.append(PortfolioCryptoSensor(coordinator, config_entry, "transactions"))
     entities.append(PortfolioCryptoSensor(coordinator, config_entry, "total_investment"))
     entities.append(PortfolioCryptoSensor(coordinator, config_entry, "total_profit_loss"))
     entities.append(PortfolioCryptoSensor(coordinator, config_entry, "total_profit_loss_percent"))
     entities.append(PortfolioCryptoSensor(coordinator, config_entry, "total_value"))
 
-    # Ajouter les capteurs pour chaque cryptomonnaie dans le portfolio
+    # Add sensors for each cryptocurrency in the portfolio
     cryptos = config_entry.options.get("cryptos", [])
     for crypto in cryptos:
-        # Créer un nouveau dispositif pour chaque cryptomonnaie
+        # Create a new device for each cryptocurrency
         entities.append(CryptoSensor(coordinator, config_entry, crypto, "transactions"))
         entities.append(CryptoSensor(coordinator, config_entry, crypto, "total_investment"))
         entities.append(CryptoSensor(coordinator, config_entry, crypto, "total_profit_loss"))
@@ -45,9 +45,8 @@ class PortfolioCryptoCoordinator(DataUpdateCoordinator):
         )
         self.config_entry = config_entry
         self._last_update = None
-        self.data = {}  # Initialiser avec un dictionnaire vide
         _LOGGER.info(f"Coordinator initialized with update interval: {update_interval} minute(s)")
-
+        
     async def _async_update_data(self):
         now = datetime.now()
         if self._last_update is not None:
@@ -57,22 +56,17 @@ class PortfolioCryptoCoordinator(DataUpdateCoordinator):
         
         _LOGGER.info("Fetching new data from API/database")
 
-        # Récupérer les données de l'API ou de la base de données
-        data = {
-            "transactions": await self.fetch_transactions(),
-            "total_investment": await self.fetch_total_investment(),
-            "total_profit_loss": await self.fetch_total_profit_loss(),
-            "total_profit_loss_percent": await self.fetch_total_profit_loss_percent(),
-            "total_value": await self.fetch_total_value()
-        }
+        # Fetch data from API or database
+        data = {}
+        data["transactions"] = await self.fetch_transactions()
+        data["total_investment"] = await self.fetch_total_investment()
+        data["total_profit_loss"] = await self.fetch_total_profit_loss()
+        data["total_profit_loss_percent"] = await self.fetch_total_profit_loss_percent()
+        data["total_value"] = await self.fetch_total_value()
 
         for crypto in self.config_entry.options.get("cryptos", []):
             crypto_data = await self.fetch_crypto_data(crypto["id"])
-            data[crypto["id"]] = {
-                **crypto_data,
-                "crypto_name": crypto["name"],
-                "crypto_id": crypto["id"]
-            }
+            data[crypto["id"]] = crypto_data
 
         _LOGGER.info("New data fetched successfully")
         return data
@@ -114,6 +108,9 @@ class PortfolioCryptoCoordinator(DataUpdateCoordinator):
             cryptos.append({"name": crypto_name, "id": crypto_id})
             self.hass.config_entries.async_update_entry(self.config_entry, options={**self.config_entry.options, "cryptos": cryptos})
 
+            # Sauvegarder les informations de crypto dans la base de données
+            await self.save_crypto_to_db(self.config_entry.entry_id, crypto_name, crypto_id)
+
             # Reconfigurer les entités pour ajouter les nouvelles cryptomonnaies
             await self.hass.config_entries.async_forward_entry_unload(self.config_entry, "sensor")
             await self.hass.config_entries.async_forward_entry_setup(self.config_entry, "sensor")
@@ -133,6 +130,28 @@ class PortfolioCryptoCoordinator(DataUpdateCoordinator):
             except (aiohttp.ClientError, asyncio.TimeoutError):
                 _LOGGER.error("Error fetching CoinGecko data")
         return None
+
+    async def save_crypto_to_db(self, entry_id, crypto_name, crypto_id):
+        try:
+            async with aiohttp.ClientSession() as session:
+                supervisor_token = os.getenv("SUPERVISOR_TOKEN")
+                headers = {
+                    "Authorization": f"Bearer {supervisor_token}",
+                    "Content-Type": "application/json",
+                }
+                url = f"http://localhost:5000/save_crypto"
+                payload = {
+                    "entry_id": entry_id,
+                    "crypto_name": crypto_name,
+                    "crypto_id": crypto_id
+                }
+                async with session.post(url, json=payload, headers=headers) as response:
+                    if response.status == 200:
+                        _LOGGER.info(f"Crypto {crypto_name} avec ID {crypto_id} sauvegardée dans la base de données.")
+                    else:
+                        _LOGGER.error(f"Erreur lors de la sauvegarde de la crypto {crypto_name} avec ID {crypto_id} dans la base de données.")
+        except Exception as e:
+            _LOGGER.error(f"Exception lors de la sauvegarde de la crypto {crypto_name} avec ID {crypto_id} dans la base de données: {e}")
 
 class PortfolioCryptoSensor(CoordinatorEntity, SensorEntity):
     def __init__(self, coordinator, config_entry, sensor_type):
@@ -170,9 +189,13 @@ class PortfolioCryptoSensor(CoordinatorEntity, SensorEntity):
 
     @property
     def extra_state_attributes(self):
-        attributes = self._attributes.copy()
-        attributes.update(self.coordinator.data.get(self._sensor_type, {}))
-        return attributes
+        return self._attributes
+
+    async def async_update(self):
+        self._attributes = {
+            "entry_id": self.config_entry.entry_id,
+        }
+        await self.coordinator.async_request_refresh()
 
 class CryptoSensor(CoordinatorEntity, SensorEntity):
     def __init__(self, coordinator, config_entry, crypto, sensor_type):
@@ -212,6 +235,32 @@ class CryptoSensor(CoordinatorEntity, SensorEntity):
 
     @property
     def extra_state_attributes(self):
-        attributes = self._attributes.copy()
-        attributes.update(self.coordinator.data.get(self._crypto['id'], {}))
-        return attributes
+        return self._attributes
+
+    async def async_update(self):
+        self._attributes = {
+            "crypto_id": self._crypto['id'],
+            "crypto_name": self._crypto['name'],
+        }
+        await self.coordinator.async_request_refresh()
+
+    # Ajoutez cette méthode dans la classe PortfolioCryptoCoordinator
+    async def load_cryptos_from_db(self, entry_id):
+        try:
+            async with aiohttp.ClientSession() as session:
+                supervisor_token = os.getenv("SUPERVISOR_TOKEN")
+                headers = {
+                    "Authorization": f"Bearer {supervisor_token}",
+                    "Content-Type": "application/json",
+                }
+                url = f"http://localhost:5000/load_cryptos/{entry_id}"
+                async with session.get(url, headers=headers) as response:
+                    if response.status == 200:
+                        cryptos = await response.json()
+                        return cryptos
+                    else:
+                        _LOGGER.error(f"Erreur lors du chargement des cryptos depuis la base de données pour l'ID d'entrée {entry_id}")
+                        return []
+        except Exception as e:
+            _LOGGER.error(f"Exception lors du chargement des cryptos depuis la base de données pour l'ID d'entrée {entry_id}: {e}")
+            return []

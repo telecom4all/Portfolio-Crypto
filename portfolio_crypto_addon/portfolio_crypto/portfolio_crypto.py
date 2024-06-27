@@ -10,7 +10,7 @@ from datetime import datetime, timedelta
 import logging
 import time
 from flask import Flask, jsonify, request
-from .db import add_transaction, get_transactions, delete_transaction, update_transaction, get_crypto_transactions, create_table
+from .db import add_transaction, get_transactions, delete_transaction, update_transaction, get_crypto_transactions, create_table, create_crypto_table, save_crypto, get_cryptos
 import os
 
 # Configurer les logs
@@ -31,11 +31,36 @@ def initialize():
         return jsonify({"error": "entry_id is required"}), 400
     try:
         create_table(entry_id)
+        create_crypto_table(entry_id)
         logging.info(f"Portfolio initialisé avec succès pour l'ID d'entrée: {entry_id}")
         return jsonify({"message": "Database initialized"}), 200
     except Exception as e:
         logging.error(f"Erreur lors de l'initialisation de la base de données pour l'ID d'entrée {entry_id}: {e}")
         return jsonify({"error": str(e)}), 500
+
+@app.route('/save_crypto', methods=['POST'])
+def save_crypto_route():
+    """Sauvegarder une nouvelle crypto dans la base de données"""
+    try:
+        data = request.json
+        entry_id = data['entry_id']
+        crypto_name = data['crypto_name']
+        crypto_id = data['crypto_id']
+        save_crypto(entry_id, crypto_name, crypto_id)
+        return jsonify({"message": "Crypto sauvegardée"}), 200
+    except Exception as e:
+        logging.error(f"Erreur lors de la sauvegarde de la crypto: {e}")
+        return jsonify({"error": "Erreur Interne"}), 500
+
+@app.route('/load_cryptos/<entry_id>', methods=['GET'])
+def load_cryptos(entry_id):
+    """Charger toutes les cryptos pour un ID d'entrée donné depuis la base de données"""
+    try:
+        cryptos = get_cryptos(entry_id)
+        return jsonify(cryptos), 200
+    except Exception as e:
+        logging.error(f"Erreur lors du chargement des cryptos pour l'ID d'entrée {entry_id}: {e}")
+        return jsonify({"error": "Erreur Interne"}), 500
 
 def get_data_with_retry(url, retries=5, backoff_factor=1.0):
     """Récupérer les données depuis une URL avec des tentatives de réessai en cas d'échec"""
