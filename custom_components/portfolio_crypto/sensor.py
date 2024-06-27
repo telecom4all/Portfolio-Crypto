@@ -6,6 +6,7 @@ from homeassistant.helpers.entity import DeviceInfo
 import aiohttp
 import async_timeout
 import asyncio
+import os
 from .const import DOMAIN, COINGECKO_API_URL
 
 _LOGGER = logging.getLogger(__name__)
@@ -156,6 +157,26 @@ class PortfolioCryptoCoordinator(DataUpdateCoordinator):
                         _LOGGER.error(f"Erreur lors de la sauvegarde de la crypto {crypto_name} avec ID {crypto_id} dans la base de données.")
         except Exception as e:
             _LOGGER.error(f"Exception lors de la sauvegarde de la crypto {crypto_name} avec ID {crypto_id} dans la base de données: {e}")
+
+    async def load_cryptos_from_db(self, entry_id):
+        try:
+            async with aiohttp.ClientSession() as session:
+                supervisor_token = os.getenv("SUPERVISOR_TOKEN")
+                headers = {
+                    "Authorization": f"Bearer {supervisor_token}",
+                    "Content-Type": "application/json",
+                }
+                url = f"http://localhost:5000/load_cryptos/{entry_id}"
+                async with session.get(url, headers=headers) as response:
+                    if response.status == 200:
+                        cryptos = await response.json()
+                        return cryptos
+                    else:
+                        _LOGGER.error(f"Erreur lors du chargement des cryptos depuis la base de données pour l'ID d'entrée {entry_id}")
+                        return []
+        except Exception as e:
+            _LOGGER.error(f"Exception lors du chargement des cryptos depuis la base de données pour l'ID d'entrée {entry_id}: {e}")
+            return []
 
 class PortfolioCryptoSensor(CoordinatorEntity, SensorEntity):
     def __init__(self, coordinator, config_entry, sensor_type):
