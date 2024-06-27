@@ -211,6 +211,8 @@ class PortfolioCryptoCoordinator(DataUpdateCoordinator):
                 }
                 _LOGGER.info(f"Sauvegarde de la crypto {crypto_name} avec ID {crypto_id} dans la base de données.")
                 async with session.post(url, json=payload, headers=headers) as response:
+                    response_text = await response.text()
+                    _LOGGER.info(f"Statut de la réponse: {response.status}, Texte de la réponse: {response_text}")
                     if response.status == 200:
                         _LOGGER.info(f"Crypto {crypto_name} avec ID {crypto_id} sauvegardée dans la base de données.")
                     else:
@@ -228,6 +230,8 @@ class PortfolioCryptoCoordinator(DataUpdateCoordinator):
                 }
                 url = f"http://localhost:5000/load_cryptos/{entry_id}"
                 async with session.get(url, headers=headers) as response:
+                    response_text = await response.text()
+                    _LOGGER.info(f"Statut de la réponse: {response.status}, Texte de la réponse: {response_text}")
                     if response.status == 200:
                         cryptos = await response.json()
                         _LOGGER.info(f"Cryptos chargées depuis la base de données: {cryptos}")
