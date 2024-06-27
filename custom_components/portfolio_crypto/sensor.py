@@ -6,6 +6,7 @@ from homeassistant.helpers.entity import DeviceInfo
 import aiohttp
 import async_timeout
 import asyncio
+import os
 from .const import DOMAIN, COINGECKO_API_URL
 from .db import get_crypto_attributes  # Ajoutez cette ligne
 
