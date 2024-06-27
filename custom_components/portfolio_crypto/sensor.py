@@ -6,18 +6,28 @@ from homeassistant.helpers.entity import DeviceInfo
 import aiohttp
 import async_timeout
 import asyncio
-import os
 from .const import DOMAIN, COINGECKO_API_URL
-from .db import get_crypto_attributes  # Ajoutez cette ligne
 
 _LOGGER = logging.getLogger(__name__)
+
+# sensor.py
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
     coordinator = PortfolioCryptoCoordinator(hass, config_entry, update_interval=1)  # Fixing update interval to 1 minute
     await coordinator.async_config_entry_first_refresh()
-    await coordinator.load_crypto_attributes()
 
     entities = []
+
+    # Charger les attributs depuis la base de données
+    cryptos = await coordinator.load_cryptos_from_db(config_entry.entry_id)
+    if cryptos:
+        for crypto in cryptos:
+            crypto_name, crypto_id = crypto
+            entities.append(CryptoSensor(coordinator, config_entry, {"name": crypto_name, "id": crypto_id}, "transactions"))
+            entities.append(CryptoSensor(coordinator, config_entry, {"name": crypto_name, "id": crypto_id}, "total_investment"))
+            entities.append(CryptoSensor(coordinator, config_entry, {"name": crypto_name, "id": crypto_id}, "total_profit_loss"))
+            entities.append(CryptoSensor(coordinator, config_entry, {"name": crypto_name, "id": crypto_id}, "total_profit_loss_percent"))
+            entities.append(CryptoSensor(coordinator, config_entry, {"name": crypto_name, "id": crypto_id}, "total_value"))
 
     # Add main portfolio sensors
     entities.append(PortfolioCryptoSensor(coordinator, config_entry, "transactions"))
@@ -26,16 +36,8 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     entities.append(PortfolioCryptoSensor(coordinator, config_entry, "total_profit_loss_percent"))
     entities.append(PortfolioCryptoSensor(coordinator, config_entry, "total_value"))
 
-    # Add sensors for each cryptocurrency in the portfolio
-    for crypto in coordinator.cryptos:
-        # Create a new device for each cryptocurrency
-        entities.append(CryptoSensor(coordinator, config_entry, crypto, "transactions"))
-        entities.append(CryptoSensor(coordinator, config_entry, crypto, "total_investment"))
-        entities.append(CryptoSensor(coordinator, config_entry, crypto, "total_profit_loss"))
-        entities.append(CryptoSensor(coordinator, config_entry, crypto, "total_profit_loss_percent"))
-        entities.append(CryptoSensor(coordinator, config_entry, crypto, "total_value"))
-
     async_add_entities(entities)
+
 
 class PortfolioCryptoCoordinator(DataUpdateCoordinator):
     def __init__(self, hass, config_entry, update_interval):
@@ -47,16 +49,15 @@ class PortfolioCryptoCoordinator(DataUpdateCoordinator):
         )
         self.config_entry = config_entry
         self._last_update = None
-        self.cryptos = []
         _LOGGER.info(f"Coordinator initialized with update interval: {update_interval} minute(s)")
-
+        
     async def _async_update_data(self):
         now = datetime.now()
         if self._last_update is not None:
             elapsed = now - self._last_update
-            _LOGGER.info(f"Data updated. {(elapsed.total_seconds() / 60):.2f} minutes elapsed since last update.")
+            _LOGGER.info(f"Data updated. {elapsed.total_seconds() / 60:.2f} minutes elapsed since last update.")
         self._last_update = now
-
+        
         _LOGGER.info("Fetching new data from API/database")
 
         # Fetch data from API or database
@@ -73,10 +74,6 @@ class PortfolioCryptoCoordinator(DataUpdateCoordinator):
 
         _LOGGER.info("New data fetched successfully")
         return data
-
-    async def load_crypto_attributes(self):
-        self.cryptos = get_crypto_attributes(self.config_entry.entry_id)
-        _LOGGER.info(f"Loaded crypto attributes: {self.cryptos}")
 
     async def fetch_transactions(self):
         _LOGGER.info("Fetching transactions data")
@@ -156,9 +153,9 @@ class PortfolioCryptoCoordinator(DataUpdateCoordinator):
                     if response.status == 200:
                         _LOGGER.info(f"Crypto {crypto_name} avec ID {crypto_id} sauvegardée dans la base de données.")
                     else:
-                        _LOGGER.error(f"Erreur lors de la sauvegarde de la crypto {crypto_name} dans la base de données.")
+                        _LOGGER.error(f"Erreur lors de la sauvegarde de la crypto {crypto_name} avec ID {crypto_id} dans la base de données.")
         except Exception as e:
-            _LOGGER.error(f"Exception lors de la sauvegarde de la crypto dans la base de données: {e}")
+            _LOGGER.error(f"Exception lors de la sauvegarde de la crypto {crypto_name} avec ID {crypto_id} dans la base de données: {e}")
 
 class PortfolioCryptoSensor(CoordinatorEntity, SensorEntity):
     def __init__(self, coordinator, config_entry, sensor_type):

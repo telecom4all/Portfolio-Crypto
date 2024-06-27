@@ -13,16 +13,16 @@
     "options": {
         "step": {
             "init": {
-                "title": "Options du Portfolio Crypto",
+                "title": "Nouvelle Crypto",
                 "data": {
-                    "crypto_name_or_id": "Nom ou ID de la cryptomonnaie"
+                    "crypto_name_or_id": "Nom ou ID de la Crypto"
                 }
             },
             "add_crypto": {
-                "title": "Ajouter une cryptomonnaie",
+                "title": "Ajouter une Crypto",
                 "data": {
-                    "crypto_name": "Nom de la cryptomonnaie",
-                    "crypto_id": "ID de la cryptomonnaie"
+                    "crypto_name": "Nom de la Crypto",
+                    "crypto_id": "ID de la Crypto"
                 }
             }
         }

@@ -8,7 +8,6 @@ import async_timeout
 import asyncio
 import os
 from .const import DOMAIN, COINGECKO_API_URL
-from .db import get_crypto_attributes, create_table, create_crypto_table
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -31,16 +30,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     if entry.entry_id in hass.data[DOMAIN]:
         return False  # Entry déjà configurée
 
-    # Créer les tables nécessaires
-    create_table(entry.entry_id)
-    create_crypto_table(entry.entry_id)
-
     coordinator = PortfolioCryptoCoordinator(hass, entry, update_interval=1)  # Fixe l'intervalle de mise à jour à 1 minute
     hass.data[DOMAIN][entry.entry_id] = coordinator
 
     # Charger les cryptos depuis la base de données
-    await coordinator.load_crypto_attributes()
-    cryptos = coordinator.cryptos
+    cryptos = await coordinator.load_cryptos_from_db(entry.entry_id)
     if not cryptos:
         cryptos = []
     hass.config_entries.async_update_entry(entry, options={**entry.options, "cryptos": cryptos})
@@ -106,16 +100,15 @@ class PortfolioCryptoCoordinator(DataUpdateCoordinator):
         )
         self.config_entry = config_entry
         self._last_update = None
-        self.cryptos = []
         _LOGGER.info(f"Coordinator initialized with update interval: {update_interval} minute(s)")
-
+        
     async def _async_update_data(self):
         now = datetime.now()
         if self._last_update is not None:
             elapsed = now - self._last_update
-            _LOGGER.info(f"Data updated. {(elapsed.total_seconds() / 60):.2f} minutes elapsed since last update.")
+            _LOGGER.info(f"Data updated. {elapsed.total_seconds() / 60:.2f} minutes elapsed since last update.")
         self._last_update = now
-
+        
         _LOGGER.info("Fetching new data from API/database")
 
         # Fetch data from API or database
@@ -132,10 +125,6 @@ class PortfolioCryptoCoordinator(DataUpdateCoordinator):
 
         _LOGGER.info("New data fetched successfully")
         return data
-
-    async def load_crypto_attributes(self):
-        self.cryptos = get_crypto_attributes(self.config_entry.entry_id)
-        _LOGGER.info(f"Loaded crypto attributes: {self.cryptos}")
 
     async def fetch_transactions(self):
         _LOGGER.info("Fetching transactions data")
@@ -218,3 +207,23 @@ class PortfolioCryptoCoordinator(DataUpdateCoordinator):
                         _LOGGER.error(f"Erreur lors de la sauvegarde de la crypto {crypto_name} dans la base de données.")
         except Exception as e:
             _LOGGER.error(f"Exception lors de la sauvegarde de la crypto dans la base de données: {e}")
+
+    async def load_cryptos_from_db(self, entry_id):
+        try:
+            async with aiohttp.ClientSession() as session:
+                supervisor_token = os.getenv("SUPERVISOR_TOKEN")
+                headers = {
+                    "Authorization": f"Bearer {supervisor_token}",
+                    "Content-Type": "application/json",
+                }
+                url = f"http://localhost:5000/load_cryptos/{entry_id}"
+                async with session.get(url, headers=headers) as response:
+                    if response.status == 200:
+                        cryptos = await response.json()
+                        return cryptos
+                    else:
+                        _LOGGER.error(f"Erreur lors du chargement des cryptos depuis la base de données pour l'ID d'entrée {entry_id}")
+                        return []
+        except Exception as e:
+            _LOGGER.error(f"Exception lors du chargement des cryptos depuis la base de données pour l'ID d'entrée {entry_id}: {e}")
+            return []

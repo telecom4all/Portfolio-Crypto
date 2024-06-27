@@ -58,7 +58,8 @@ def create_crypto_table(entry_id):
 
 def save_crypto(entry_id, crypto_name, crypto_id):
     """Sauvegarder une crypto dans la base de données"""
-    create_crypto_table(entry_id)  # Assurer que la table est créée avant d'ajouter des données
+    save_crypto_attributes(entry_id, crypto_name, crypto_id)  # Utiliser la nouvelle fonction pour sauvegarder les attributs
+    conn = sqlite3.connect(get_database_path(entry_id))
     conn = sqlite3.connect(get_database_path(entry_id))
     cursor = conn.cursor()
     cursor.execute('''
@@ -141,12 +142,25 @@ def get_crypto_transactions(entry_id, crypto_name):
     conn.close()
     return transactions
 
-def get_crypto_attributes(entry_id):
-    """Récupérer les attributs des cryptos pour un ID d'entrée donné"""
+def save_crypto_attributes(entry_id, crypto_name, crypto_id):
+    """Sauvegarder les attributs crypto_id et crypto_name dans la base de données"""
+    create_crypto_table(entry_id)  # Assurer que la table est créée avant d'ajouter des données
+    conn = sqlite3.connect(get_database_path(entry_id))
+    cursor = conn.cursor()
+    cursor.execute('''
+        INSERT INTO cryptos (entry_id, crypto_name, crypto_id)
+        VALUES (?, ?, ?)
+        ON CONFLICT(entry_id, crypto_id) DO UPDATE SET crypto_name=excluded.crypto_name
+    ''', (entry_id, crypto_name, crypto_id))
+    conn.commit()
+    conn.close()
+
+def load_crypto_attributes(entry_id):
+    """Charger les attributs crypto_id et crypto_name depuis la base de données"""
     create_crypto_table(entry_id)  # Assurer que la table est créée avant de lire des données
     conn = sqlite3.connect(get_database_path(entry_id))
     cursor = conn.cursor()
-    cursor.execute('SELECT crypto_id, crypto_name FROM cryptos WHERE entry_id = ?', (entry_id,))
-    attributes = cursor.fetchall()
+    cursor.execute('SELECT crypto_name, crypto_id FROM cryptos WHERE entry_id = ?', (entry_id,))
+    cryptos = cursor.fetchall()
     conn.close()
-    return [{"id": crypto_id, "name": crypto_name} for crypto_id, crypto_name in attributes]
+    return cryptos

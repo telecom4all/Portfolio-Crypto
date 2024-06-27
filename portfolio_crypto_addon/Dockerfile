@@ -13,7 +13,6 @@ COPY portfolio_crypto_addon/run.sh /app/run.sh
 COPY custom_components/portfolio_crypto /app/custom_components/portfolio_crypto
 COPY portfolio_crypto_addon/portfolio_crypto/wsgi.py /app/wsgi.py
 COPY portfolio_crypto_addon/crypto-transactions-panel.js /app/crypto-transactions-panel.js
-COPY portfolio_crypto_addon/portfolio_crypto/db.py /app/custom_components/portfolio_crypto/db.py
 
 # Installer les dépendances
 RUN pip install --no-cache-dir -r requirements.txt
