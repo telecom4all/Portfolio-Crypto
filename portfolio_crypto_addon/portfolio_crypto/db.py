@@ -78,6 +78,15 @@ def get_cryptos(entry_id):
     conn.close()
     return cryptos
 
+def get_crypto_attributes(entry_id):
+    """Récupérer les attributs des cryptos pour un ID d'entrée donné"""
+    conn = sqlite3.connect(get_database_path(entry_id))
+    cursor = conn.cursor()
+    cursor.execute('SELECT crypto_name, crypto_id FROM cryptos WHERE entry_id = ?', (entry_id,))
+    cryptos = cursor.fetchall()
+    conn.close()
+    return [{"name": crypto[0], "id": crypto[1]} for crypto in cryptos]
+
 def add_transaction(entry_id, crypto_name, crypto_id, quantity, price_usd, transaction_type, location, date, historical_price):
     """Ajouter une transaction à la base de données"""
     create_table(entry_id)  # Assurer que la table est créée avant d'ajouter des données
