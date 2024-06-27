@@ -4,7 +4,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 from datetime import timedelta, datetime
 import aiohttp
-import async_timeout  # Ajout de l'import async_timeout
+import async_timeout
 import asyncio
 import os
 from .const import DOMAIN, COINGECKO_API_URL

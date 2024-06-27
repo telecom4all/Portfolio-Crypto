@@ -243,24 +243,3 @@ class CryptoSensor(CoordinatorEntity, SensorEntity):
             "crypto_name": self._crypto['name'],
         }
         await self.coordinator.async_request_refresh()
-
-    # Ajoutez cette méthode dans la classe PortfolioCryptoCoordinator
-    async def load_cryptos_from_db(self, entry_id):
-        try:
-            async with aiohttp.ClientSession() as session:
-                supervisor_token = os.getenv("SUPERVISOR_TOKEN")
-                headers = {
-                    "Authorization": f"Bearer {supervisor_token}",
-                    "Content-Type": "application/json",
-                }
-                url = f"http://localhost:5000/load_cryptos/{entry_id}"
-                async with session.get(url, headers=headers) as response:
-                    if response.status == 200:
-                        cryptos = await response.json()
-                        return cryptos
-                    else:
-                        _LOGGER.error(f"Erreur lors du chargement des cryptos depuis la base de données pour l'ID d'entrée {entry_id}")
-                        return []
-        except Exception as e:
-            _LOGGER.error(f"Exception lors du chargement des cryptos depuis la base de données pour l'ID d'entrée {entry_id}: {e}")
-            return []
