@@ -11,22 +11,22 @@ from .const import DOMAIN, COINGECKO_API_URL
 _LOGGER = logging.getLogger(__name__)
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
-    coordinator = PortfolioCryptoCoordinator(hass, config_entry, update_interval=1)  # Fixing update interval to 1 minute
+    coordinator = PortfolioCryptoCoordinator(hass, config_entry, update_interval=1)  # Fixer l'intervalle de mise à jour à 1 minute
     await coordinator.async_config_entry_first_refresh()
 
     entities = []
 
-    # Add main portfolio sensors
+    # Ajouter les capteurs principaux du portfolio
     entities.append(PortfolioCryptoSensor(coordinator, config_entry, "transactions"))
     entities.append(PortfolioCryptoSensor(coordinator, config_entry, "total_investment"))
     entities.append(PortfolioCryptoSensor(coordinator, config_entry, "total_profit_loss"))
     entities.append(PortfolioCryptoSensor(coordinator, config_entry, "total_profit_loss_percent"))
     entities.append(PortfolioCryptoSensor(coordinator, config_entry, "total_value"))
 
-    # Add sensors for each cryptocurrency in the portfolio
+    # Ajouter les capteurs pour chaque cryptomonnaie dans le portfolio
     cryptos = config_entry.options.get("cryptos", [])
     for crypto in cryptos:
-        # Create a new device for each cryptocurrency
+        # Créer un nouveau dispositif pour chaque cryptomonnaie
         entities.append(CryptoSensor(coordinator, config_entry, crypto, "transactions"))
         entities.append(CryptoSensor(coordinator, config_entry, crypto, "total_investment"))
         entities.append(CryptoSensor(coordinator, config_entry, crypto, "total_profit_loss"))
@@ -45,8 +45,9 @@ class PortfolioCryptoCoordinator(DataUpdateCoordinator):
         )
         self.config_entry = config_entry
         self._last_update = None
+        self.data = {}  # Initialiser avec un dictionnaire vide
         _LOGGER.info(f"Coordinator initialized with update interval: {update_interval} minute(s)")
-        
+
     async def _async_update_data(self):
         now = datetime.now()
         if self._last_update is not None:
@@ -56,17 +57,22 @@ class PortfolioCryptoCoordinator(DataUpdateCoordinator):
         
         _LOGGER.info("Fetching new data from API/database")
 
-        # Fetch data from API or database
-        data = {}
-        data["transactions"] = await self.fetch_transactions()
-        data["total_investment"] = await self.fetch_total_investment()
-        data["total_profit_loss"] = await self.fetch_total_profit_loss()
-        data["total_profit_loss_percent"] = await self.fetch_total_profit_loss_percent()
-        data["total_value"] = await self.fetch_total_value()
+        # Récupérer les données de l'API ou de la base de données
+        data = {
+            "transactions": await self.fetch_transactions(),
+            "total_investment": await self.fetch_total_investment(),
+            "total_profit_loss": await self.fetch_total_profit_loss(),
+            "total_profit_loss_percent": await self.fetch_total_profit_loss_percent(),
+            "total_value": await self.fetch_total_value()
+        }
 
         for crypto in self.config_entry.options.get("cryptos", []):
             crypto_data = await self.fetch_crypto_data(crypto["id"])
-            data[crypto["id"]] = crypto_data
+            data[crypto["id"]] = {
+                **crypto_data,
+                "crypto_name": crypto["name"],
+                "crypto_id": crypto["id"]
+            }
 
         _LOGGER.info("New data fetched successfully")
         return data
@@ -164,13 +170,9 @@ class PortfolioCryptoSensor(CoordinatorEntity, SensorEntity):
 
     @property
     def extra_state_attributes(self):
-        return self._attributes
-
-    async def async_update(self):
-        self._attributes = {
-            "entry_id": self.config_entry.entry_id,
-        }
-        await self.coordinator.async_request_refresh()
+        attributes = self._attributes.copy()
+        attributes.update(self.coordinator.data.get(self._sensor_type, {}))
+        return attributes
 
 class CryptoSensor(CoordinatorEntity, SensorEntity):
     def __init__(self, coordinator, config_entry, crypto, sensor_type):
@@ -210,11 +212,6 @@ class CryptoSensor(CoordinatorEntity, SensorEntity):
 
     @property
     def extra_state_attributes(self):
-        return self._attributes
-
-    async def async_update(self):
-        self._attributes = {
-            "crypto_id": self._crypto['id'],
-            "crypto_name": self._crypto['name'],
-        }
-        await self.coordinator.async_request_refresh()
+        attributes = self._attributes.copy()
+        attributes.update(self.coordinator.data.get(self._crypto['id'], {}))
+        return attributes
