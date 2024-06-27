@@ -2,10 +2,12 @@ import logging
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
+from datetime import timedelta, datetime
 import aiohttp
+import async_timeout  # Ajout de l'import async_timeout
+import asyncio
 import os
-from datetime import datetime, timedelta
-from .const import DOMAIN
+from .const import DOMAIN, COINGECKO_API_URL
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -33,6 +35,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
 
     # Charger les cryptos depuis la base de données
     cryptos = await coordinator.load_cryptos_from_db(entry.entry_id)
+    if not cryptos:
+        cryptos = []
     hass.config_entries.async_update_entry(entry, options={**entry.options, "cryptos": cryptos})
 
     # Initialiser la base de données pour le nouveau portfolio en appelant le service de l'addon
