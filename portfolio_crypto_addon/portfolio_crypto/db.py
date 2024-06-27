@@ -1,8 +1,3 @@
-"""
-Fichier db.py
-Ce fichier gère les opérations de base de données pour l'addon Portfolio Crypto.
-"""
-
 import sqlite3
 import os
 import logging
@@ -63,6 +58,7 @@ def create_crypto_table(entry_id):
 
 def save_crypto(entry_id, crypto_name, crypto_id):
     """Sauvegarder une crypto dans la base de données"""
+    create_crypto_table(entry_id)  # Assurer que la table est créée avant d'ajouter des données
     conn = sqlite3.connect(get_database_path(entry_id))
     cursor = conn.cursor()
     cursor.execute('''
@@ -74,6 +70,7 @@ def save_crypto(entry_id, crypto_name, crypto_id):
 
 def get_cryptos(entry_id):
     """Récupérer toutes les cryptos pour un ID d'entrée donné"""
+    create_crypto_table(entry_id)  # Assurer que la table est créée avant de lire des données
     conn = sqlite3.connect(get_database_path(entry_id))
     cursor = conn.cursor()
     cursor.execute('SELECT crypto_name, crypto_id FROM cryptos WHERE entry_id = ?', (entry_id,))
@@ -83,6 +80,7 @@ def get_cryptos(entry_id):
 
 def add_transaction(entry_id, crypto_name, crypto_id, quantity, price_usd, transaction_type, location, date, historical_price):
     """Ajouter une transaction à la base de données"""
+    create_table(entry_id)  # Assurer que la table est créée avant d'ajouter des données
     conn = sqlite3.connect(get_database_path(entry_id))
     cursor = conn.cursor()
     cursor.execute('''
