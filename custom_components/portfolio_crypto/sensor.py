@@ -6,29 +6,15 @@ from homeassistant.helpers.entity import DeviceInfo
 import aiohttp
 import async_timeout
 import asyncio
-import os
 from .const import DOMAIN, COINGECKO_API_URL
 
 _LOGGER = logging.getLogger(__name__)
-
-# sensor.py
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
     coordinator = PortfolioCryptoCoordinator(hass, config_entry, update_interval=1)  # Fixing update interval to 1 minute
     await coordinator.async_config_entry_first_refresh()
 
     entities = []
-
-    # Charger les attributs depuis la base de données
-    cryptos = await coordinator.load_cryptos_from_db(config_entry.entry_id)
-    if cryptos:
-        for crypto in cryptos:
-            crypto_name, crypto_id = crypto
-            entities.append(CryptoSensor(coordinator, config_entry, {"name": crypto_name, "id": crypto_id}, "transactions"))
-            entities.append(CryptoSensor(coordinator, config_entry, {"name": crypto_name, "id": crypto_id}, "total_investment"))
-            entities.append(CryptoSensor(coordinator, config_entry, {"name": crypto_name, "id": crypto_id}, "total_profit_loss"))
-            entities.append(CryptoSensor(coordinator, config_entry, {"name": crypto_name, "id": crypto_id}, "total_profit_loss_percent"))
-            entities.append(CryptoSensor(coordinator, config_entry, {"name": crypto_name, "id": crypto_id}, "total_value"))
 
     # Add main portfolio sensors
     entities.append(PortfolioCryptoSensor(coordinator, config_entry, "transactions"))
@@ -37,8 +23,17 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     entities.append(PortfolioCryptoSensor(coordinator, config_entry, "total_profit_loss_percent"))
     entities.append(PortfolioCryptoSensor(coordinator, config_entry, "total_value"))
 
-    async_add_entities(entities)
+    # Add sensors for each cryptocurrency in the portfolio
+    cryptos = config_entry.options.get("cryptos", [])
+    for crypto in cryptos:
+        # Create a new device for each cryptocurrency
+        entities.append(CryptoSensor(coordinator, config_entry, crypto, "transactions"))
+        entities.append(CryptoSensor(coordinator, config_entry, crypto, "total_investment"))
+        entities.append(CryptoSensor(coordinator, config_entry, crypto, "total_profit_loss"))
+        entities.append(CryptoSensor(coordinator, config_entry, crypto, "total_profit_loss_percent"))
+        entities.append(CryptoSensor(coordinator, config_entry, crypto, "total_value"))
 
+    async_add_entities(entities)
 
 class PortfolioCryptoCoordinator(DataUpdateCoordinator):
     def __init__(self, hass, config_entry, update_interval):
@@ -157,26 +152,6 @@ class PortfolioCryptoCoordinator(DataUpdateCoordinator):
                         _LOGGER.error(f"Erreur lors de la sauvegarde de la crypto {crypto_name} avec ID {crypto_id} dans la base de données.")
         except Exception as e:
             _LOGGER.error(f"Exception lors de la sauvegarde de la crypto {crypto_name} avec ID {crypto_id} dans la base de données: {e}")
-
-    async def load_cryptos_from_db(self, entry_id):
-        try:
-            async with aiohttp.ClientSession() as session:
-                supervisor_token = os.getenv("SUPERVISOR_TOKEN")
-                headers = {
-                    "Authorization": f"Bearer {supervisor_token}",
-                    "Content-Type": "application/json",
-                }
-                url = f"http://localhost:5000/load_cryptos/{entry_id}"
-                async with session.get(url, headers=headers) as response:
-                    if response.status == 200:
-                        cryptos = await response.json()
-                        return cryptos
-                    else:
-                        _LOGGER.error(f"Erreur lors du chargement des cryptos depuis la base de données pour l'ID d'entrée {entry_id}")
-                        return []
-        except Exception as e:
-            _LOGGER.error(f"Exception lors du chargement des cryptos depuis la base de données pour l'ID d'entrée {entry_id}: {e}")
-            return []
 
 class PortfolioCryptoSensor(CoordinatorEntity, SensorEntity):
     def __init__(self, coordinator, config_entry, sensor_type):

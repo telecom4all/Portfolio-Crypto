@@ -14,7 +14,7 @@ _LOGGER = logging.getLogger(__name__)
 # Configurer la journalisation pour écrire dans un fichier
 log_handler = logging.FileHandler('/config/logs/integration.log')
 log_handler.setLevel(logging.DEBUG)
-log_formatter = logging.Formatter('%(asctime)s %(levellevelname)s: %(message)s [in %(pathname)s:%(lineno)d]')
+log_formatter = logging.Formatter('%(asctime)s %(levelname)s: %(message)s [in %(pathname)s:%(lineno)d]')
 log_handler.setFormatter(log_formatter)
 _LOGGER.addHandler(log_handler)
 
