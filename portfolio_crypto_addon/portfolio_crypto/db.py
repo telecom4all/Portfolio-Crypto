@@ -16,6 +16,7 @@ def create_table(entry_id):
     db_path = get_database_path(entry_id)
     try:
         conn = sqlite3.connect(db_path)
+        logging.info(f"Connexion à la base de données établie pour {db_path}")
         cursor = conn.cursor()
         cursor.execute('''
             CREATE TABLE IF NOT EXISTS transactions (
@@ -30,8 +31,11 @@ def create_table(entry_id):
                 historical_price REAL
             )
         ''')
+        logging.info("Requête de création de table exécutée")
         conn.commit()
+        logging.info("Transaction commit")
         conn.close()
+        logging.info(f"Connexion fermée pour {db_path}")
         logging.info(f"Table 'transactions' créée avec succès pour l'entrée {entry_id}")
     except Exception as e:
         logging.error(f"Erreur lors de la création de la table pour l'entrée {entry_id}: {e}")
