@@ -8,7 +8,7 @@ import async_timeout
 import asyncio
 import os
 from .const import DOMAIN, COINGECKO_API_URL
-from .db import get_crypto_attributes  # Ajoutez cette ligne
+from .db import get_crypto_attributes, create_table, create_crypto_table
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -30,6 +30,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
 
     if entry.entry_id in hass.data[DOMAIN]:
         return False  # Entry déjà configurée
+
+    # Créer les tables nécessaires
+    create_table(entry.entry_id)
+    create_crypto_table(entry.entry_id)
 
     coordinator = PortfolioCryptoCoordinator(hass, entry, update_interval=1)  # Fixe l'intervalle de mise à jour à 1 minute
     hass.data[DOMAIN][entry.entry_id] = coordinator

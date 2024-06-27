@@ -143,6 +143,7 @@ def get_crypto_transactions(entry_id, crypto_name):
 
 def get_crypto_attributes(entry_id):
     """Récupérer les attributs des cryptos pour un ID d'entrée donné"""
+    create_crypto_table(entry_id)  # Assurer que la table est créée avant de lire des données
     conn = sqlite3.connect(get_database_path(entry_id))
     cursor = conn.cursor()
     cursor.execute('SELECT crypto_id, crypto_name FROM cryptos WHERE entry_id = ?', (entry_id,))
