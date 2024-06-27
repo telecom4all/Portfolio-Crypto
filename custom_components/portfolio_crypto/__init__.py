@@ -41,43 +41,47 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
 
     # Initialiser la base de données pour le nouveau portfolio en appelant le service de l'addon
     if not entry.options.get("initialized", False):
-        try:
-            async with aiohttp.ClientSession() as session:
-                supervisor_token = os.getenv("SUPERVISOR_TOKEN")
-                headers = {
-                    "Authorization": f"Bearer {supervisor_token}",
-                    "Content-Type": "application/json",
-                }
-                url = "http://localhost:5000/initialize"
-                _LOGGER.info(f"Appel de l'URL {url} avec l'ID d'entrée: {entry.entry_id}")
-                async with session.post(url, json={"entry_id": entry.entry_id}, headers=headers) as response:
-                    response_text = await response.text()
-                    _LOGGER.info(f"Statut de la réponse: {response.status}, Texte de la réponse: {response_text}")
-                    if response.status == 200:
-                        _LOGGER.info(f"Base de données initialisée avec succès pour l'ID d'entrée: {entry.entry_id}")
-                        hass.config_entries.async_update_entry(entry, options={**entry.options, "initialized": True})
-                    else:
-                        _LOGGER.error(f"Échec de l'initialisation de la base de données pour l'ID d'entrée: {entry.entry_id}, code de statut: {response.status}, texte de la réponse: {response_text}")
-        except Exception as e:
-            _LOGGER.error(f"Exception survenue lors de l'initialisation de la base de données pour l'ID d'entrée: {entry.entry_id}: {e}")
+        await initialize_database(entry, hass)
 
     await hass.config_entries.async_forward_entry_setup(entry, "sensor")
-
-    async def async_add_crypto_service(call):
-        """Service pour ajouter une nouvelle crypto-monnaie"""
-        name = call.data.get("crypto_name")
-        entry_id = call.data.get("entry_id")
-        coordinator = hass.data[DOMAIN].get(entry_id)
-        if coordinator:
-            success = await coordinator.add_crypto(name)
-            if not success:
-                _LOGGER.error(f"Crypto {name} introuvable")
 
     hass.services.async_register(
         DOMAIN, "add_crypto", async_add_crypto_service
     )
     
     return True
+
+async def initialize_database(entry: ConfigEntry, hass: HomeAssistant):
+    """Initialize the database for the new portfolio by calling the addon service."""
+    try:
+        async with aiohttp.ClientSession() as session:
+            supervisor_token = os.getenv("SUPERVISOR_TOKEN")
+            headers = {
+                "Authorization": f"Bearer {supervisor_token}",
+                "Content-Type": "application/json",
+            }
+            url = "http://localhost:5000/initialize"
+            _LOGGER.info(f"Appel de l'URL {url} avec l'ID d'entrée: {entry.entry_id}")
+            async with session.post(url, json={"entry_id": entry.entry_id}, headers=headers) as response:
+                response_text = await response.text()
+                _LOGGER.info(f"Statut de la réponse: {response.status}, Texte de la réponse: {response_text}")
+                if response.status == 200:
+                    _LOGGER.info(f"Base de données initialisée avec succès pour l'ID d'entrée: {entry.entry_id}")
+                    hass.config_entries.async_update_entry(entry, options={**entry.options, "initialized": True})
+                else:
+                    _LOGGER.error(f"Échec de l'initialisation de la base de données pour l'ID d'entrée: {entry.entry_id}, code de statut: {response.status}, texte de la réponse: {response_text}")
+    except Exception as e:
+        _LOGGER.error(f"Exception survenue lors de l'initialisation de la base de données pour l'ID d'entrée: {entry.entry_id}: {e}")
+
+async def async_add_crypto_service(call):
+    """Service pour ajouter une nouvelle crypto-monnaie"""
+    name = call.data.get("crypto_name")
+    entry_id = call.data.get("entry_id")
+    coordinator = hass.data[DOMAIN].get(entry_id)
+    if coordinator:
+        success = await coordinator.add_crypto(name)
+        if not success:
+            _LOGGER.error(f"Crypto {name} introuvable")
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
     """Décharger une entrée configurée"""
@@ -112,6 +116,13 @@ class PortfolioCryptoCoordinator(DataUpdateCoordinator):
         _LOGGER.info("Fetching new data from API/database")
 
         # Fetch data from API or database
+        data = await self.fetch_all_data()
+
+        _LOGGER.info("New data fetched successfully")
+        return data
+
+    async def fetch_all_data(self):
+        """Fetch all necessary data."""
         data = {}
         data["transactions"] = await self.fetch_transactions()
         data["total_investment"] = await self.fetch_total_investment()
@@ -122,8 +133,6 @@ class PortfolioCryptoCoordinator(DataUpdateCoordinator):
         for crypto in self.config_entry.options.get("cryptos", []):
             crypto_data = await self.fetch_crypto_data(crypto["id"])
             data[crypto["id"]] = crypto_data
-
-        _LOGGER.info("New data fetched successfully")
         return data
 
     async def fetch_transactions(self):

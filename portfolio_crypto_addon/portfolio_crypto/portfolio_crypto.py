@@ -40,7 +40,6 @@ def initialize():
 
 @app.route('/save_crypto', methods=['POST'])
 def save_crypto_route():
-    """Sauvegarder une nouvelle crypto dans la base de données"""
     try:
         data = request.json
         entry_id = data['entry_id']
