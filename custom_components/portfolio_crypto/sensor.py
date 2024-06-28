@@ -28,13 +28,14 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     cryptos = config_entry.options.get("cryptos", [])
     crypto_attributes = load_crypto_attributes(config_entry.entry_id)
     for crypto in cryptos:
-        crypto_data = crypto_attributes.get(crypto["id"], {})
-        # Create a new device for each cryptocurrency
-        entities.append(CryptoSensor(coordinator, config_entry, crypto, "transactions", crypto_data))
-        entities.append(CryptoSensor(coordinator, config_entry, crypto, "total_investment", crypto_data))
-        entities.append(CryptoSensor(coordinator, config_entry, crypto, "total_profit_loss", crypto_data))
-        entities.append(CryptoSensor(coordinator, config_entry, crypto, "total_profit_loss_percent", crypto_data))
-        entities.append(CryptoSensor(coordinator, config_entry, crypto, "total_value", crypto_data))
+        if isinstance(crypto, dict):
+            crypto_data = crypto_attributes.get(crypto["id"], {})
+            # Create a new device for each cryptocurrency
+            entities.append(CryptoSensor(coordinator, config_entry, crypto, "transactions", crypto_data))
+            entities.append(CryptoSensor(coordinator, config_entry, crypto, "total_investment", crypto_data))
+            entities.append(CryptoSensor(coordinator, config_entry, crypto, "total_profit_loss", crypto_data))
+            entities.append(CryptoSensor(coordinator, config_entry, crypto, "total_profit_loss_percent", crypto_data))
+            entities.append(CryptoSensor(coordinator, config_entry, crypto, "total_value", crypto_data))
 
     async_add_entities(entities)
 
@@ -67,9 +68,12 @@ class PortfolioCryptoCoordinator(DataUpdateCoordinator):
         data["total_profit_loss_percent"] = await self.fetch_total_profit_loss_percent()
         data["total_value"] = await self.fetch_total_value()
 
-        for crypto in self.config_entry.options.get("cryptos", []):
-            crypto_data = await self.fetch_crypto_data(crypto["id"])
-            data[crypto["id"]] = crypto_data
+        cryptos = self.config_entry.options.get("cryptos", [])
+        if isinstance(cryptos, list):
+            for crypto in cryptos:
+                if isinstance(crypto, dict):
+                    crypto_data = await self.fetch_crypto_data(crypto["id"])
+                    data[crypto["id"]] = crypto_data
 
         _LOGGER.info("New data fetched successfully")
         return data
