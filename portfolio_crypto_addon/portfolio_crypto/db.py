@@ -12,6 +12,7 @@ def get_database_path(entry_id):
     return db_path
 
 def create_tables_if_not_exists(entry_id):
+    """Créer les tables 'transactions' et 'cryptos' si elles n'existent pas"""
     db_path = get_database_path(entry_id)
     conn = sqlite3.connect(db_path)
     cursor = conn.cursor()
@@ -46,6 +47,7 @@ def create_tables_if_not_exists(entry_id):
         conn.close()
 
 def save_crypto(entry_id, crypto_name, crypto_id):
+    """Sauvegarder une crypto-monnaie dans la base de données"""
     create_tables_if_not_exists(entry_id)
     db_path = get_database_path(entry_id)
     try:
@@ -65,6 +67,7 @@ def save_crypto(entry_id, crypto_name, crypto_id):
         conn.close()
 
 def get_cryptos(entry_id):
+    """Obtenir toutes les cryptos pour un ID d'entrée donné"""
     create_tables_if_not_exists(entry_id)
     db_path = get_database_path(entry_id)
     conn = sqlite3.connect(db_path)
