@@ -94,12 +94,15 @@ class PortfolioCryptoCoordinator(DataUpdateCoordinator):
     async def fetch_crypto_data(self, crypto_id):
         _LOGGER.info(f"Fetching data for crypto ID: {crypto_id}")
         return {
+            "crypto_id": crypto_id,  # Ajout de l'ID de la crypto
+            "crypto_name": next((crypto["name"] for crypto in self.config_entry.options.get("cryptos", []) if crypto["id"] == crypto_id), None),
             "transactions": [],
             "total_investment": 0,
             "total_profit_loss": 0,
             "total_profit_loss_percent": 0,
             "total_value": 0
         }
+
 
     async def add_crypto(self, crypto_name):
         crypto_id = await self.fetch_crypto_id(crypto_name)
@@ -235,7 +238,10 @@ class CryptoSensor(CoordinatorEntity, SensorEntity):
 
     @property
     def extra_state_attributes(self):
-        return self._attributes
+        return {
+            "crypto_id": self._crypto['id'],
+            "crypto_name": self._crypto['name'],
+        }
 
     async def async_update(self):
         self._attributes = {

@@ -24,14 +24,13 @@ async def async_setup(hass: HomeAssistant, config: dict):
     return True
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
-    """Configurer l'intégration via l'interface utilisateur"""
     if DOMAIN not in hass.data:
         hass.data[DOMAIN] = {}
 
     if entry.entry_id in hass.data[DOMAIN]:
         return False  # Entry déjà configurée
 
-    coordinator = PortfolioCryptoCoordinator(hass, entry, update_interval=1)  # Fixe l'intervalle de mise à jour à 1 minute
+    coordinator = PortfolioCryptoCoordinator(hass, entry, update_interval=1)
     hass.data[DOMAIN][entry.entry_id] = coordinator
 
     # Charger les cryptos depuis la base de données
@@ -47,7 +46,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     await hass.config_entries.async_forward_entry_setup(entry, "sensor")
 
     async def async_add_crypto_service(call):
-        """Service pour ajouter une nouvelle crypto-monnaie"""
         name = call.data.get("crypto_name")
         entry_id = call.data.get("entry_id")
         _LOGGER.debug(f"Service add_crypto appelé avec entry_id: {entry_id} et crypto_name: {name}")
@@ -58,14 +56,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
                 _LOGGER.error(f"Crypto {name} introuvable")
             else:
                 _LOGGER.debug(f"Crypto {name} ajoutée avec succès")
-            # Ajout de logs supplémentaires pour vérifier le retour
             _LOGGER.debug(f"Retour de add_crypto: {success}")
 
-    hass.services.async_register(
-        DOMAIN, "add_crypto", async_add_crypto_service
-    )
-    
+    hass.services.async_register(DOMAIN, "add_crypto", async_add_crypto_service)
+
     return True
+
 
 async def initialize_database(entry: ConfigEntry, hass: HomeAssistant):
     """Initialize the database for the new portfolio by calling the addon service."""
