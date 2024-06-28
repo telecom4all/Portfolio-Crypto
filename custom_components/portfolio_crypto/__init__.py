@@ -58,6 +58,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
                 _LOGGER.error(f"Crypto {name} introuvable")
             else:
                 _LOGGER.debug(f"Crypto {name} ajoutée avec succès")
+            # Ajout de logs supplémentaires pour vérifier le retour
+            _LOGGER.debug(f"Retour de add_crypto: {success}")
 
     hass.services.async_register(
         DOMAIN, "add_crypto", async_add_crypto_service
