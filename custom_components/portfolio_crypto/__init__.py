@@ -50,11 +50,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
         """Service pour ajouter une nouvelle crypto-monnaie"""
         name = call.data.get("crypto_name")
         entry_id = call.data.get("entry_id")
+        _LOGGER.debug(f"Service add_crypto appelé avec entry_id: {entry_id} et crypto_name: {name}")
         coordinator = hass.data[DOMAIN].get(entry_id)
         if coordinator:
             success = await coordinator.add_crypto(name)
             if not success:
                 _LOGGER.error(f"Crypto {name} introuvable")
+            else:
+                _LOGGER.debug(f"Crypto {name} ajoutée avec succès")
 
     hass.services.async_register(
         DOMAIN, "add_crypto", async_add_crypto_service
@@ -198,10 +201,28 @@ class PortfolioCryptoCoordinator(DataUpdateCoordinator):
 
     async def save_crypto_to_db(self, entry_id, crypto_name, crypto_id):
         try:
-            save_crypto(entry_id, crypto_name, crypto_id)
-            _LOGGER.info(f"Sauvegarde de la crypto {crypto_name} avec ID {crypto_id} dans la base de données réussie.")
+            async with aiohttp.ClientSession() as session:
+                supervisor_token = os.getenv("SUPERVISOR_TOKEN")
+                headers = {
+                    "Authorization": f"Bearer {supervisor_token}",
+                    "Content-Type": "application/json",
+                }
+                url = f"http://localhost:5000/save_crypto"
+                payload = {
+                    "entry_id": entry_id,
+                    "crypto_name": crypto_name,
+                    "crypto_id": crypto_id
+                }
+                _LOGGER.debug(f"Envoi de la requête à {url} avec payload: {payload}")
+                async with session.post(url, json=payload, headers=headers) as response:
+                    response_text = await response.text()
+                    _LOGGER.debug(f"Réponse reçue: {response.status}, {response_text}")
+                    if response.status == 200:
+                        _LOGGER.info(f"Crypto {crypto_name} avec ID {crypto_id} sauvegardée dans la base de données.")
+                    else:
+                        _LOGGER.error(f"Erreur lors de la sauvegarde de la crypto {crypto_name} avec ID {crypto_id} dans la base de données. Statut: {response.status}, Réponse: {response_text}")
         except Exception as e:
-            _LOGGER.error(f"Exception lors de la sauvegarde de la crypto dans la base de données: {e}")
+            _LOGGER.error(f"Exception lors de la sauvegarde de la crypto {crypto_name} avec ID {crypto_id} dans la base de données: {e}")
 
     async def load_cryptos_from_db(self, entry_id):
         try:
