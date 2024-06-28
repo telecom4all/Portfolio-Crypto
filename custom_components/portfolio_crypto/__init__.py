@@ -8,6 +8,7 @@ import async_timeout
 import asyncio
 import os
 from .const import DOMAIN, COINGECKO_API_URL
+from .db import save_crypto
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -197,26 +198,8 @@ class PortfolioCryptoCoordinator(DataUpdateCoordinator):
 
     async def save_crypto_to_db(self, entry_id, crypto_name, crypto_id):
         try:
-            async with aiohttp.ClientSession() as session:
-                supervisor_token = os.getenv("SUPERVISOR_TOKEN")
-                headers = {
-                    "Authorization": f"Bearer {supervisor_token}",
-                    "Content-Type": "application/json",
-                }
-                url = f"http://localhost:5000/save_crypto"
-                payload = {
-                    "entry_id": entry_id,
-                    "crypto_name": crypto_name,
-                    "crypto_id": crypto_id
-                }
-                _LOGGER.info(f"Sauvegarde de la crypto {crypto_name} avec ID {crypto_id} dans la base de données.")
-                async with session.post(url, json=payload, headers=headers) as response:
-                    response_text = await response.text()
-                    _LOGGER.info(f"Statut de la réponse: {response.status}, Texte de la réponse: {response_text}")
-                    if response.status == 200:
-                        _LOGGER.info(f"Crypto {crypto_name} avec ID {crypto_id} sauvegardée dans la base de données.")
-                    else:
-                        _LOGGER.error(f"Erreur lors de la sauvegarde de la crypto {crypto_name} dans la base de données.")
+            save_crypto(entry_id, crypto_name, crypto_id)
+            _LOGGER.info(f"Sauvegarde de la crypto {crypto_name} avec ID {crypto_id} dans la base de données réussie.")
         except Exception as e:
             _LOGGER.error(f"Exception lors de la sauvegarde de la crypto dans la base de données: {e}")
 
@@ -237,7 +220,7 @@ class PortfolioCryptoCoordinator(DataUpdateCoordinator):
                         _LOGGER.info(f"Cryptos chargées depuis la base de données: {cryptos}")
                         return cryptos
                     else:
-                        _LOGGER.error(f"Erreur lors du chargement des cryptos depuis la base de données pour l'ID d'entrée {entry_id}")
+                        _LOGGER.error(f"Erreur lors du chargement des cryptos depuis la base de données pour l'ID d'entrée {entry_id}. Statut: {response.status}, Réponse: {response_text}")
                         return []
         except Exception as e:
             _LOGGER.error(f"Exception lors du chargement des cryptos depuis la base de données pour l'ID d'entrée {entry_id}: {e}")
