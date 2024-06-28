@@ -7,7 +7,7 @@ import aiohttp
 import async_timeout
 import asyncio
 from .const import DOMAIN, COINGECKO_API_URL
-from .db import save_crypto, load_crypto_attributes, get_cryptos, create_tables_if_not_exists
+from .db import save_crypto, load_crypto_attributes, get_cryptos, create_table,  create_tables_if_not_exists
 
 _LOGGER = logging.getLogger(__name__)
 
