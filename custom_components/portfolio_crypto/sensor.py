@@ -49,14 +49,14 @@ class PortfolioCryptoCoordinator(DataUpdateCoordinator):
         self.config_entry = config_entry
         self._last_update = None
         _LOGGER.info(f"Coordinator initialized with update interval: {update_interval} minute(s)")
-        
+
     async def _async_update_data(self):
         now = datetime.now()
         if self._last_update is not None:
             elapsed = now - self._last_update
             _LOGGER.info(f"Data updated. {elapsed.total_seconds() / 60:.2f} minutes elapsed since last update.")
         self._last_update = now
-        
+
         _LOGGER.info("Fetching new data from API/database")
 
         # Fetch data from API or database
@@ -73,6 +73,7 @@ class PortfolioCryptoCoordinator(DataUpdateCoordinator):
 
         _LOGGER.info("New data fetched successfully")
         return data
+
 
     async def fetch_transactions(self):
         _LOGGER.info("Fetching transactions data")
@@ -96,16 +97,19 @@ class PortfolioCryptoCoordinator(DataUpdateCoordinator):
 
     async def fetch_crypto_data(self, crypto_id):
         _LOGGER.info(f"Fetching data for crypto ID: {crypto_id}")
+        crypto_attributes = load_crypto_attributes(self.config_entry.entry_id)
+        crypto = next((c for c in self.config_entry.options.get("cryptos", []) if c["id"] == crypto_id), None)
         return {
-            "crypto_id": crypto_id,  # Ajout de l'ID de la crypto
-            "crypto_name": next((crypto["name"] for crypto in self.config_entry.options.get("cryptos", []) if crypto["id"] == crypto_id), None),
-            "transactions": [],
-            "total_investment": 0,
-            "total_profit_loss": 0,
-            "total_profit_loss_percent": 0,
-            "total_value": 0
+            "crypto_id": crypto["id"] if crypto else None,
+            "crypto_name": crypto["name"] if crypto else None,
+            **crypto_attributes.get(crypto_id, {
+                "transactions": [],
+                "total_investment": 0,
+                "total_profit_loss": 0,
+                "total_profit_loss_percent": 0,
+                "total_value": 0,
+            })
         }
-
 
     async def add_crypto(self, crypto_name):
         crypto_id = await self.fetch_crypto_id(crypto_name)
@@ -246,8 +250,9 @@ class CryptoSensor(CoordinatorEntity, SensorEntity):
 
     async def async_update(self):
         await self.coordinator.async_request_refresh()
+        crypto = next((c for c in self.config_entry.options.get("cryptos", []) if c["id"] == self._crypto['id']), None)
         self._attributes.update({
-            "crypto_id": next((crypto["id"] for crypto in self.config_entry.options.get("cryptos", []) if crypto["id"] == self._crypto['id']), None),
-            "crypto_name": next((crypto["name"] for crypto in self.config_entry.options.get("cryptos", []) if crypto["id"] == self._crypto['id']), None),
+            "crypto_id": crypto["id"] if crypto else None,
+            "crypto_name": crypto["name"] if crypto else None,
         })
 
