@@ -84,12 +84,33 @@ class PortfolioCryptoOptionsFlowHandler(config_entries.OptionsFlow):
         if user_input is not None:
             crypto_name = user_input.get("crypto_name")
             crypto_id = user_input.get("crypto_id")
+
+            _LOGGER.error(f"crypto_name : {crypto_name}")
+            _LOGGER.error(f"crypto_id : {crypto_id}")
+
+            # Récupère les cryptomonnaies existantes et ajoute la nouvelle
             cryptos = self.config_entry.options.get("cryptos", [])
             cryptos.append({"name": crypto_name, "id": crypto_id})
+
+            _LOGGER.error(f"cryptos : {cryptos}")
+
+            # Met à jour les options de l'entrée de configuration
             self.hass.config_entries.async_update_entry(self.config_entry, options={**self.config_entry.options, "cryptos": cryptos})
 
-            # Reconfigurer les entités pour ajouter les nouvelles cryptomonnaies
+            # Reconfigure les entités pour ajouter les nouvelles cryptomonnaies
             await self.hass.config_entries.async_forward_entry_unload(self.config_entry, "sensor")
             await self.hass.config_entries.async_forward_entry_setup(self.config_entry, "sensor")
-            
+
+            # Appel du service add_crypto pour ajouter la cryptomonnaie à la base de données
+            await self.hass.services.async_call(
+                'portfolio_crypto',
+                'add_crypto',
+                {
+                    'entry_id': self.config_entry.entry_id,
+                    'crypto_name': crypto_name,
+                    'crypto_id': crypto_id
+                }
+            )
+
+            # Crée une nouvelle entrée
             return self.async_create_entry(title=crypto_name, data={})

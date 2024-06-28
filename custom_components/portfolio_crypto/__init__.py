@@ -172,8 +172,10 @@ class PortfolioCryptoCoordinator(DataUpdateCoordinator):
         }
 
     async def add_crypto(self, crypto_name):
+        _LOGGER.debug(f"Adding crypto {crypto_name}")
         crypto_id = await self.fetch_crypto_id(crypto_name)
         if crypto_id:
+            _LOGGER.debug(f"Found crypto ID {crypto_id} for {crypto_name}")
             cryptos = self.config_entry.options.get("cryptos", [])
             cryptos.append({"name": crypto_name, "id": crypto_id})
             self.hass.config_entries.async_update_entry(self.config_entry, options={**self.config_entry.options, "cryptos": cryptos})
@@ -186,6 +188,7 @@ class PortfolioCryptoCoordinator(DataUpdateCoordinator):
             await self.hass.config_entries.async_forward_entry_setup(self.config_entry, "sensor")
 
             return True
+        _LOGGER.error(f"Crypto {crypto_name} not found")
         return False
 
     async def fetch_crypto_id(self, crypto_name):
