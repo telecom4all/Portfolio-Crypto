@@ -65,6 +65,8 @@ def save_crypto(entry_id, crypto_name, crypto_id):
         ''', (entry_id, crypto_name, crypto_id))
         conn.commit()
         logging.info(f"Crypto {crypto_name} avec ID {crypto_id} sauvegardée pour l'entrée {entry_id}")
+    except sqlite3.IntegrityError:
+        logging.warning(f"Crypto {crypto_name} avec ID {crypto_id} existe déjà pour l'entrée {entry_id}")
     except Exception as e:
         logging.error(f"Erreur lors de la sauvegarde de la crypto pour l'entrée {entry_id}: {e}")
     finally:

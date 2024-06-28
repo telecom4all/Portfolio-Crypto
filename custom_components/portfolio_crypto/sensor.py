@@ -52,6 +52,7 @@ class PortfolioCryptoCoordinator(DataUpdateCoordinator):
         )
         self.config_entry = config_entry
         self._last_update = None
+
         _LOGGER.info(f"Coordinator initialized with update interval: {update_interval} minute(s)")
 
     async def _async_update_data(self):
@@ -72,6 +73,9 @@ class PortfolioCryptoCoordinator(DataUpdateCoordinator):
         data["total_value"] = await self.fetch_total_value()
 
         cryptos = self.config_entry.options.get("cryptos", [])
+        if not cryptos:
+            cryptos = get_cryptos(self.config_entry.entry_id)
+
         if isinstance(cryptos, list):
             for crypto in cryptos:
                 if isinstance(crypto, dict):
