@@ -81,6 +81,7 @@ class PortfolioCryptoOptionsFlowHandler(config_entries.OptionsFlow):
                     )
 
     async def async_step_confirm_add_crypto(self, user_input=None):
+        errors = {}
         if user_input is not None:
             crypto_name = user_input.get("crypto_name")
             crypto_id = user_input.get("crypto_id")
@@ -88,29 +89,52 @@ class PortfolioCryptoOptionsFlowHandler(config_entries.OptionsFlow):
             _LOGGER.error(f"crypto_name : {crypto_name}")
             _LOGGER.error(f"crypto_id : {crypto_id}")
 
-            # Récupère les cryptomonnaies existantes et ajoute la nouvelle
+            # Vérifier si la crypto est déjà enregistrée dans l'intégration
             cryptos = self.config_entry.options.get("cryptos", [])
-            cryptos.append({"name": crypto_name, "id": crypto_id})
+            if any(crypto["id"] == crypto_id for crypto in cryptos):
+                errors["base"] = "crypto_already_exists"
+            else:
+                # Vérifier si la crypto existe déjà dans la base de données
+                session = async_get_clientsession(self.hass)
+                async with session.get(f"http://localhost:5000/load_cryptos/{self.config_entry.entry_id}") as response:
+                    if response.status == 200:
+                        db_cryptos = await response.json()
+                        if any(crypto[1] == crypto_id for crypto in db_cryptos):  # Assurez-vous que la structure des données correspond à votre base de données
+                            errors["base"] = "crypto_already_in_db"
+                        else:
+                            # Ajoute la nouvelle crypto
+                            cryptos.append({"name": crypto_name, "id": crypto_id})
 
-            _LOGGER.error(f"cryptos : {cryptos}")
+                            _LOGGER.error(f"cryptos : {cryptos}")
 
-            # Met à jour les options de l'entrée de configuration
-            self.hass.config_entries.async_update_entry(self.config_entry, options={**self.config_entry.options, "cryptos": cryptos})
+                            # Met à jour les options de l'entrée de configuration
+                            self.hass.config_entries.async_update_entry(self.config_entry, options={**self.config_entry.options, "cryptos": cryptos})
 
-            # Reconfigure les entités pour ajouter les nouvelles cryptomonnaies
-            await self.hass.config_entries.async_forward_entry_unload(self.config_entry, "sensor")
-            await self.hass.config_entries.async_forward_entry_setup(self.config_entry, "sensor")
+                            # Reconfigure les entités pour ajouter les nouvelles cryptomonnaies
+                            await self.hass.config_entries.async_forward_entry_unload(self.config_entry, "sensor")
+                            await self.hass.config_entries.async_forward_entry_setup(self.config_entry, "sensor")
 
-            # Appel du service add_crypto pour ajouter la cryptomonnaie à la base de données
-            await self.hass.services.async_call(
-                'portfolio_crypto',
-                'add_crypto',
-                {
-                    'entry_id': self.config_entry.entry_id,
-                    'crypto_name': crypto_name,
-                    'crypto_id': crypto_id
-                }
-            )
+                            # Appel du service add_crypto pour ajouter la cryptomonnaie à la base de données
+                            await self.hass.services.async_call(
+                                'portfolio_crypto',
+                                'add_crypto',
+                                {
+                                    'entry_id': self.config_entry.entry_id,
+                                    'crypto_name': crypto_name,
+                                    'crypto_id': crypto_id
+                                }
+                            )
 
-            # Crée une nouvelle entrée
-            return self.async_create_entry(title=crypto_name, data={})
+                            # Crée une nouvelle entrée
+                            return self.async_create_entry(title=crypto_name, data={})
+                    else:
+                        errors["base"] = "db_error"
+
+        return self.async_show_form(
+            step_id="confirm_add_crypto",
+            data_schema=vol.Schema({
+                vol.Required("crypto_name", default=user_input.get("crypto_name"), description="Nom de la cryptomonnaie"): str,
+                vol.Required("crypto_id", default=user_input.get("crypto_id"), description="ID de la cryptomonnaie"): str,
+            }),
+            errors=errors,
+        )

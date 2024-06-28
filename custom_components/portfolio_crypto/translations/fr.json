@@ -46,5 +46,10 @@
             }
         }
     },
-    "wallet": "Portfolio"
+    "wallet": "Portfolio",
+    "errors": {
+        "crypto_already_exists": "La crypto-monnaie est déjà enregistrée dans l'intégration.",
+        "crypto_already_in_db": "La crypto-monnaie est déjà enregistrée dans la base de données.",
+        "db_error": "Erreur de communication avec la base de données."
+    }
 }
