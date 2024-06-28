@@ -110,7 +110,7 @@ class PortfolioCryptoCoordinator(DataUpdateCoordinator):
                 "total_value": 0,
             })
         }
-
+    
     async def add_crypto(self, crypto_name):
         crypto_id = await self.fetch_crypto_id(crypto_name)
         if crypto_id:
@@ -255,4 +255,3 @@ class CryptoSensor(CoordinatorEntity, SensorEntity):
             "crypto_id": crypto["id"] if crypto else None,
             "crypto_name": crypto["name"] if crypto else None,
         })
-
