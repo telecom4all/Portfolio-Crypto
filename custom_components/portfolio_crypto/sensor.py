@@ -7,7 +7,7 @@ import aiohttp
 import async_timeout
 import asyncio
 from .const import DOMAIN, COINGECKO_API_URL
-from .db import save_crypto
+from .db import save_crypto, load_crypto_attributes
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -26,13 +26,15 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 
     # Add sensors for each cryptocurrency in the portfolio
     cryptos = config_entry.options.get("cryptos", [])
+    crypto_attributes = load_crypto_attributes(config_entry.entry_id)
     for crypto in cryptos:
+        crypto_data = crypto_attributes.get(crypto["id"], {})
         # Create a new device for each cryptocurrency
-        entities.append(CryptoSensor(coordinator, config_entry, crypto, "transactions"))
-        entities.append(CryptoSensor(coordinator, config_entry, crypto, "total_investment"))
-        entities.append(CryptoSensor(coordinator, config_entry, crypto, "total_profit_loss"))
-        entities.append(CryptoSensor(coordinator, config_entry, crypto, "total_profit_loss_percent"))
-        entities.append(CryptoSensor(coordinator, config_entry, crypto, "total_value"))
+        entities.append(CryptoSensor(coordinator, config_entry, crypto, "transactions", crypto_data))
+        entities.append(CryptoSensor(coordinator, config_entry, crypto, "total_investment", crypto_data))
+        entities.append(CryptoSensor(coordinator, config_entry, crypto, "total_profit_loss", crypto_data))
+        entities.append(CryptoSensor(coordinator, config_entry, crypto, "total_profit_loss_percent", crypto_data))
+        entities.append(CryptoSensor(coordinator, config_entry, crypto, "total_value", crypto_data))
 
     async_add_entities(entities)
 
@@ -202,7 +204,7 @@ class PortfolioCryptoSensor(CoordinatorEntity, SensorEntity):
         await self.coordinator.async_request_refresh()
 
 class CryptoSensor(CoordinatorEntity, SensorEntity):
-    def __init__(self, coordinator, config_entry, crypto, sensor_type):
+    def __init__(self, coordinator, config_entry, crypto, sensor_type, crypto_data):
         super().__init__(coordinator)
         self.coordinator = coordinator
         self.config_entry = config_entry
@@ -213,6 +215,7 @@ class CryptoSensor(CoordinatorEntity, SensorEntity):
             "crypto_id": crypto['id'],
             "crypto_name": crypto['name'],
         }
+        self._attributes.update(crypto_data)
 
     @property
     def name(self):
