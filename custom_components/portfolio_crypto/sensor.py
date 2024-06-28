@@ -7,7 +7,7 @@ import aiohttp
 import async_timeout
 import asyncio
 from .const import DOMAIN, COINGECKO_API_URL
-from .db import save_crypto, load_crypto_attributes
+from .db import save_crypto, load_crypto_attributes, get_cryptos
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -26,6 +26,9 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 
     # Add sensors for each cryptocurrency in the portfolio
     cryptos = config_entry.options.get("cryptos", [])
+    if not cryptos:
+        cryptos = get_cryptos(config_entry.entry_id)
+
     crypto_attributes = load_crypto_attributes(config_entry.entry_id)
     for crypto in cryptos:
         if isinstance(crypto, dict):
