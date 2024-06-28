@@ -45,6 +45,16 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
 
     await hass.config_entries.async_forward_entry_setup(entry, "sensor")
 
+    async def async_add_crypto_service(call):
+        """Service pour ajouter une nouvelle crypto-monnaie"""
+        name = call.data.get("crypto_name")
+        entry_id = call.data.get("entry_id")
+        coordinator = hass.data[DOMAIN].get(entry_id)
+        if coordinator:
+            success = await coordinator.add_crypto(name)
+            if not success:
+                _LOGGER.error(f"Crypto {name} introuvable")
+
     hass.services.async_register(
         DOMAIN, "add_crypto", async_add_crypto_service
     )
@@ -72,16 +82,6 @@ async def initialize_database(entry: ConfigEntry, hass: HomeAssistant):
                     _LOGGER.error(f"Échec de l'initialisation de la base de données pour l'ID d'entrée: {entry.entry_id}, code de statut: {response.status}, texte de la réponse: {response_text}")
     except Exception as e:
         _LOGGER.error(f"Exception survenue lors de l'initialisation de la base de données pour l'ID d'entrée: {entry.entry_id}: {e}")
-
-async def async_add_crypto_service(call):
-    """Service pour ajouter une nouvelle crypto-monnaie"""
-    name = call.data.get("crypto_name")
-    entry_id = call.data.get("entry_id")
-    coordinator = hass.data[DOMAIN].get(entry_id)
-    if coordinator:
-        success = await coordinator.add_crypto(name)
-        if not success:
-            _LOGGER.error(f"Crypto {name} introuvable")
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
     """Décharger une entrée configurée"""
