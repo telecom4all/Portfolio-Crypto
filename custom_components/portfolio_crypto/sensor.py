@@ -7,7 +7,7 @@ import aiohttp
 import async_timeout
 import asyncio
 from .const import DOMAIN, COINGECKO_API_URL
-from .db import save_crypto, load_crypto_attributes, get_cryptos
+from .db import save_crypto, load_crypto_attributes, get_cryptos, create_tables_if_not_exists
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -25,16 +25,20 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     entities.append(PortfolioCryptoSensor(coordinator, config_entry, "total_value"))
 
     # Add sensors for each cryptocurrency in the portfolio
-    cryptos = get_cryptos(config_entry.entry_id)
+    cryptos = config_entry.options.get("cryptos", [])
+    if not cryptos:
+        cryptos = get_cryptos(config_entry.entry_id)
+
     crypto_attributes = load_crypto_attributes(config_entry.entry_id)
     for crypto in cryptos:
-        crypto_data = crypto_attributes.get(crypto[1], {})
-        # Create a new device for each cryptocurrency
-        entities.append(CryptoSensor(coordinator, config_entry, crypto, "transactions", crypto_data))
-        entities.append(CryptoSensor(coordinator, config_entry, crypto, "total_investment", crypto_data))
-        entities.append(CryptoSensor(coordinator, config_entry, crypto, "total_profit_loss", crypto_data))
-        entities.append(CryptoSensor(coordinator, config_entry, crypto, "total_profit_loss_percent", crypto_data))
-        entities.append(CryptoSensor(coordinator, config_entry, crypto, "total_value", crypto_data))
+        if isinstance(crypto, dict):
+            crypto_data = crypto_attributes.get(crypto["id"], {})
+            # Create a new device for each cryptocurrency
+            entities.append(CryptoSensor(coordinator, config_entry, crypto, "transactions", crypto_data))
+            entities.append(CryptoSensor(coordinator, config_entry, crypto, "total_investment", crypto_data))
+            entities.append(CryptoSensor(coordinator, config_entry, crypto, "total_profit_loss", crypto_data))
+            entities.append(CryptoSensor(coordinator, config_entry, crypto, "total_profit_loss_percent", crypto_data))
+            entities.append(CryptoSensor(coordinator, config_entry, crypto, "total_value", crypto_data))
 
     async_add_entities(entities)
 
@@ -48,6 +52,7 @@ class PortfolioCryptoCoordinator(DataUpdateCoordinator):
         )
         self.config_entry = config_entry
         self._last_update = None
+
         _LOGGER.info(f"Coordinator initialized with update interval: {update_interval} minute(s)")
 
     async def _async_update_data(self):
@@ -59,115 +64,154 @@ class PortfolioCryptoCoordinator(DataUpdateCoordinator):
 
         _LOGGER.info("Fetching new data from API/database")
 
-        # Fetch data from the database
-        transactions = self.fetch_transactions_data()
-        total_investment = self.fetch_total_investment_data()
-        total_profit_loss = self.fetch_total_profit_loss_data()
-        total_profit_loss_percent = self.fetch_total_profit_loss_percent_data()
-        total_value = self.fetch_total_value_data()
+        # Fetch data from API or database
+        data = {}
+        data["transactions"] = await self.fetch_transactions()
+        data["total_investment"] = await self.fetch_total_investment()
+        data["total_profit_loss"] = await self.fetch_total_profit_loss()
+        data["total_profit_loss_percent"] = await self.fetch_total_profit_loss_percent()
+        data["total_value"] = await self.fetch_total_value()
 
-        # Fetch data for each cryptocurrency
-        cryptos = get_cryptos(self.config_entry.entry_id)
-        crypto_data = {}
-        for crypto in cryptos:
-            crypto_data[crypto[1]] = await self.fetch_crypto_data(crypto[1])
+        cryptos = self.config_entry.options.get("cryptos", [])
+        if not cryptos:
+            create_tables_if_not_exists(self.config_entry.entry_id)
+            cryptos = get_cryptos(self.config_entry.entry_id)
 
-        return {
-            "transactions": transactions,
-            "total_investment": total_investment,
-            "total_profit_loss": total_profit_loss,
-            "total_profit_loss_percent": total_profit_loss_percent,
-            "total_value": total_value,
-            "crypto_data": crypto_data
-        }
+        if isinstance(cryptos, list):
+            for crypto in cryptos:
+                if isinstance(crypto, dict):
+                    _LOGGER.info(f"Fetching data for crypto ID: {crypto['id']}")
+                    crypto_data = await self.fetch_crypto_data(crypto["id"])
+                    data[crypto["id"]] = crypto_data
+
+        _LOGGER.info("New data fetched successfully")
+        return data
+
+    async def fetch_transactions(self):
+        _LOGGER.info("Fetching transactions data")
+        return []
+
+    async def fetch_total_investment(self):
+        _LOGGER.info("Fetching total investment data")
+        return 0
+
+    async def fetch_total_profit_loss(self):
+        _LOGGER.info("Fetching total profit/loss data")
+        return 0
+
+    async def fetch_total_profit_loss_percent(self):
+        _LOGGER.info("Fetching total profit/loss percent data")
+        return 0
+
+    async def fetch_total_value(self):
+        _LOGGER.info("Fetching total value data")
+        return 0
 
     async def fetch_crypto_data(self, crypto_id):
-        url = f"{COINGECKO_API_URL}/coins/{crypto_id}"
-        async with aiohttp.ClientSession() as session:
-            async with async_timeout.timeout(10):
-                async with session.get(url) as response:
-                    if response.status != 200:
-                        _LOGGER.error(f"Error fetching data for crypto ID: {crypto_id}. Status: {response.status}")
-                        return None
-                    data = await response.json()
-                    return data
-
-    def fetch_transactions_data(self):
-        return load_crypto_attributes(self.config_entry.entry_id)
-
-    def fetch_total_investment_data(self):
-        # Calculer l'investissement total
-        transactions = self.fetch_transactions_data()
-        total_investment = sum(
-            transaction['price_usd'] * transaction['quantity']
-            for transaction in transactions
-            if transaction['transaction_type'] == 'buy'
-        )
-        return total_investment
-
-    def fetch_total_profit_loss_data(self):
-        # Calculer le profit/perte total
-        transactions = self.fetch_transactions_data()
-        total_investment = self.fetch_total_investment_data()
-        current_value = self.fetch_total_value_data()
-        total_profit_loss = current_value - total_investment
-        return total_profit_loss
-
-    def fetch_total_profit_loss_percent_data(self):
-        # Calculer le pourcentage de profit/perte
-        total_investment = self.fetch_total_investment_data()
-        total_profit_loss = self.fetch_total_profit_loss_data()
-        if total_investment == 0:
-            return 0
-        return (total_profit_loss / total_investment) * 100
-
-    def fetch_total_value_data(self):
-        # Calculer la valeur totale du portefeuille
-        crypto_data = self.data["crypto_data"]
-        total_value = sum(
-            crypto['market_data']['current_price']['usd'] * self.fetch_transactions_data()[crypto_id]['quantity']
-            for crypto_id, crypto in crypto_data.items()
-        )
-        return total_value
+        _LOGGER.info(f"Fetching data for crypto ID: {crypto_id}")
+        crypto_attributes = load_crypto_attributes(self.config_entry.entry_id)
+        crypto = next((c for c in self.config_entry.options.get("cryptos", []) if c["id"] == crypto_id), None)
+        return {
+            "crypto_id": crypto["id"] if crypto else None,
+            "crypto_name": crypto["name"] if crypto else None,
+            **crypto_attributes.get(crypto_id, {
+                "transactions": [],
+                "total_investment": 0,
+                "total_profit_loss": 0,
+                "total_profit_loss_percent": 0,
+                "total_value": 0,
+            })
+        }
 
 class PortfolioCryptoSensor(CoordinatorEntity, SensorEntity):
     def __init__(self, coordinator, config_entry, sensor_type):
         super().__init__(coordinator)
+        self.coordinator = coordinator
         self.config_entry = config_entry
-        self.sensor_type = sensor_type
-        self._attr_unique_id = f"{config_entry.entry_id}_{sensor_type}"
-        self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, config_entry.entry_id)},
-            name="Portfolio Crypto",
-            manufacturer="Your Name",
-        )
+        self._sensor_type = sensor_type
+        self._name = f"{config_entry.title} {sensor_type}"
+        self._attributes = {
+            "entry_id": config_entry.entry_id,
+        }
 
     @property
     def name(self):
-        return f"Portfolio {self.sensor_type.replace('_', ' ').title()}"
+        return self._name
 
     @property
     def state(self):
-        return self.coordinator.data[self.sensor_type]
+        return self.coordinator.data.get(self._sensor_type)
+
+    @property
+    def unique_id(self):
+        return f"{self.config_entry.entry_id}_{self._sensor_type}"
+
+    @property
+    def device_info(self):
+        return DeviceInfo(
+            identifiers={(DOMAIN, self.config_entry.entry_id)},
+            name=self.config_entry.title,
+            manufacturer="Custom",
+            model="Portfolio Crypto",
+            sw_version="1.0",
+            via_device=(DOMAIN, self.config_entry.entry_id),
+        )
+
+    @property
+    def extra_state_attributes(self):
+        return self._attributes
+
+    async def async_update(self):
+        self._attributes = {
+            "entry_id": self.config_entry.entry_id,
+        }
+        await self.coordinator.async_request_refresh()
 
 class CryptoSensor(CoordinatorEntity, SensorEntity):
     def __init__(self, coordinator, config_entry, crypto, sensor_type, crypto_data):
         super().__init__(coordinator)
+        self.coordinator = coordinator
         self.config_entry = config_entry
-        self.crypto = crypto
-        self.sensor_type = sensor_type
-        self.crypto_data = crypto_data
-        self._attr_unique_id = f"{config_entry.entry_id}_{crypto[1]}_{sensor_type}"
-        self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, f"{config_entry.entry_id}_{crypto[1]}")},
-            name=f"Portfolio {crypto_data['crypto_name']}",
-            manufacturer="Your Name",
-        )
+        self._crypto = crypto
+        self._sensor_type = sensor_type
+        self._name = f"{crypto['name']} {sensor_type}"
+        self._attributes = {
+            "crypto_id": crypto['id'],
+            "crypto_name": crypto['name'],
+        }
+        self._attributes.update(crypto_data)
 
     @property
     def name(self):
-        return f"{self.crypto_data['crypto_name']} {self.sensor_type.replace('_', ' ').title()}"
+        return self._name
 
     @property
     def state(self):
-        return self.coordinator.data["crypto_data"][self.crypto[1]][self.sensor_type]
+        return self.coordinator.data.get(self._crypto['id'], {}).get(self._sensor_type)
+
+    @property
+    def unique_id(self):
+        return f"{self.config_entry.entry_id}_{self._crypto['id']}_{self._sensor_type}"
+
+    @property
+    def device_info(self):
+        return DeviceInfo(
+            identifiers={(DOMAIN, self._crypto['id'])},
+            name=self._crypto['name'],
+            manufacturer="Custom",
+            model="Portfolio Crypto",
+            sw_version="1.0",
+            via_device=(DOMAIN, self.config_entry.entry_id),
+        )
+
+    @property
+    def extra_state_attributes(self):
+        return self._attributes
+
+    async def async_update(self):
+        await self.coordinator.async_request_refresh()
+        crypto = next((c for c in self.config_entry.options.get("cryptos", []) if c["id"] == self._crypto['id']), None)
+        self._attributes.update({
+            "crypto_id": crypto["id"] if crypto else None,
+            "crypto_name": crypto["name"] if crypto else None,
+        })
