@@ -72,6 +72,7 @@ class PortfolioCryptoCoordinator(DataUpdateCoordinator):
         if isinstance(cryptos, list):
             for crypto in cryptos:
                 if isinstance(crypto, dict):
+                    _LOGGER.info(f"Fetching data for crypto ID: {crypto['id']}")
                     crypto_data = await self.fetch_crypto_data(crypto["id"])
                     data[crypto["id"]] = crypto_data
 
