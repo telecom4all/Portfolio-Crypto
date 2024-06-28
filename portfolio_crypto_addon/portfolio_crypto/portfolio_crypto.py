@@ -10,7 +10,7 @@ from datetime import datetime, timedelta
 import logging
 import time
 from flask import Flask, jsonify, request
-from .db import add_transaction, get_transactions, delete_transaction, update_transaction, get_crypto_transactions, create_table, create_crypto_table, save_crypto, get_cryptos
+from .db import add_transaction, get_transactions, delete_transaction, update_transaction, get_crypto_transactions, save_crypto, get_cryptos
 import os
 
 # Configurer les logs
@@ -30,8 +30,6 @@ def initialize():
     if not entry_id:
         return jsonify({"error": "entry_id is required"}), 400
     try:
-        create_table(entry_id)
-        create_crypto_table(entry_id)
         logging.info(f"Portfolio initialisé avec succès pour l'ID d'entrée: {entry_id}")
         return jsonify({"message": "Database initialized"}), 200
     except Exception as e:
