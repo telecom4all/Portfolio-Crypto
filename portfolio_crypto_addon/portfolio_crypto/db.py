@@ -11,11 +11,11 @@ def get_database_path(entry_id):
     logging.info(f"Chemin de la base de données pour l'entrée {entry_id}: {db_path}")
     return db_path
 
-def create_table(entry_id):
+def create_tables_if_not_exists(entry_id):
     db_path = get_database_path(entry_id)
+    conn = sqlite3.connect(db_path)
+    cursor = conn.cursor()
     try:
-        conn = sqlite3.connect(db_path)
-        cursor = conn.cursor()
         cursor.execute('''
             CREATE TABLE IF NOT EXISTS transactions (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -29,17 +29,7 @@ def create_table(entry_id):
                 historical_price REAL
             )
         ''')
-        conn.commit()
-        conn.close()
         logging.info(f"Table 'transactions' créée avec succès pour l'entrée {entry_id}")
-    except Exception as e:
-        logging.error(f"Erreur lors de la création de la table 'transactions' pour l'entrée {entry_id}: {e}")
-
-def create_crypto_table(entry_id):
-    db_path = get_database_path(entry_id)
-    try:
-        conn = sqlite3.connect(db_path)
-        cursor = conn.cursor()
         cursor.execute('''
             CREATE TABLE IF NOT EXISTS cryptos (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -48,14 +38,15 @@ def create_crypto_table(entry_id):
                 crypto_id TEXT
             )
         ''')
-        conn.commit()
-        conn.close()
         logging.info(f"Table 'cryptos' créée avec succès pour l'entrée {entry_id}")
+        conn.commit()
     except Exception as e:
-        logging.error(f"Erreur lors de la création de la table 'cryptos' pour l'entrée {entry_id}: {e}")
+        logging.error(f"Erreur lors de la création des tables pour l'entrée {entry_id}: {e}")
+    finally:
+        conn.close()
 
 def save_crypto(entry_id, crypto_name, crypto_id):
-    create_crypto_table(entry_id)  # S'assurer que la table est créée avant d'ajouter des données
+    create_tables_if_not_exists(entry_id)
     db_path = get_database_path(entry_id)
     try:
         conn = sqlite3.connect(db_path)
@@ -65,7 +56,6 @@ def save_crypto(entry_id, crypto_name, crypto_id):
             VALUES (?, ?, ?)
         ''', (entry_id, crypto_name, crypto_id))
         conn.commit()
-        conn.close()
         logging.info(f"Crypto {crypto_name} avec ID {crypto_id} sauvegardée pour l'entrée {entry_id}")
     except sqlite3.IntegrityError:
         logging.warning(f"Crypto {crypto_name} avec ID {crypto_id} existe déjà pour l'entrée {entry_id}")
@@ -75,6 +65,7 @@ def save_crypto(entry_id, crypto_name, crypto_id):
         conn.close()
 
 def get_cryptos(entry_id):
+    create_tables_if_not_exists(entry_id)
     db_path = get_database_path(entry_id)
     conn = sqlite3.connect(db_path)
     cursor = conn.cursor()
@@ -85,7 +76,7 @@ def get_cryptos(entry_id):
 
 def add_transaction(entry_id, crypto_name, crypto_id, quantity, price_usd, transaction_type, location, date, historical_price):
     """Ajouter une transaction à la base de données"""
-    create_table(entry_id)  # Assurer que la table est créée avant d'ajouter des données
+    create_tables_if_not_exists(entry_id)
     db_path = get_database_path(entry_id)
     conn = sqlite3.connect(db_path)
     cursor = conn.cursor()
@@ -98,6 +89,7 @@ def add_transaction(entry_id, crypto_name, crypto_id, quantity, price_usd, trans
 
 def get_transactions(entry_id):
     """Récupérer toutes les transactions pour un ID d'entrée donné"""
+    create_tables_if_not_exists(entry_id)
     db_path = get_database_path(entry_id)
     conn = sqlite3.connect(db_path)
     cursor = conn.cursor()
@@ -121,6 +113,7 @@ def get_all_transactions():
 
 def delete_transaction(entry_id, transaction_id):
     """Supprimer une transaction de la base de données"""
+    create_tables_if_not_exists(entry_id)
     db_path = get_database_path(entry_id)
     conn = sqlite3.connect(db_path)
     cursor = conn.cursor()
@@ -130,6 +123,7 @@ def delete_transaction(entry_id, transaction_id):
 
 def update_transaction(entry_id, transaction_id, crypto_name, crypto_id, quantity, price_usd, transaction_type, location, date, historical_price):
     """Mettre à jour une transaction dans la base de données"""
+    create_tables_if_not_exists(entry_id)
     db_path = get_database_path(entry_id)
     conn = sqlite3.connect(db_path)
     cursor = conn.cursor()
@@ -143,6 +137,7 @@ def update_transaction(entry_id, transaction_id, crypto_name, crypto_id, quantit
 
 def get_crypto_transactions(entry_id, crypto_name):
     """Récupérer les transactions d'une crypto-monnaie spécifique pour un ID d'entrée donné"""
+    create_tables_if_not_exists(entry_id)
     db_path = get_database_path(entry_id)
     conn = sqlite3.connect(db_path)
     cursor = conn.cursor()
@@ -153,6 +148,7 @@ def get_crypto_transactions(entry_id, crypto_name):
 
 def load_crypto_attributes(entry_id):
     """Charger les attributs des cryptos depuis la base de données pour un ID d'entrée donné"""
+    create_tables_if_not_exists(entry_id)
     db_path = get_database_path(entry_id)
     conn = sqlite3.connect(db_path)
     cursor = conn.cursor()
