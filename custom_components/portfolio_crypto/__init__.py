@@ -108,6 +108,7 @@ class PortfolioCryptoCoordinator(DataUpdateCoordinator):
         self.config_entry = config_entry
         self._last_update = None
         _LOGGER.info(f"Coordinator initialized with update interval: {update_interval} minute(s)")
+
         
     async def _async_update_data(self):
         now = datetime.now()
@@ -115,7 +116,7 @@ class PortfolioCryptoCoordinator(DataUpdateCoordinator):
             elapsed = now - self._last_update
             _LOGGER.info(f"Data updated. {elapsed.total_seconds() / 60:.2f} minutes elapsed since last update.")
         self._last_update = now
-        
+
         _LOGGER.info("Fetching new data from API/database")
 
         # Fetch data from API or database
@@ -123,6 +124,7 @@ class PortfolioCryptoCoordinator(DataUpdateCoordinator):
 
         _LOGGER.info("New data fetched successfully")
         return data
+
 
     async def fetch_all_data(self):
         """Fetch all necessary data."""
@@ -157,16 +159,20 @@ class PortfolioCryptoCoordinator(DataUpdateCoordinator):
     async def fetch_total_value(self):
         _LOGGER.info("Fetching total value data")
         return 0
-
+    
     async def fetch_crypto_data(self, crypto_id):
         _LOGGER.info(f"Fetching data for crypto ID: {crypto_id}")
-        return {
+        # Reload data from database if available
+        crypto_attributes = load_crypto_attributes(self.config_entry.entry_id)
+        return crypto_attributes.get(crypto_id, {
             "transactions": [],
             "total_investment": 0,
             "total_profit_loss": 0,
             "total_profit_loss_percent": 0,
-            "total_value": 0
-        }
+            "total_value": 0,
+            "crypto_id": next((crypto["id"] for crypto in self.config_entry.options.get("cryptos", []) if crypto["id"] == crypto_id), None),
+            "crypto_name": next((crypto["name"] for crypto in self.config_entry.options.get("cryptos", []) if crypto["id"] == crypto_id), None)
+        })
 
     async def add_crypto(self, crypto_name):
         _LOGGER.debug(f"Adding crypto {crypto_name}")

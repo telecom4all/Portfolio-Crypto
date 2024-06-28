@@ -247,6 +247,7 @@ class CryptoSensor(CoordinatorEntity, SensorEntity):
     async def async_update(self):
         await self.coordinator.async_request_refresh()
         self._attributes.update({
-            "crypto_id": self._crypto['id'],
-            "crypto_name": self._crypto['name'],
+            "crypto_id": next((crypto["id"] for crypto in self.config_entry.options.get("cryptos", []) if crypto["id"] == self._crypto['id']), None),
+            "crypto_name": next((crypto["name"] for crypto in self.config_entry.options.get("cryptos", []) if crypto["id"] == self._crypto['id']), None),
         })
+
