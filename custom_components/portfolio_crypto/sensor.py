@@ -242,14 +242,11 @@ class CryptoSensor(CoordinatorEntity, SensorEntity):
 
     @property
     def extra_state_attributes(self):
-        return {
-            "crypto_id": self._crypto['id'],
-            "crypto_name": self._crypto['name'],
-        }
+        return self._attributes
 
     async def async_update(self):
-        self._attributes = {
+        await self.coordinator.async_request_refresh()
+        self._attributes.update({
             "crypto_id": self._crypto['id'],
             "crypto_name": self._crypto['name'],
-        }
-        await self.coordinator.async_request_refresh()
+        })
