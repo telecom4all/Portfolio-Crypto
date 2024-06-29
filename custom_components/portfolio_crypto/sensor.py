@@ -29,15 +29,29 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     cryptos = config_entry.options.get("cryptos", [])
     crypto_attributes = load_crypto_attributes(config_entry.entry_id)
     for crypto in cryptos:
-        crypto_data = crypto_attributes.get(crypto["id"], {})
+        if isinstance(crypto, dict) and "id" in crypto:
+            crypto_id = crypto["id"]
+            crypto_name = crypto["name"]
+            crypto_data = crypto_attributes.get(crypto_id, {})
+        elif isinstance(crypto, list) and len(crypto) > 1:
+            crypto_id = crypto[1]
+            crypto_name = crypto[0]
+            crypto_data = crypto_attributes.get(crypto_id, {})
+        else:
+            _LOGGER.error(f"Le format de 'crypto' est incorrect: {crypto}")
+            continue
+
+        
         # Create a new device for each cryptocurrency
-        entities.append(CryptoSensor(coordinator, config_entry, crypto, "transactions", crypto_data))
-        entities.append(CryptoSensor(coordinator, config_entry, crypto, "total_investment", crypto_data))
-        entities.append(CryptoSensor(coordinator, config_entry, crypto, "total_profit_loss", crypto_data))
-        entities.append(CryptoSensor(coordinator, config_entry, crypto, "total_profit_loss_percent", crypto_data))
-        entities.append(CryptoSensor(coordinator, config_entry, crypto, "total_value", crypto_data))
+        entities.append(CryptoSensor(coordinator, config_entry, {"name": crypto_name, "id": crypto_id}, "transactions", crypto_data))
+        entities.append(CryptoSensor(coordinator, config_entry, {"name": crypto_name, "id": crypto_id}, "total_investment", crypto_data))
+        entities.append(CryptoSensor(coordinator, config_entry, {"name": crypto_name, "id": crypto_id}, "total_profit_loss", crypto_data))
+        entities.append(CryptoSensor(coordinator, config_entry, {"name": crypto_name, "id": crypto_id}, "total_profit_loss_percent", crypto_data))
+        entities.append(CryptoSensor(coordinator, config_entry, {"name": crypto_name, "id": crypto_id}, "total_value", crypto_data))
 
     async_add_entities(entities)
+
+
 
 class PortfolioCryptoCoordinator(DataUpdateCoordinator):
     def __init__(self, hass, config_entry, update_interval):
@@ -67,12 +81,9 @@ class PortfolioCryptoCoordinator(DataUpdateCoordinator):
         data["total_profit_loss"] = await self.fetch_total_profit_loss()
         data["total_profit_loss_percent"] = await self.fetch_total_profit_loss_percent()
         data["total_value"] = await self.fetch_total_value()
-        _LOGGER.error("-------------------")
-        _LOGGER.error(f"self.config_entry.options =  {self.config_entry.options}")
-
+        
         for crypto in self.config_entry.options.get("cryptos", []):
-            _LOGGER.error(f"crypto =  {crypto}")
-
+           
             if isinstance(crypto, dict) and "id" in crypto:
                 # crypto est un dictionnaire
                 crypto_id = crypto["id"]
@@ -120,13 +131,18 @@ class PortfolioCryptoCoordinator(DataUpdateCoordinator):
         return 0
 
     async def fetch_crypto_data(self, crypto_id):
-        _LOGGER.error(f"Fetching data for crypto ID: {crypto_id}")
+        
         crypto_attributes = load_crypto_attributes(self.config_entry.entry_id)
-        _LOGGER.error(f"crypto_attributes = {crypto_attributes}")
-        crypto = next((c for c in self.config_entry.options.get("cryptos", []) if c["id"] == crypto_id), None)
+        
+
+        # Adapter la logique pour gérer les deux cas
+        crypto = next((c for c in self.config_entry.options.get("cryptos", []) 
+                    if (isinstance(c, dict) and c.get("id") == crypto_id) or 
+                        (isinstance(c, list) and len(c) > 1 and c[1] == crypto_id)), None)
+
         return {
-            "crypto_id": crypto["id"] if crypto else None,
-            "crypto_name": crypto["name"] if crypto else None,
+            "crypto_id": crypto_id if crypto else None,
+            "crypto_name": crypto["name"] if isinstance(crypto, dict) else (crypto[0] if isinstance(crypto, list) and len(crypto) > 0 else None),
             **crypto_attributes.get(crypto_id, {
                 "transactions": [],
                 "total_investment": 0,

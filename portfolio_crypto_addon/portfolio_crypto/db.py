@@ -161,15 +161,13 @@ def get_crypto_transactions(entry_id, crypto_name):
 
 def load_crypto_attributes(entry_id):
     """Charger les attributs des cryptos depuis la base de données pour un ID d'entrée donné"""
-    logging.info(f"load_crypto_attributes : {entry_id}")
+   
     create_crypto_table(entry_id)
     conn = sqlite3.connect(get_database_path(entry_id))
     cursor = conn.cursor()
     cursor.execute('SELECT crypto_name, crypto_id FROM cryptos WHERE entry_id = ?', (entry_id,))
     cryptos = cursor.fetchall()
-    logging.info(f"-----------------------------------------")
-    logging.info(cryptos)
-    logging.info(f"--------------------------")
+   
     conn.close()
     return {crypto_id: {'crypto_name': crypto_name, 'crypto_id': crypto_id} for crypto_name, crypto_id in cryptos}
 
