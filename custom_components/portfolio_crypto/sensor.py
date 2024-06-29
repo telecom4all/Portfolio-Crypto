@@ -73,20 +73,29 @@ class PortfolioCryptoCoordinator(DataUpdateCoordinator):
         for crypto in self.config_entry.options.get("cryptos", []):
             _LOGGER.error(f"crypto =  {crypto}")
 
-            # Vérifier que c'est bien une liste avec au moins deux éléments
-            if isinstance(crypto, list) and len(crypto) > 1:
+            if isinstance(crypto, dict) and "id" in crypto:
+                # crypto est un dictionnaire
+                crypto_id = crypto["id"]
+                _LOGGER.info(f"crypto_id = {crypto_id}")
+
+                # Fetch crypto data using the ID
+                crypto_data = await self.fetch_crypto_data(crypto_id)
+                data[crypto_id] = crypto_data
+            elif isinstance(crypto, list) and len(crypto) > 1:
+                # crypto est une liste
                 crypto_id = crypto[1]  # Récupérer l'ID de la crypto (deuxième élément de la liste)
-                _LOGGER.error(f"crypto_id = {crypto_id}")
+                _LOGGER.info(f"crypto_id = {crypto_id}")
 
                 # Fetch crypto data using the ID
                 crypto_data = await self.fetch_crypto_data(crypto_id)
                 data[crypto_id] = crypto_data
             else:
-                _LOGGER.error(f"La liste 'crypto' ne contient pas assez d'éléments: {crypto}")
+                _LOGGER.error(f"Le format de 'crypto' est incorrect: {crypto}")
 
         _LOGGER.info("-------------------")
         _LOGGER.info("New data fetched successfully")
         return data
+
 
 
 
