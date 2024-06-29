@@ -68,6 +68,7 @@ class PortfolioCryptoCoordinator(DataUpdateCoordinator):
         data["total_value"] = await self.fetch_total_value()
 
         for crypto in self.config_entry.options.get("cryptos", []):
+            _LOGGER.info(crypto)
             crypto_data = await self.fetch_crypto_data(crypto["id"])
             data[crypto["id"]] = crypto_data
 
