@@ -27,3 +27,4 @@ EXPOSE 5000
 
 # Commande pour exécuter l'application
 CMD ["/app/run.sh"]
+

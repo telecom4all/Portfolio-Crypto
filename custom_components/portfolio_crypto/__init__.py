@@ -10,6 +10,7 @@ import os
 from .const import DOMAIN, COINGECKO_API_URL
 from .db import save_crypto, load_crypto_attributes
 
+
 _LOGGER = logging.getLogger(__name__)
 
 # Configurer la journalisation pour écrire dans un fichier
@@ -62,6 +63,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
 
     return True
 
+
 async def initialize_database(entry: ConfigEntry, hass: HomeAssistant):
     """Initialize the database for the new portfolio by calling the addon service."""
     try:
@@ -107,6 +109,7 @@ class PortfolioCryptoCoordinator(DataUpdateCoordinator):
         self._last_update = None
         _LOGGER.info(f"Coordinator initialized with update interval: {update_interval} minute(s)")
 
+        
     async def _async_update_data(self):
         now = datetime.now()
         if self._last_update is not None:
@@ -121,6 +124,7 @@ class PortfolioCryptoCoordinator(DataUpdateCoordinator):
 
         _LOGGER.info("New data fetched successfully")
         return data
+
 
     async def fetch_all_data(self):
         """Fetch all necessary data."""

@@ -7,7 +7,7 @@ import aiohttp
 import async_timeout
 import asyncio
 from .const import DOMAIN, COINGECKO_API_URL
-from .db import save_crypto, load_crypto_attributes, get_cryptos, create_table,  create_tables_if_not_exists
+from .db import save_crypto, load_crypto_attributes
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -26,19 +26,15 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 
     # Add sensors for each cryptocurrency in the portfolio
     cryptos = config_entry.options.get("cryptos", [])
-    if not cryptos:
-        cryptos = get_cryptos(config_entry.entry_id)
-
     crypto_attributes = load_crypto_attributes(config_entry.entry_id)
     for crypto in cryptos:
-        if isinstance(crypto, dict):
-            crypto_data = crypto_attributes.get(crypto["id"], {})
-            # Create a new device for each cryptocurrency
-            entities.append(CryptoSensor(coordinator, config_entry, crypto, "transactions", crypto_data))
-            entities.append(CryptoSensor(coordinator, config_entry, crypto, "total_investment", crypto_data))
-            entities.append(CryptoSensor(coordinator, config_entry, crypto, "total_profit_loss", crypto_data))
-            entities.append(CryptoSensor(coordinator, config_entry, crypto, "total_profit_loss_percent", crypto_data))
-            entities.append(CryptoSensor(coordinator, config_entry, crypto, "total_value", crypto_data))
+        crypto_data = crypto_attributes.get(crypto["id"], {})
+        # Create a new device for each cryptocurrency
+        entities.append(CryptoSensor(coordinator, config_entry, crypto, "transactions", crypto_data))
+        entities.append(CryptoSensor(coordinator, config_entry, crypto, "total_investment", crypto_data))
+        entities.append(CryptoSensor(coordinator, config_entry, crypto, "total_profit_loss", crypto_data))
+        entities.append(CryptoSensor(coordinator, config_entry, crypto, "total_profit_loss_percent", crypto_data))
+        entities.append(CryptoSensor(coordinator, config_entry, crypto, "total_value", crypto_data))
 
     async_add_entities(entities)
 
@@ -52,7 +48,6 @@ class PortfolioCryptoCoordinator(DataUpdateCoordinator):
         )
         self.config_entry = config_entry
         self._last_update = None
-
         _LOGGER.info(f"Coordinator initialized with update interval: {update_interval} minute(s)")
 
     async def _async_update_data(self):
@@ -72,20 +67,13 @@ class PortfolioCryptoCoordinator(DataUpdateCoordinator):
         data["total_profit_loss_percent"] = await self.fetch_total_profit_loss_percent()
         data["total_value"] = await self.fetch_total_value()
 
-        cryptos = self.config_entry.options.get("cryptos", [])
-        if not cryptos:
-            create_tables_if_not_exists(self.config_entry.entry_id)
-            cryptos = get_cryptos(self.config_entry.entry_id)
-
-        if isinstance(cryptos, list):
-            for crypto in cryptos:
-                if isinstance(crypto, dict):
-                    _LOGGER.info(f"Fetching data for crypto ID: {crypto['id']}")
-                    crypto_data = await self.fetch_crypto_data(crypto["id"])
-                    data[crypto["id"]] = crypto_data
+        for crypto in self.config_entry.options.get("cryptos", []):
+            crypto_data = await self.fetch_crypto_data(crypto["id"])
+            data[crypto["id"]] = crypto_data
 
         _LOGGER.info("New data fetched successfully")
         return data
+
 
     async def fetch_transactions(self):
         _LOGGER.info("Fetching transactions data")
@@ -122,6 +110,58 @@ class PortfolioCryptoCoordinator(DataUpdateCoordinator):
                 "total_value": 0,
             })
         }
+    
+    async def add_crypto(self, crypto_name):
+        crypto_id = await self.fetch_crypto_id(crypto_name)
+        if crypto_id:
+            cryptos = self.config_entry.options.get("cryptos", [])
+            cryptos.append({"name": crypto_name, "id": crypto_id})
+            self.hass.config_entries.async_update_entry(self.config_entry, options={**self.config_entry.options, "cryptos": cryptos})
+
+            # Sauvegarder les informations de crypto dans la base de données
+            await self.save_crypto_to_db(self.config_entry.entry_id, crypto_name, crypto_id)
+
+            # Reconfigurer les entités pour ajouter les nouvelles cryptomonnaies
+            await self.hass.config_entries.async_forward_entry_unload(self.config_entry, "sensor")
+            await self.hass.config_entries.async_forward_entry_setup(self.config_entry, "sensor")
+
+            return True
+        return False
+
+    async def fetch_crypto_id(self, crypto_name):
+        async with aiohttp.ClientSession() as session:
+            try:
+                with async_timeout.timeout(10):
+                    async with session.get(COINGECKO_API_URL) as response:
+                        result = await response.json()
+                        for coin in result:
+                            if coin['name'].lower() == crypto_name.lower() or coin['id'].lower() == crypto_name.lower():
+                                return coin['id']
+            except (aiohttp.ClientError, asyncio.TimeoutError):
+                _LOGGER.error("Error fetching CoinGecko data")
+        return None
+
+    async def save_crypto_to_db(self, entry_id, crypto_name, crypto_id):
+        try:
+            async with aiohttp.ClientSession() as session:
+                supervisor_token = os.getenv("SUPERVISOR_TOKEN")
+                headers = {
+                    "Authorization": f"Bearer {supervisor_token}",
+                    "Content-Type": "application/json",
+                }
+                url = f"http://localhost:5000/save_crypto"
+                payload = {
+                    "entry_id": entry_id,
+                    "crypto_name": crypto_name,
+                    "crypto_id": crypto_id
+                }
+                async with session.post(url, json=payload, headers=headers) as response:
+                    if response.status == 200:
+                        _LOGGER.info(f"Crypto {crypto_name} avec ID {crypto_id} sauvegardée dans la base de données.")
+                    else:
+                        _LOGGER.error(f"Erreur lors de la sauvegarde de la crypto {crypto_name} avec ID {crypto_id} dans la base de données.")
+        except Exception as e:
+            _LOGGER.error(f"Exception lors de la sauvegarde de la crypto {crypto_name} avec ID {crypto_id} dans la base de données: {e}")
 
 class PortfolioCryptoSensor(CoordinatorEntity, SensorEntity):
     def __init__(self, coordinator, config_entry, sensor_type):

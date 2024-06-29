@@ -41,3 +41,4 @@ echo "L'installation est terminée. Veuillez redémarrer Home Assistant pour ter
 
 # Continuer à exécuter Gunicorn en premier plan
 wait
+
