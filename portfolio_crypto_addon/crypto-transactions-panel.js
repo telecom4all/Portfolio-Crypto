@@ -5,16 +5,53 @@ class CryptoTransactionsPanel extends HTMLElement {
     }
 
     set hass(hass) {
-        const entryId = this.config.entry_id;
-        const cryptoId = this.config.crypto_id;
+        if (!this.panel.config) {
+            console.error('Configuration non définie');
+            return;
+        }
 
-        // Fetch transactions
-        hass.callApi('GET', `portfolio_crypto/transactions/${entryId}/${cryptoId}`).then(transactions => {
-            this.render(transactions);
+        const entryId = this.panel.config.entry_id;
+        const cryptoId = this.panel.config.crypto_id;
+
+        this.fetchAndRenderTransactions(entryId, cryptoId);
+    }
+
+    async fetchAndRenderTransactions(entryId, cryptoId) {
+        try {
+            const transactions = await this.fetchTransactions(entryId);
+
+            // Filtrer les transactions pour le crypto_id donné
+            const filteredTransactions = transactions.filter(transaction => transaction.crypto_id === cryptoId);
+            this.render(filteredTransactions);
+        } catch (error) {
+            console.error('Erreur lors de la récupération des transactions:', error);
+        }
+    }
+
+    async fetchTransactions(entryId) {
+        const baseUrl = `${window.location.protocol}//${window.location.hostname}`;
+        const url = `${baseUrl}:5000/transactions/${entryId}`;
+        const response = await fetch(url, {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json'
+            }
         });
+
+        if (response.ok) {
+            return await response.json();
+        } else {
+            const errorText = await response.text();
+            throw new Error(`Erreur ${response.status}: ${errorText}`);
+        }
     }
 
     render(transactions) {
+        if (!transactions || transactions.length === 0) {
+            this.shadowRoot.innerHTML = '<div>Aucune transaction trouvée.</div>';
+            return;
+        }
+
         this.shadowRoot.innerHTML = `
             <style>
                 table {
@@ -40,7 +77,7 @@ class CryptoTransactionsPanel extends HTMLElement {
                 }
             </style>
             <div>
-                <h1>Transactions pour ${this.config.crypto_name}</h1>
+                <h1>Transactions pour ${this.panel.config.crypto_name}</h1>
                 <table>
                     <tr>
                         <th>ID</th>
@@ -73,7 +110,7 @@ class CryptoTransactionsPanel extends HTMLElement {
         this.shadowRoot.querySelectorAll('.delete').forEach(button => {
             button.addEventListener('click', e => {
                 const transactionId = e.target.dataset.id;
-                this.hass.callService('portfolio_crypto', 'delete_transaction', { entry_id: this.config.entry_id, transaction_id: transactionId });
+                this.hass.callService('portfolio_crypto', 'delete_transaction', { entry_id: this.panel.config.entry_id, transaction_id: transactionId });
             });
         });
 
@@ -93,7 +130,7 @@ class CryptoTransactionsPanel extends HTMLElement {
         if (!config.entry_id || !config.crypto_id || !config.crypto_name) {
             throw new Error('Vous devez définir un entry_id, un crypto_id, et un crypto_name');
         }
-        this.config = config;
+        this.panel.config = config;
     }
 
     getCardSize() {

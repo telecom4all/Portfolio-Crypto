@@ -10,6 +10,7 @@ from datetime import datetime, timedelta
 import logging
 import time
 from flask import Flask, jsonify, request
+from flask_cors import CORS
 from .db import add_transaction, get_transactions, delete_transaction, update_transaction, get_crypto_transactions, create_table, create_crypto_table, save_crypto, get_cryptos
 import os
 
@@ -22,6 +23,7 @@ requests_cache.install_cache('coingecko_cache', expire_after=expire_after)
 
 # Configuration de l'application Flask
 app = Flask(__name__)
+CORS(app)  # Cette ligne permet d'ajouter les en-têtes CORS à toutes les routes
 
 @app.route('/initialize', methods=['POST'])
 def initialize():

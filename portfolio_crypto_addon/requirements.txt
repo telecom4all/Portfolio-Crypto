@@ -3,4 +3,5 @@ requests
 flask
 datetime
 gunicorn
+flask-cors
 requests_cache
