@@ -111,24 +111,79 @@ class PortfolioCryptoCoordinator(DataUpdateCoordinator):
 
 
     async def fetch_transactions(self):
-        _LOGGER.info("Fetching transactions data")
-        return []
+        entry_id = self.config_entry.entry_id
+        try:
+            async with aiohttp.ClientSession() as session:
+                async with session.get(f"http://localhost:5000/transactions/{entry_id}") as response:
+                    if response.status == 200:
+                        transactions = await response.json()
+                        return transactions
+                    else:
+                        _LOGGER.error(f"Erreur lors de la récupération des transactions: {response.status}")
+                        return []
+        except Exception as e:
+            _LOGGER.error(f"Exception lors de la récupération des transactions: {e}")
+            return []
 
     async def fetch_total_investment(self):
-        _LOGGER.info("Fetching total investment data")
-        return 0
+        entry_id = self.config_entry.entry_id
+        try:
+            async with aiohttp.ClientSession() as session:
+                async with session.get(f"http://localhost:5000/profit_loss/{entry_id}") as response:
+                    if response.status == 200:
+                        data = await response.json()
+                        return data['summary']['total_investment']
+                    else:
+                        _LOGGER.error(f"Erreur lors de la récupération de l'investissement total: {response.status}")
+                        return 0
+        except Exception as e:
+            _LOGGER.error(f"Exception lors de la récupération de l'investissement total: {e}")
+            return 0
 
     async def fetch_total_profit_loss(self):
-        _LOGGER.info("Fetching total profit/loss data")
-        return 0
+        entry_id = self.config_entry.entry_id
+        try:
+            async with aiohttp.ClientSession() as session:
+                async with session.get(f"http://localhost:5000/profit_loss/{entry_id}") as response:
+                    if response.status == 200:
+                        data = await response.json()
+                        return data['summary']['total_profit_loss']
+                    else:
+                        _LOGGER.error(f"Erreur lors de la récupération du profit/perte total: {response.status}")
+                        return 0
+        except Exception as e:
+            _LOGGER.error(f"Exception lors de la récupération du profit/perte total: {e}")
+            return 0
 
     async def fetch_total_profit_loss_percent(self):
-        _LOGGER.info("Fetching total profit/loss percent data")
-        return 0
+        entry_id = self.config_entry.entry_id
+        try:
+            async with aiohttp.ClientSession() as session:
+                async with session.get(f"http://localhost:5000/profit_loss/{entry_id}") as response:
+                    if response.status == 200:
+                        data = await response.json()
+                        return data['summary']['total_profit_loss_percent']
+                    else:
+                        _LOGGER.error(f"Erreur lors de la récupération du pourcentage de profit/perte total: {response.status}")
+                        return 0
+        except Exception as e:
+            _LOGGER.error(f"Exception lors de la récupération du pourcentage de profit/perte total: {e}")
+            return 0
 
     async def fetch_total_value(self):
-        _LOGGER.info("Fetching total value data")
-        return 0
+        entry_id = self.config_entry.entry_id
+        try:
+            async with aiohttp.ClientSession() as session:
+                async with session.get(f"http://localhost:5000/profit_loss/{entry_id}") as response:
+                    if response.status == 200:
+                        data = await response.json()
+                        return data['summary']['total_value']
+                    else:
+                        _LOGGER.error(f"Erreur lors de la récupération de la valeur totale: {response.status}")
+                        return 0
+        except Exception as e:
+            _LOGGER.error(f"Exception lors de la récupération de la valeur totale: {e}")
+            return 0
 
     async def fetch_crypto_data(self, crypto_id):
         

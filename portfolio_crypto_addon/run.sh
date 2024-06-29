@@ -20,8 +20,7 @@ panel_custom:
     js_url: '/local/crypto-transactions-panel.js'
     config:
       entry_id: your_entry_id
-      crypto_id: your_crypto_id
-      crypto_name: your_crypto_name
+      entry_name: your_entry_name
 "
 
 if ! grep -q "panel_custom:" "$CONFIG_FILE"; then
