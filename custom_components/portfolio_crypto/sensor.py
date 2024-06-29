@@ -8,6 +8,7 @@ import async_timeout
 import asyncio
 from .const import DOMAIN, COINGECKO_API_URL
 from .db import save_crypto, load_crypto_attributes
+import ast
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -66,14 +67,27 @@ class PortfolioCryptoCoordinator(DataUpdateCoordinator):
         data["total_profit_loss"] = await self.fetch_total_profit_loss()
         data["total_profit_loss_percent"] = await self.fetch_total_profit_loss_percent()
         data["total_value"] = await self.fetch_total_value()
+        _LOGGER.error("-------------------")
+        _LOGGER.error(f"self.config_entry.options =  {self.config_entry.options}")
 
         for crypto in self.config_entry.options.get("cryptos", []):
-            _LOGGER.info(crypto)
-            crypto_data = await self.fetch_crypto_data(crypto["id"])
-            data[crypto["id"]] = crypto_data
+            _LOGGER.error(f"crypto =  {crypto}")
 
+            # Vérifier que c'est bien une liste avec au moins deux éléments
+            if isinstance(crypto, list) and len(crypto) > 1:
+                crypto_id = crypto[1]  # Récupérer l'ID de la crypto (deuxième élément de la liste)
+                _LOGGER.error(f"crypto_id = {crypto_id}")
+
+                # Fetch crypto data using the ID
+                crypto_data = await self.fetch_crypto_data(crypto_id)
+                data[crypto_id] = crypto_data
+            else:
+                _LOGGER.error(f"La liste 'crypto' ne contient pas assez d'éléments: {crypto}")
+
+        _LOGGER.info("-------------------")
         _LOGGER.info("New data fetched successfully")
         return data
+
 
 
     async def fetch_transactions(self):
@@ -97,8 +111,9 @@ class PortfolioCryptoCoordinator(DataUpdateCoordinator):
         return 0
 
     async def fetch_crypto_data(self, crypto_id):
-        _LOGGER.info(f"Fetching data for crypto ID: {crypto_id}")
+        _LOGGER.error(f"Fetching data for crypto ID: {crypto_id}")
         crypto_attributes = load_crypto_attributes(self.config_entry.entry_id)
+        _LOGGER.error(f"crypto_attributes = {crypto_attributes}")
         crypto = next((c for c in self.config_entry.options.get("cryptos", []) if c["id"] == crypto_id), None)
         return {
             "crypto_id": crypto["id"] if crypto else None,
