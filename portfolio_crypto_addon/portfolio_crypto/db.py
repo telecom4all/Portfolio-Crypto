@@ -161,13 +161,28 @@ def get_crypto_transactions(entry_id, crypto_name):
 
 def load_crypto_attributes(entry_id):
     """Charger les attributs des cryptos depuis la base de données pour un ID d'entrée donné"""
-   
     create_crypto_table(entry_id)
     conn = sqlite3.connect(get_database_path(entry_id))
     cursor = conn.cursor()
     cursor.execute('SELECT crypto_name, crypto_id FROM cryptos WHERE entry_id = ?', (entry_id,))
     cryptos = cursor.fetchall()
-   
     conn.close()
-    return {crypto_id: {'crypto_name': crypto_name, 'crypto_id': crypto_id} for crypto_name, crypto_id in cryptos}
-
+    
+    attributes = {}
+    for crypto_name, crypto_id in cryptos:
+        transactions = get_crypto_transactions(entry_id, crypto_name)
+        total_investment = sum(t[4] for t in transactions if t[5] == 'buy') - sum(t[4] for t in transactions if t[5] == 'sell')
+        total_value = sum(t[3] * get_crypto_price(crypto_id) for t in transactions)
+        profit_loss = total_value - total_investment
+        profit_loss_percent = (profit_loss / total_investment * 100) if total_investment != 0 else 0
+        attributes[crypto_id] = {
+            'crypto_name': crypto_name,
+            'crypto_id': crypto_id,
+            'transactions': transactions,
+            'total_investment': total_investment,
+            'total_profit_loss': profit_loss,
+            'total_profit_loss_percent': profit_loss_percent,
+            'total_value': total_value
+        }
+    
+    return attributes

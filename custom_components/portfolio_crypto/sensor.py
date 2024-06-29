@@ -4,6 +4,7 @@ from homeassistant.components.sensor import SensorEntity
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, CoordinatorEntity
 from homeassistant.helpers.entity import DeviceInfo
 import aiohttp
+import os
 import async_timeout
 import asyncio
 from .const import DOMAIN, COINGECKO_API_URL
@@ -83,27 +84,19 @@ class PortfolioCryptoCoordinator(DataUpdateCoordinator):
         data["total_value"] = await self.fetch_total_value()
         
         for crypto in self.config_entry.options.get("cryptos", []):
-           
             if isinstance(crypto, dict) and "id" in crypto:
-                # crypto est un dictionnaire
                 crypto_id = crypto["id"]
                 _LOGGER.info(f"crypto_id = {crypto_id}")
-
-                # Fetch crypto data using the ID
                 crypto_data = await self.fetch_crypto_data(crypto_id)
                 data[crypto_id] = crypto_data
             elif isinstance(crypto, list) and len(crypto) > 1:
-                # crypto est une liste
-                crypto_id = crypto[1]  # Récupérer l'ID de la crypto (deuxième élément de la liste)
+                crypto_id = crypto[1]
                 _LOGGER.info(f"crypto_id = {crypto_id}")
-
-                # Fetch crypto data using the ID
                 crypto_data = await self.fetch_crypto_data(crypto_id)
                 data[crypto_id] = crypto_data
             else:
                 _LOGGER.error(f"Le format de 'crypto' est incorrect: {crypto}")
 
-        _LOGGER.info("-------------------")
         _LOGGER.info("New data fetched successfully")
         return data
 
@@ -186,11 +179,8 @@ class PortfolioCryptoCoordinator(DataUpdateCoordinator):
             return 0
 
     async def fetch_crypto_data(self, crypto_id):
-        
         crypto_attributes = load_crypto_attributes(self.config_entry.entry_id)
         
-
-        # Adapter la logique pour gérer les deux cas
         crypto = next((c for c in self.config_entry.options.get("cryptos", []) 
                     if (isinstance(c, dict) and c.get("id") == crypto_id) or 
                         (isinstance(c, list) and len(c) > 1 and c[1] == crypto_id)), None)
@@ -206,6 +196,7 @@ class PortfolioCryptoCoordinator(DataUpdateCoordinator):
                 "total_value": 0,
             })
         }
+
     
     async def add_crypto(self, crypto_name):
         crypto_id = await self.fetch_crypto_id(crypto_name)
