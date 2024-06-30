@@ -42,7 +42,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
             _LOGGER.error(f"Le format de 'crypto' est incorrect: {crypto}")
             continue
 
-        for sensor_type in ['investment', 'current_value', 'profit_loss', 'profit_loss_percent']:
+        for sensor_type in ['investment', 'current_value', 'profit_loss', 'profit_loss_percent', 'transactions_count', 'average_price']:
             entities.append(CryptoSensor(coordinator, config_entry, {"name": crypto_name, "id": crypto_id}, sensor_type, crypto_data))
 
     async_add_entities(entities)
@@ -90,7 +90,7 @@ class PortfolioCryptoCoordinator(DataUpdateCoordinator):
                 _LOGGER.error(f"Le format de 'crypto' est incorrect: {crypto}")
                 continue
 
-            crypto_data = await self.fetch_crypto_profit_loss(crypto_name)
+            crypto_data = await self.fetch_crypto_profit_loss(crypto_id)
             crypto_transactions = await self.fetch_crypto_transactions(crypto_id)
             crypto_data["transactions_count"] = len(crypto_transactions)
             crypto_data["average_price"] = 0
@@ -111,16 +111,16 @@ class PortfolioCryptoCoordinator(DataUpdateCoordinator):
 
 
 
-    async def fetch_crypto_profit_loss(self, crypto_name):
+    async def fetch_crypto_profit_loss(self, crypto_id):
         entry_id = self.config_entry.entry_id
         try:
             async with aiohttp.ClientSession() as session:
-                async with session.get(f"http://localhost:5000/crypto_profit_loss/{entry_id}/{crypto_name}") as response:
+                async with session.get(f"http://localhost:5000/crypto_profit_loss/{entry_id}/{crypto_id}") as response:
                     if response.status == 200:
                         data = await response.json()
                         return data
                     else:
-                        _LOGGER.error(f"Erreur lors de la récupération du profit/perte pour {crypto_name}: {response.status}")
+                        _LOGGER.error(f"Erreur lors de la récupération du profit/perte pour {crypto_id}: {response.status}")
                         return {
                             "investment": 0,
                             "current_value": 0,
@@ -128,7 +128,7 @@ class PortfolioCryptoCoordinator(DataUpdateCoordinator):
                             "profit_loss_percent": 0
                         }
         except Exception as e:
-            _LOGGER.error(f"Exception lors de la récupération du profit/perte pour {crypto_name}: {e}")
+            _LOGGER.error(f"Exception lors de la récupération du profit/perte pour {crypto_id}: {e}")
             return {
                 "investment": 0,
                 "current_value": 0,
@@ -238,14 +238,7 @@ class PortfolioCryptoCoordinator(DataUpdateCoordinator):
 
         return {
             "crypto_id": crypto_id if crypto else None,
-            "crypto_name": crypto["name"] if isinstance(crypto, dict) else (crypto[0] if isinstance(crypto, list) and len(crypto) > 0 else None),
-            **crypto_attributes.get(crypto_id, {
-                "transactions": [],
-                "total_investment": 0,
-                "total_profit_loss": 0,
-                "total_profit_loss_percent": 0,
-                "total_value": 0,
-            })
+            "crypto_name": crypto["name"] if isinstance(crypto, dict) else (crypto[0] if isinstance(crypto, list) and len(crypto) > 0 else None)
         }
     
     async def add_crypto(self, crypto_name):
@@ -355,12 +348,6 @@ class CryptoSensor(CoordinatorEntity, SensorEntity):
         self._attributes = {
             "crypto_id": crypto['id'],
             "crypto_name": crypto['name'],
-            "investment": crypto_data.get("investment", 0),
-            "current_value": crypto_data.get("current_value", 0),
-            "profit_loss": crypto_data.get("profit_loss", 0),
-            "profit_loss_percent": crypto_data.get("profit_loss_percent", 0),
-            "transactions_count": crypto_data.get("transactions_count", 0),
-            "average_price": crypto_data.get("average_price", 0),
         }
         
 
@@ -374,7 +361,6 @@ class CryptoSensor(CoordinatorEntity, SensorEntity):
         data_crypto = coordinator_data.get(self._crypto['id'], {})
         retour = data_crypto.get(self._sensor_type, "unknown")
         return retour
-
 
     @property
     def unique_id(self):
@@ -390,12 +376,10 @@ class CryptoSensor(CoordinatorEntity, SensorEntity):
             sw_version="1.0",
             via_device=(DOMAIN, self.config_entry.entry_id),
         )
-    
-    
+
     @property
     def extra_state_attributes(self):
         return self._attributes
-    
 
     async def async_update(self):
         await self.coordinator.async_request_refresh()
@@ -404,4 +388,3 @@ class CryptoSensor(CoordinatorEntity, SensorEntity):
             "crypto_id": crypto["id"] if crypto else None,
             "crypto_name": crypto["name"] if crypto else None,
         })
-

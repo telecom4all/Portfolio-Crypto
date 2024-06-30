@@ -165,11 +165,7 @@ class PortfolioCryptoCoordinator(DataUpdateCoordinator):
         # Reload data from database if available
         crypto_attributes = load_crypto_attributes(self.config_entry.entry_id)
         return crypto_attributes.get(crypto_id, {
-            "transactions": [],
-            "total_investment": 0,
-            "total_profit_loss": 0,
-            "total_profit_loss_percent": 0,
-            "total_value": 0,
+            
             "crypto_id": next((crypto["id"] for crypto in self.config_entry.options.get("cryptos", []) if crypto["id"] == crypto_id), None),
             "crypto_name": next((crypto["name"] for crypto in self.config_entry.options.get("cryptos", []) if crypto["id"] == crypto_id), None)
         })
