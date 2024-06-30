@@ -11,7 +11,7 @@ import logging
 import time
 from flask import Flask, jsonify, request
 from flask_cors import CORS
-from .db import add_transaction, get_transactions, delete_transaction, update_transaction, get_crypto_transactions, create_table, create_crypto_table, save_crypto, get_cryptos, calculate_crypto_profit_loss, load_crypto_attributes, db_delete_crypto
+from .db import add_transaction, get_transactions, delete_transaction, update_transaction, get_crypto_transactions, create_table, create_crypto_table, save_crypto, get_cryptos, calculate_crypto_profit_loss, load_crypto_attributes, delete_crypto
 import os
 
 # Configurer les logs
@@ -276,7 +276,7 @@ def list_crypto_transactions(entry_id, crypto_id):
 @app.route('/delete_crypto/<entry_id>/<crypto_id>', methods=['DELETE'])
 def delete_crypto(entry_id, crypto_id):
     """Supprimer une crypto-monnaie pour un ID d'entrée donné"""
-    success = db_delete_crypto(entry_id, crypto_id)
+    success = delete_crypto(entry_id, crypto_id)
     if success:
         return jsonify({"message": "Crypto supprimée"}), 200
     else:
