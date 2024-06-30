@@ -249,8 +249,8 @@ def update_transaction_endpoint(entry_id, transaction_id):
         if not crypto_id:
             logging.error("Cryptomonnaie introuvable")
             return jsonify({"error": "Cryptomonnaie introuvable"}), 404
-        quantity = data['quantity']
-        price_usd = data['price_usd']
+        quantity = float(data['quantity'])
+        price_usd = float(data['price_usd'])
         transaction_type = data['transaction_type']
         location = data['location']
         date = data['date']
