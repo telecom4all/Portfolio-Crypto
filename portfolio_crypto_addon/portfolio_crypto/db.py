@@ -223,3 +223,20 @@ def load_crypto_attributes(entry_id):
     cryptos = cursor.fetchall()
     conn.close()
     return {crypto_id: {'crypto_name': crypto_name, 'crypto_id': crypto_id} for crypto_name, crypto_id in cryptos}
+
+
+
+def delete_crypto(entry_id, crypto_id):
+    """Supprimer une crypto-monnaie de la base de données pour un ID d'entrée donné"""
+    try:
+        conn = sqlite3.connect(get_database_path(entry_id))
+        cursor = conn.cursor()
+        cursor.execute('DELETE FROM cryptos WHERE crypto_id = ?', (crypto_id,))
+        conn.commit()
+        conn.close()
+        logging.info(f"Crypto avec ID: {crypto_id} supprimée dans l'entrée {entry_id}")
+        return True
+    except Exception as e:
+        logging.error(f"Erreur lors de la suppression de la crypto: {e}")
+        return False
+

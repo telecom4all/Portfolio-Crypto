@@ -31,11 +31,14 @@ class PortfolioCryptoOptionsFlowHandler(config_entries.OptionsFlow):
 
     async def async_step_init(self, user_input=None):
         if user_input is not None:
+            if 'delete_crypto' in user_input:
+                return await self.async_step_delete_crypto(user_input)
             return await self.async_step_add_crypto(user_input)
         return self.async_show_form(
             step_id="init",
             data_schema=vol.Schema({
                 vol.Required("crypto_name_or_id", description="Nom ou ID de la cryptomonnaie"): str,
+                vol.Optional("delete_crypto", default=False): bool,
             }),
             errors={},
         )
@@ -127,3 +130,26 @@ class PortfolioCryptoOptionsFlowHandler(config_entries.OptionsFlow):
             errors=errors,
         )
 
+    async def async_step_delete_crypto(self, user_input=None):
+        errors = {}
+        if user_input is not None:
+            crypto_id = user_input.get("crypto_name_or_id")
+            try:
+                async with aiohttp.ClientSession() as session:
+                    async with session.delete(f"http://localhost:5000/delete_crypto/{self.config_entry.entry_id}/{crypto_id}") as response:
+                        if response.status == 200:
+                            self.hass.config_entries.async_update_entry(self.config_entry, options={**self.config_entry.options, "cryptos": [crypto for crypto in self.config_entry.options.get("cryptos", []) if crypto["id"] != crypto_id]})
+                            return self.async_create_entry(title=crypto_id, data={})
+                        else:
+                            errors["base"] = "delete_failed"
+            except Exception as e:
+                _LOGGER.error(f"Erreur lors de la suppression de la crypto {crypto_id}: {e}")
+                errors["base"] = "delete_failed"
+
+        return self.async_show_form(
+            step_id="delete_crypto",
+            data_schema=vol.Schema({
+                vol.Required("crypto_name_or_id", default=user_input.get("crypto_name_or_id"), description="Nom ou ID de la cryptomonnaie"): str,
+            }),
+            errors=errors,
+        )

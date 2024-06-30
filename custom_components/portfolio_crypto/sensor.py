@@ -110,7 +110,17 @@ class PortfolioCryptoCoordinator(DataUpdateCoordinator):
         return data
 
 
-
+    async def delete_crypto(self, crypto_id):
+        entry_id = self.config_entry.entry_id
+        async with aiohttp.ClientSession() as session:
+            async with session.delete(f"http://localhost:5000/delete_crypto/{entry_id}/{crypto_id}") as response:
+                if response.status == 200:
+                    cryptos = [crypto for crypto in self.config_entry.options.get("cryptos", []) if crypto["id"] != crypto_id]
+                    self.hass.config_entries.async_update_entry(self.config_entry, options={**self.config_entry.options, "cryptos": cryptos})
+                    _LOGGER.info(f"Crypto {crypto_id} supprimée avec succès.")
+                else:
+                    _LOGGER.error(f"Erreur lors de la suppression de la crypto {crypto_id}: {response.status}")
+                    
     async def fetch_crypto_profit_loss(self, crypto_id):
         entry_id = self.config_entry.entry_id
         try:
