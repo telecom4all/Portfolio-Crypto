@@ -42,13 +42,8 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
             _LOGGER.error(f"Le format de 'crypto' est incorrect: {crypto}")
             continue
 
-        
-        # Create a new device for each cryptocurrency
-        entities.append(CryptoSensor(coordinator, config_entry, {"name": crypto_name, "id": crypto_id}, "transactions", crypto_data))
-        entities.append(CryptoSensor(coordinator, config_entry, {"name": crypto_name, "id": crypto_id}, "total_investment", crypto_data))
-        entities.append(CryptoSensor(coordinator, config_entry, {"name": crypto_name, "id": crypto_id}, "total_profit_loss", crypto_data))
-        entities.append(CryptoSensor(coordinator, config_entry, {"name": crypto_name, "id": crypto_id}, "total_profit_loss_percent", crypto_data))
-        entities.append(CryptoSensor(coordinator, config_entry, {"name": crypto_name, "id": crypto_id}, "total_value", crypto_data))
+        for sensor_type in ['investment', 'current_value', 'profit_loss', 'profit_loss_percent']:
+            entities.append(CryptoSensor(coordinator, config_entry, {"name": crypto_name, "id": crypto_id}, sensor_type, crypto_data))
 
     async_add_entities(entities)
 
@@ -103,7 +98,7 @@ class PortfolioCryptoCoordinator(DataUpdateCoordinator):
                 "profit_loss": crypto_data.get("profit_loss"),
                 "profit_loss_percent": crypto_data.get("profit_loss_percent")
             }
-
+        _LOGGER.info(f"Fetched data: {data}")
         _LOGGER.info("New data fetched successfully")
         return data
 
@@ -343,6 +338,7 @@ class CryptoSensor(CoordinatorEntity, SensorEntity):
             "profit_loss": crypto_data.get("profit_loss", 0),
             "profit_loss_percent": crypto_data.get("profit_loss_percent", 0),
         }
+        
 
     @property
     def name(self):
@@ -350,7 +346,10 @@ class CryptoSensor(CoordinatorEntity, SensorEntity):
 
     @property
     def state(self):
-        return self.coordinator.data.get(self._crypto['id'], {}).get(self._sensor_type, "unknown")
+        coordinator_data = self.coordinator.data
+        data_crypto = coordinator_data.get(self._crypto['id'], {})
+        retour = data_crypto.get(self._sensor_type, "unknown")
+        return retour
 
 
     @property
