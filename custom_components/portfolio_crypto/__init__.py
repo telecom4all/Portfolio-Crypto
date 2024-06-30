@@ -259,4 +259,3 @@ class PortfolioCryptoCoordinator(DataUpdateCoordinator):
         except Exception as e:
             _LOGGER.error(f"Exception lors du chargement des cryptos depuis la base de données pour l'ID d'entrée {entry_id}: {e}")
             return []
-
