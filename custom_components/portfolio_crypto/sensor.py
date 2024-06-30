@@ -98,11 +98,15 @@ class PortfolioCryptoCoordinator(DataUpdateCoordinator):
             data[crypto_id] = {
                 "crypto_id": crypto_id,
                 "crypto_name": crypto_name,
-                **crypto_data
+                "investment": crypto_data.get("investment"),
+                "current_value": crypto_data.get("current_value"),
+                "profit_loss": crypto_data.get("profit_loss"),
+                "profit_loss_percent": crypto_data.get("profit_loss_percent")
             }
 
         _LOGGER.info("New data fetched successfully")
         return data
+
 
 
     async def fetch_crypto_profit_loss(self, crypto_name):
@@ -346,7 +350,8 @@ class CryptoSensor(CoordinatorEntity, SensorEntity):
 
     @property
     def state(self):
-        return self.coordinator.data.get(self._crypto['id'], {}).get(self._sensor_type)
+        return self.coordinator.data.get(self._crypto['id'], {}).get(self._sensor_type, "unknown")
+
 
     @property
     def unique_id(self):
@@ -363,9 +368,11 @@ class CryptoSensor(CoordinatorEntity, SensorEntity):
             via_device=(DOMAIN, self.config_entry.entry_id),
         )
     
+    
     @property
     def extra_state_attributes(self):
         return self._attributes
+    
 
     async def async_update(self):
         await self.coordinator.async_request_refresh()
