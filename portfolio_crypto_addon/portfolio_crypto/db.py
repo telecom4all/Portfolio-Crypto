@@ -226,7 +226,7 @@ def load_crypto_attributes(entry_id):
 
 
 
-def delete_crypto(entry_id, crypto_id):
+def delete_crypto_db(entry_id, crypto_id):
     """Supprimer une crypto-monnaie de la base de données pour un ID d'entrée donné"""
     try:
         conn = sqlite3.connect(get_database_path(entry_id))
