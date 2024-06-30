@@ -206,15 +206,16 @@ def create_transaction(entry_id):
         if not crypto_id:
             logging.error("Cryptomonnaie introuvable")
             return jsonify({"error": "Cryptomonnaie introuvable"}), 404
-        quantity = data['quantity']
-        price_usd = data['price_usd']
+        quantity = float(data['quantity'])
+        price_usd = float(data['price_usd'])
         transaction_type = data['transaction_type']
         location = data['location']
         date = data['date']
-        historical_price = get_historical_price(crypto_id, datetime.strptime(date, "%Y-%m-%d").strftime("%d-%m-%Y"))
-        if not historical_price:
-            logging.warning(f"Prix historique non trouvé pour {crypto_id} à la date {date}. Utilisation du prix par défaut.")
-            historical_price = price_usd / quantity
+        historical_price = price_usd / quantity
+        #historical_price = get_historical_price(crypto_id, datetime.strptime(date, "%Y-%m-%d").strftime("%d-%m-%Y"))
+        #if not historical_price:
+        #    logging.warning(f"Prix historique non trouvé pour {crypto_id} à la date {date}. Utilisation du prix par défaut.")
+        #    historical_price = price_usd / quantity
 
         add_transaction(entry_id, crypto_name, crypto_id, quantity, price_usd, transaction_type, location, date, historical_price)
 
@@ -223,6 +224,7 @@ def create_transaction(entry_id):
     except Exception as e:
         logging.error(f"Erreur lors de l'ajout de la transaction: {e}")
         return jsonify({"error": "Erreur Interne"}), 500
+
 
 @app.route('/transaction/<entry_id>/<int:transaction_id>', methods=['DELETE'])
 def delete_transaction_endpoint(entry_id, transaction_id):
@@ -252,9 +254,10 @@ def update_transaction_endpoint(entry_id, transaction_id):
         transaction_type = data['transaction_type']
         location = data['location']
         date = data['date']
-        historical_price = get_historical_price(crypto_id, datetime.strptime(date, "%Y-%m-%d").strftime("%d-%m-%Y"))
-        if not historical_price:
-            historical_price = price_usd / quantity
+        historical_price = price_usd / quantity
+        #historical_price = get_historical_price(crypto_id, datetime.strptime(date, "%Y-%m-%d").strftime("%d-%m-%Y"))
+        #if not historical_price:
+        #    historical_price = price_usd / quantity
 
         update_transaction(entry_id, transaction_id, crypto_name, crypto_id, quantity, price_usd, transaction_type, location, date, historical_price)
         logging.info(f"Transaction mise à jour avec ID: {transaction_id} dans l'entrée {entry_id}")
