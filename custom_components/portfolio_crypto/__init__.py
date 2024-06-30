@@ -53,11 +53,15 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
         coordinator = hass.data[DOMAIN].get(entry_id)
         if coordinator:
             success = await coordinator.add_crypto(name)
-            if not success:
-                _LOGGER.error(f"Crypto {name} introuvable")
+            if success:
+                # Recharger les entités après l'ajout d'une nouvelle crypto
+                await hass.config_entries.async_forward_entry_unload(entry, "sensor")
+                await hass.config_entries.async_forward_entry_setup(entry, "sensor")
+                _LOGGER.debug(f"Crypto {name} ajoutée avec succès et les entités ont été rechargées.")
             else:
-                _LOGGER.debug(f"Crypto {name} ajoutée avec succès")
-            _LOGGER.debug(f"Retour de add_crypto: {success}")
+                _LOGGER.error(f"Crypto {name} introuvable ou déjà existante.")
+        else:
+            _LOGGER.error(f"Aucun coordinator trouvé pour l'entry_id: {entry_id}")
 
     hass.services.async_register(DOMAIN, "add_crypto", async_add_crypto_service)
 
@@ -172,10 +176,20 @@ class PortfolioCryptoCoordinator(DataUpdateCoordinator):
 
     async def add_crypto(self, crypto_name):
         _LOGGER.debug(f"Adding crypto {crypto_name}")
-        crypto_id = await self.fetch_crypto_id(crypto_name)
+        
+        try:
+            crypto_id = await self.fetch_crypto_id(crypto_name)
+        except Exception as e:
+            _LOGGER.error(f"Error fetching crypto ID for {crypto_name}: {e}")
+            return False
+
         if crypto_id:
             _LOGGER.debug(f"Found crypto ID {crypto_id} for {crypto_name}")
             cryptos = self.config_entry.options.get("cryptos", [])
+            if any(c["id"] == crypto_id for c in cryptos):
+                _LOGGER.error(f"Crypto {crypto_name} (ID: {crypto_id}) already exists")
+                return False
+
             cryptos.append({"name": crypto_name, "id": crypto_id})
             self.hass.config_entries.async_update_entry(self.config_entry, options={**self.config_entry.options, "cryptos": cryptos})
 
@@ -190,22 +204,27 @@ class PortfolioCryptoCoordinator(DataUpdateCoordinator):
         _LOGGER.error(f"Crypto {crypto_name} not found")
         return False
 
+
     async def fetch_crypto_id(self, crypto_name):
         async with aiohttp.ClientSession() as session:
             try:
                 with async_timeout.timeout(10):
                     async with session.get(COINGECKO_API_URL) as response:
-                        result = await response.json()
-                        if isinstance(result, list):
-                            for coin in result:
-                                if isinstance(coin, dict):
-                                    if coin.get('name', '').lower() == crypto_name.lower() or coin.get('id', '').lower() == crypto_name.lower():
-                                        return coin['id']
+                        if response.status == 200:
+                            result = await response.json()
+                            if isinstance(result, list):
+                                for coin in result:
+                                    if isinstance(coin, dict):
+                                        if coin.get('name', '').lower() == crypto_name.lower() or coin.get('id', '').lower() == crypto_name.lower():
+                                            return coin['id']
+                            else:
+                                _LOGGER.error("Unexpected response format from CoinGecko API")
                         else:
-                            _LOGGER.error("Unexpected response format from CoinGecko API")
+                            _LOGGER.error(f"Error fetching data from CoinGecko API: {response.status}")
             except (aiohttp.ClientError, asyncio.TimeoutError) as e:
                 _LOGGER.error(f"Error fetching CoinGecko data: {e}")
         return None
+
 
 
     async def save_crypto_to_db(self, entry_id, crypto_name, crypto_id):
