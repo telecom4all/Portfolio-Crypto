@@ -136,6 +136,21 @@ class PortfolioCryptoCoordinator(DataUpdateCoordinator):
                 "profit_loss_percent": 0
             }
 
+    async def fetch_crypto_transactions(self, crypto_id):
+        entry_id = self.config_entry.entry_id
+        try:
+            async with aiohttp.ClientSession() as session:
+                async with session.get(f"http://localhost:5000/transactions/{entry_id}/{crypto_id}") as response:
+                    if response.status == 200:
+                        transactions = await response.json()
+                        return transactions
+                    else:
+                        _LOGGER.error(f"Erreur lors de la récupération des transactions pour {crypto_id}: {response.status}")
+                        return []
+        except Exception as e:
+            _LOGGER.error(f"Exception lors de la récupération des transactions pour {crypto_id}: {e}")
+            return []
+        
     async def fetch_transactions(self):
         entry_id = self.config_entry.entry_id
         try:
