@@ -215,7 +215,7 @@ class CryptoTransactionsPanel extends HTMLElement {
         </style>
         <div class="container">
             <div class="content">
-                <h1 style="color: #ffffff;">Transactions pour ${this.panel.config.crypto_name}</h1>
+                <h1 style="color: #ffffff;">Transactions pour ${this.panel.config.entry_name}</h1>
                 <div class="info">
                     <strong>Entry ID:</strong> ${this.panel.config.entry_id}
                 </div>

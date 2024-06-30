@@ -4,9 +4,9 @@ from homeassistant.components.sensor import SensorEntity
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, CoordinatorEntity
 from homeassistant.helpers.entity import DeviceInfo
 import aiohttp
-import os
 import async_timeout
 import asyncio
+import os
 from .const import DOMAIN, COINGECKO_API_URL
 from .db import save_crypto, load_crypto_attributes
 import ast
@@ -82,26 +82,53 @@ class PortfolioCryptoCoordinator(DataUpdateCoordinator):
         data["total_profit_loss"] = await self.fetch_total_profit_loss()
         data["total_profit_loss_percent"] = await self.fetch_total_profit_loss_percent()
         data["total_value"] = await self.fetch_total_value()
-        
+
         for crypto in self.config_entry.options.get("cryptos", []):
             if isinstance(crypto, dict) and "id" in crypto:
                 crypto_id = crypto["id"]
-                _LOGGER.info(f"crypto_id = {crypto_id}")
-                crypto_data = await self.fetch_crypto_data(crypto_id)
-                data[crypto_id] = crypto_data
+                crypto_name = crypto["name"]
             elif isinstance(crypto, list) and len(crypto) > 1:
                 crypto_id = crypto[1]
-                _LOGGER.info(f"crypto_id = {crypto_id}")
-                crypto_data = await self.fetch_crypto_data(crypto_id)
-                data[crypto_id] = crypto_data
+                crypto_name = crypto[0]
             else:
                 _LOGGER.error(f"Le format de 'crypto' est incorrect: {crypto}")
+                continue
+
+            crypto_data = await self.fetch_crypto_profit_loss(crypto_name)
+            data[crypto_id] = {
+                "crypto_id": crypto_id,
+                "crypto_name": crypto_name,
+                **crypto_data
+            }
 
         _LOGGER.info("New data fetched successfully")
         return data
 
 
-
+    async def fetch_crypto_profit_loss(self, crypto_name):
+        entry_id = self.config_entry.entry_id
+        try:
+            async with aiohttp.ClientSession() as session:
+                async with session.get(f"http://localhost:5000/crypto_profit_loss/{entry_id}/{crypto_name}") as response:
+                    if response.status == 200:
+                        data = await response.json()
+                        return data
+                    else:
+                        _LOGGER.error(f"Erreur lors de la récupération du profit/perte pour {crypto_name}: {response.status}")
+                        return {
+                            "investment": 0,
+                            "current_value": 0,
+                            "profit_loss": 0,
+                            "profit_loss_percent": 0
+                        }
+        except Exception as e:
+            _LOGGER.error(f"Exception lors de la récupération du profit/perte pour {crypto_name}: {e}")
+            return {
+                "investment": 0,
+                "current_value": 0,
+                "profit_loss": 0,
+                "profit_loss_percent": 0
+            }
 
     async def fetch_transactions(self):
         entry_id = self.config_entry.entry_id
@@ -179,8 +206,11 @@ class PortfolioCryptoCoordinator(DataUpdateCoordinator):
             return 0
 
     async def fetch_crypto_data(self, crypto_id):
+        
         crypto_attributes = load_crypto_attributes(self.config_entry.entry_id)
         
+
+        # Adapter la logique pour gérer les deux cas
         crypto = next((c for c in self.config_entry.options.get("cryptos", []) 
                     if (isinstance(c, dict) and c.get("id") == crypto_id) or 
                         (isinstance(c, list) and len(c) > 1 and c[1] == crypto_id)), None)
@@ -196,7 +226,6 @@ class PortfolioCryptoCoordinator(DataUpdateCoordinator):
                 "total_value": 0,
             })
         }
-
     
     async def add_crypto(self, crypto_name):
         crypto_id = await self.fetch_crypto_id(crypto_name)
@@ -305,8 +334,11 @@ class CryptoSensor(CoordinatorEntity, SensorEntity):
         self._attributes = {
             "crypto_id": crypto['id'],
             "crypto_name": crypto['name'],
+            "investment": crypto_data.get("investment", 0),
+            "current_value": crypto_data.get("current_value", 0),
+            "profit_loss": crypto_data.get("profit_loss", 0),
+            "profit_loss_percent": crypto_data.get("profit_loss_percent", 0),
         }
-        self._attributes.update(crypto_data)
 
     @property
     def name(self):
@@ -330,7 +362,7 @@ class CryptoSensor(CoordinatorEntity, SensorEntity):
             sw_version="1.0",
             via_device=(DOMAIN, self.config_entry.entry_id),
         )
-
+    
     @property
     def extra_state_attributes(self):
         return self._attributes
@@ -342,3 +374,4 @@ class CryptoSensor(CoordinatorEntity, SensorEntity):
             "crypto_id": crypto["id"] if crypto else None,
             "crypto_name": crypto["name"] if crypto else None,
         })
+

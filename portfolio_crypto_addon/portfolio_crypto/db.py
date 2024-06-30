@@ -1,6 +1,7 @@
 import sqlite3
 import os
 import logging
+import requests
 
 # Configurer les logs
 logging.basicConfig(level=logging.INFO)
@@ -42,7 +43,6 @@ def create_table(entry_id):
         conn.close()
     except Exception as e:
         logging.error(f"Erreur lors de la création de la table pour l'entrée {entry_id}: {e}")
-
 
 def create_crypto_table(entry_id):
     db_path = get_database_path(entry_id)
@@ -159,6 +159,52 @@ def get_crypto_transactions(entry_id, crypto_name):
     conn.close()
     return transactions
 
+def get_crypto_price(crypto_id):
+    """Récupérer le prix actuel d'une crypto-monnaie"""
+    url = f"https://api.coingecko.com/api/v3/simple/price?ids={crypto_id}&vs_currencies=usd"
+    response = requests.get(url)
+    data = response.json()
+    if crypto_id in data:
+        return data[crypto_id]['usd']
+    else:
+        logging.error(f"Données de prix pour {crypto_id} introuvables.")
+        return 0
+
+def get_crypto_id(name):
+    """Récupérer l'ID d'une crypto-monnaie en fonction de son nom"""
+    url = f"https://api.coingecko.com/api/v3/search?query={name}"
+    data = requests.get(url).json()
+    for coin in data['coins']:
+        if coin['name'].lower() == name.lower():
+            return coin['id']
+    return None
+
+def calculate_crypto_profit_loss(entry_id, crypto_name):
+    """Calculer le profit/perte pour une crypto-monnaie spécifique et un ID d'entrée donné"""
+    transactions = get_crypto_transactions(entry_id, crypto_name)
+    crypto_id = get_crypto_id(crypto_name)
+    current_price = get_crypto_price(crypto_id)
+    investment = 0
+    quantity_held = 0
+    for transaction in transactions:
+        if transaction[5] == 'buy':
+            investment += transaction[4]
+            quantity_held += transaction[3]
+        elif transaction[5] == 'sell':
+            investment -= transaction[4]
+            quantity_held -= transaction[3]
+
+    current_value = quantity_held * current_price
+    profit_loss = current_value - investment
+    profit_loss_percent = (profit_loss / investment) * 100 if investment != 0 else 0
+
+    return {
+        "investment": investment,
+        "current_value": current_value,
+        "profit_loss": profit_loss,
+        "profit_loss_percent": profit_loss_percent
+    }
+
 def load_crypto_attributes(entry_id):
     """Charger les attributs des cryptos depuis la base de données pour un ID d'entrée donné"""
     create_crypto_table(entry_id)
@@ -167,22 +213,4 @@ def load_crypto_attributes(entry_id):
     cursor.execute('SELECT crypto_name, crypto_id FROM cryptos WHERE entry_id = ?', (entry_id,))
     cryptos = cursor.fetchall()
     conn.close()
-    
-    attributes = {}
-    for crypto_name, crypto_id in cryptos:
-        transactions = get_crypto_transactions(entry_id, crypto_name)
-        total_investment = sum(t[4] for t in transactions if t[5] == 'buy') - sum(t[4] for t in transactions if t[5] == 'sell')
-        total_value = sum(t[3] * get_crypto_price(crypto_id) for t in transactions)
-        profit_loss = total_value - total_investment
-        profit_loss_percent = (profit_loss / total_investment * 100) if total_investment != 0 else 0
-        attributes[crypto_id] = {
-            'crypto_name': crypto_name,
-            'crypto_id': crypto_id,
-            'transactions': transactions,
-            'total_investment': total_investment,
-            'total_profit_loss': profit_loss,
-            'total_profit_loss_percent': profit_loss_percent,
-            'total_value': total_value
-        }
-    
-    return attributes
+    return {crypto_id: {'crypto_name': crypto_name, 'crypto_id': crypto_id} for crypto_name, crypto_id in cryptos}

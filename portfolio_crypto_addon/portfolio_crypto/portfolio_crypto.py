@@ -11,7 +11,7 @@ import logging
 import time
 from flask import Flask, jsonify, request
 from flask_cors import CORS
-from .db import add_transaction, get_transactions, delete_transaction, update_transaction, get_crypto_transactions, create_table, create_crypto_table, save_crypto, get_cryptos
+from .db import add_transaction, get_transactions, delete_transaction, update_transaction, get_crypto_transactions, create_table, create_crypto_table, save_crypto, get_cryptos, calculate_crypto_profit_loss, load_crypto_attributes
 import os
 
 # Configurer les logs
@@ -63,6 +63,17 @@ def load_cryptos(entry_id):
         logging.error(f"Erreur lors du chargement des cryptos pour l'ID d'entrée {entry_id}: {e}")
         return jsonify({"error": "Erreur Interne"}), 500
 
+@app.route('/crypto_profit_loss/<entry_id>/<crypto_name>', methods=['GET'])
+def crypto_profit_loss(entry_id, crypto_name):
+    """Calculer et retourner le profit/perte pour une crypto-monnaie spécifique et un ID d'entrée donné"""
+    try:
+        result = calculate_crypto_profit_loss(entry_id, crypto_name)
+        logging.info(f"Profit/perte calculé pour {crypto_name} dans l'entrée {entry_id}: {result}")
+        return jsonify(result)
+    except Exception as e:
+        logging.error(f"Erreur lors du calcul du profit/perte pour {crypto_name} dans l'entrée {entry_id}: {e}")
+        return jsonify({"error": "Erreur Interne"}), 500
+
 def get_data_with_retry(url, retries=5, backoff_factor=1.0):
     """Récupérer les données depuis une URL avec des tentatives de réessai en cas d'échec"""
     for i in range(retries):
@@ -101,11 +112,13 @@ def get_crypto_price(crypto_id):
 def get_historical_price(crypto_id, date):
     """Récupérer le prix historique d'une crypto-monnaie pour une date donnée"""
     url = f"https://api.coingecko.com/api/v3/coins/{crypto_id}/history?date={date}"
-    data = get_data_with_retry(url)
     try:
+        data = get_data_with_retry(url)
         return data['market_data']['current_price']['usd']
-    except KeyError:
+    except (requests.exceptions.RequestException, KeyError) as e:
+        logging.error(f"Erreur lors de la récupération du prix historique pour {crypto_id} à la date {date}: {e}")
         return None
+
 
 def calculate_profit_loss(entry_id):
     """Calculer le profit/perte pour un ID d'entrée donné"""
@@ -157,31 +170,6 @@ def calculate_profit_loss(entry_id):
 
     return {"details": results, "summary": summary}
 
-def calculate_crypto_profit_loss(entry_id, crypto_name):
-    """Calculer le profit/perte pour une crypto-monnaie spécifique et un ID d'entrée donné"""
-    transactions = get_crypto_transactions(entry_id, crypto_name)
-    current_price = get_crypto_price(crypto_name)
-    investment = 0
-    quantity_held = 0
-    for transaction in transactions:
-        if transaction[5] == 'buy':
-            investment += transaction[4]
-            quantity_held += transaction[3]
-        elif transaction[5] == 'sell':
-            investment -= transaction[4]
-            quantity_held -= transaction[3]
-
-    current_value = quantity_held * current_price
-    profit_loss = current_value - investment
-    profit_loss_percent = (profit_loss / investment) * 100 if investment != 0 else 0
-
-    return {
-        "investment": investment,
-        "current_value": current_value,
-        "profit_loss": profit_loss,
-        "profit_loss_percent": profit_loss_percent
-    }
-
 @app.route('/transactions/<entry_id>', methods=['GET'])
 def list_transactions(entry_id):
     """Lister toutes les transactions pour un ID d'entrée donné"""
@@ -207,13 +195,6 @@ def profit_loss(entry_id):
     logging.info(f"Profit/perte calculé pour l'entrée {entry_id}: {result}")
     return jsonify(result)
 
-@app.route('/crypto_profit_loss/<entry_id>/<crypto_name>', methods=['GET'])
-def crypto_profit_loss(entry_id, crypto_name):
-    """Calculer et retourner le profit/perte pour une crypto-monnaie spécifique et un ID d'entrée donné"""
-    result = calculate_crypto_profit_loss(entry_id, crypto_name)
-    logging.info(f"Profit/perte calculé pour {crypto_name} dans l'entrée {entry_id}: {result}")
-    return jsonify(result)
-
 @app.route('/transaction/<entry_id>', methods=['POST'])
 def create_transaction(entry_id):
     """Créer une nouvelle transaction pour un ID d'entrée donné"""
@@ -232,6 +213,7 @@ def create_transaction(entry_id):
         date = data['date']
         historical_price = get_historical_price(crypto_id, datetime.strptime(date, "%Y-%m-%d").strftime("%d-%m-%Y"))
         if not historical_price:
+            logging.warning(f"Prix historique non trouvé pour {crypto_id} à la date {date}. Utilisation du prix par défaut.")
             historical_price = price_usd / quantity
 
         add_transaction(entry_id, crypto_name, crypto_id, quantity, price_usd, transaction_type, location, date, historical_price)
