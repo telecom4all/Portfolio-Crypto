@@ -65,21 +65,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
 
     hass.services.async_register(DOMAIN, "add_crypto", async_add_crypto_service)
 
-    async def async_delete_crypto_service(call):
-        crypto_id = call.data.get("crypto_id")
-        entry_id = call.data.get("entry_id")
-        _LOGGER.debug(f"Service delete_crypto appelé avec entry_id: {entry_id} et crypto_id: {crypto_id}")
-        coordinator = hass.data[DOMAIN].get(entry_id)
-        if coordinator:
-            await coordinator.delete_crypto(crypto_id)
-            await hass.config_entries.async_forward_entry_unload(entry, "sensor")
-            await hass.config_entries.async_forward_entry_setup(entry, "sensor")
-            _LOGGER.debug(f"Crypto {crypto_id} supprimée avec succès et les entités ont été mises à jour.")
-        else:
-            _LOGGER.error(f"Aucun coordinator trouvé pour l'entry_id: {entry_id}")
-
-    hass.services.async_register(DOMAIN, "delete_crypto", async_delete_crypto_service)
-    
     return True
 
 

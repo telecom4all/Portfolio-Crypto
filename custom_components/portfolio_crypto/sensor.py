@@ -45,7 +45,11 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         for sensor_type in ['investment', 'current_value', 'profit_loss', 'profit_loss_percent', 'transactions_count', 'average_price']:
             entities.append(CryptoSensor(coordinator, config_entry, {"name": crypto_name, "id": crypto_id}, sensor_type, crypto_data))
 
-    async_add_entities(entities)
+    async_add_entities(entities, update_before_add=True)
+
+    # Schedule periodic updates for all entities
+    for entity in entities:
+        coordinator.async_add_listener(entity.async_write_ha_state)
 
 
 
@@ -110,17 +114,7 @@ class PortfolioCryptoCoordinator(DataUpdateCoordinator):
         return data
 
 
-    async def delete_crypto(self, crypto_id):
-        entry_id = self.config_entry.entry_id
-        async with aiohttp.ClientSession() as session:
-            async with session.delete(f"http://localhost:5000/delete_crypto/{entry_id}/{crypto_id}") as response:
-                if response.status == 200:
-                    cryptos = [crypto for crypto in self.config_entry.options.get("cryptos", []) if crypto["id"] != crypto_id]
-                    self.hass.config_entries.async_update_entry(self.config_entry, options={**self.config_entry.options, "cryptos": cryptos})
-                    _LOGGER.info(f"Crypto {crypto_id} supprimée avec succès.")
-                else:
-                    _LOGGER.error(f"Erreur lors de la suppression de la crypto {crypto_id}: {response.status}")
-                    
+
     async def fetch_crypto_profit_loss(self, crypto_id):
         entry_id = self.config_entry.entry_id
         try:
