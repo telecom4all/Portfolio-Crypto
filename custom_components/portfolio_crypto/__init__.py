@@ -219,10 +219,13 @@ class PortfolioCryptoCoordinator(DataUpdateCoordinator):
                                             return coin['id']
                             else:
                                 _LOGGER.error("Unexpected response format from CoinGecko API")
+                                return None
                         else:
                             _LOGGER.error(f"Error fetching data from CoinGecko API: {response.status}")
+                            return None
             except (aiohttp.ClientError, asyncio.TimeoutError) as e:
                 _LOGGER.error(f"Error fetching CoinGecko data: {e}")
+                return None
         return None
 
 
