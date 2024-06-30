@@ -174,14 +174,14 @@ class PortfolioCryptoCoordinator(DataUpdateCoordinator):
             "crypto_name": next((crypto["name"] for crypto in self.config_entry.options.get("cryptos", []) if crypto["id"] == crypto_id), None)
         })
 
-    async def add_crypto(self, crypto_name):
+    async def add_crypto(self, crypto_name, crypto_id):
         _LOGGER.debug(f"Adding crypto {crypto_name}")
         
-        try:
-            crypto_id = await self.fetch_crypto_id(crypto_name)
-        except Exception as e:
-            _LOGGER.error(f"Error fetching crypto ID for {crypto_name}: {e}")
-            return False
+       # try:
+       #     crypto_id = await self.fetch_crypto_id(crypto_name)
+       # except Exception as e:
+       #     _LOGGER.error(f"Error fetching crypto ID for {crypto_name}: {e}")
+       #     return False
 
         if crypto_id:
             _LOGGER.debug(f"Found crypto ID {crypto_id} for {crypto_name}")
