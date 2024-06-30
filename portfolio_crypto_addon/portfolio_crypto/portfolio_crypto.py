@@ -266,5 +266,13 @@ def update_transaction_endpoint(entry_id, transaction_id):
         logging.error(f"Erreur lors de la mise à jour de la transaction: {e}")
         return jsonify({"error": "Erreur Interne"}), 500
 
+@app.route('/transactions/<entry_id>/<crypto_id>', methods=['GET'])
+def list_crypto_transactions(entry_id, crypto_id):
+    """Lister toutes les transactions pour un ID d'entrée donné et un crypto_id spécifique"""
+    transactions = get_crypto_transactions(entry_id, crypto_id)
+    logging.info(f"Transactions récupérées pour l'entrée {entry_id} et crypto_id {crypto_id}: {transactions}")
+    return jsonify(transactions)
+
+
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=5000)

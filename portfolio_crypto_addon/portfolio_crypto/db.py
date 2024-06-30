@@ -214,3 +214,13 @@ def load_crypto_attributes(entry_id):
     cryptos = cursor.fetchall()
     conn.close()
     return {crypto_id: {'crypto_name': crypto_name, 'crypto_id': crypto_id} for crypto_name, crypto_id in cryptos}
+
+
+def get_crypto_transactions(entry_id, crypto_id):
+    """Récupérer les transactions pour une crypto-monnaie spécifique et un ID d'entrée donné"""
+    conn = sqlite3.connect(get_database_path(entry_id))
+    cursor = conn.cursor()
+    cursor.execute('SELECT * FROM transactions WHERE crypto_id = ?', (crypto_id,))
+    transactions = cursor.fetchall()
+    conn.close()
+    return transactions
