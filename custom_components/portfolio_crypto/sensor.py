@@ -191,7 +191,7 @@ class PortfolioCryptoCoordinator(DataUpdateCoordinator):
         try:
             async with aiohttp.ClientSession() as session:
                 async with session.get(f"http://localhost:5000/profit_loss/{entry_id}") as response:
-                    if response.status == 200):
+                    if response.status == 200:
                         data = await response.json()
                         return data['summary']['total_profit_loss']
                     else:
@@ -206,7 +206,7 @@ class PortfolioCryptoCoordinator(DataUpdateCoordinator):
         try:
             async with aiohttp.ClientSession() as session:
                 async with session.get(f"http://localhost:5000/profit_loss/{entry_id}") as response:
-                    if response.status == 200):
+                    if response.status == 200:
                         data = await response.json()
                         return data['summary']['total_profit_loss_percent']
                     else:
@@ -221,7 +221,7 @@ class PortfolioCryptoCoordinator(DataUpdateCoordinator):
         try:
             async with aiohttp.ClientSession() as session:
                 async with session.get(f"http://localhost:5000/profit_loss/{entry_id}") as response:
-                    if response.status == 200):
+                    if response.status == 200:
                         data = await response.json()
                         return data['summary']['total_value']
                     else:

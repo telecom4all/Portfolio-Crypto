@@ -150,11 +150,20 @@ def update_transaction(entry_id, transaction_id, crypto_name, crypto_id, quantit
     conn.commit()
     conn.close()
 
-def get_crypto_transactions(entry_id, crypto_name):
-    """Récupérer les transactions d'une crypto-monnaie spécifique pour un ID d'entrée donné"""
+#def get_crypto_transactions(entry_id, crypto_name):
+#    """Récupérer les transactions d'une crypto-monnaie spécifique pour un ID d'entrée donné"""
+#    conn = sqlite3.connect(get_database_path(entry_id))
+#    cursor = conn.cursor()
+#    cursor.execute('SELECT * FROM transactions WHERE crypto_name = ?', (crypto_name,))
+#    transactions = cursor.fetchall()
+#    conn.close()
+#    return transactions
+
+def get_crypto_transactions(entry_id, crypto_id):
+    """Récupérer les transactions pour une crypto-monnaie spécifique et un ID d'entrée donné"""
     conn = sqlite3.connect(get_database_path(entry_id))
     cursor = conn.cursor()
-    cursor.execute('SELECT * FROM transactions WHERE crypto_name = ?', (crypto_name,))
+    cursor.execute('SELECT * FROM transactions WHERE crypto_id = ?', (crypto_id,))
     transactions = cursor.fetchall()
     conn.close()
     return transactions
@@ -216,11 +225,4 @@ def load_crypto_attributes(entry_id):
     return {crypto_id: {'crypto_name': crypto_name, 'crypto_id': crypto_id} for crypto_name, crypto_id in cryptos}
 
 
-def get_crypto_transactions(entry_id, crypto_id):
-    """Récupérer les transactions pour une crypto-monnaie spécifique et un ID d'entrée donné"""
-    conn = sqlite3.connect(get_database_path(entry_id))
-    cursor = conn.cursor()
-    cursor.execute('SELECT * FROM transactions WHERE crypto_id = ?', (crypto_id,))
-    transactions = cursor.fetchall()
-    conn.close()
-    return transactions
+
