@@ -200,12 +200,17 @@ class PortfolioCryptoCoordinator(DataUpdateCoordinator):
                 with async_timeout.timeout(10):
                     async with session.get(COINGECKO_API_URL) as response:
                         result = await response.json()
-                        for coin in result:
-                            if coin['name'].lower() == crypto_name.lower() or coin['id'].lower() == crypto_name.lower():
-                                return coin['id']
-            except (aiohttp.ClientError, asyncio.TimeoutError):
-                _LOGGER.error("Error fetching CoinGecko data")
+                        if isinstance(result, list):
+                            for coin in result:
+                                if isinstance(coin, dict):
+                                    if coin.get('name', '').lower() == crypto_name.lower() or coin.get('id', '').lower() == crypto_name.lower():
+                                        return coin['id']
+                        else:
+                            _LOGGER.error("Unexpected response format from CoinGecko API")
+            except (aiohttp.ClientError, asyncio.TimeoutError) as e:
+                _LOGGER.error(f"Error fetching CoinGecko data: {e}")
         return None
+
 
     async def save_crypto_to_db(self, entry_id, crypto_name, crypto_id):
         try:

@@ -115,7 +115,7 @@ def get_historical_price(crypto_id, date):
     try:
         data = get_data_with_retry(url)
         return data['market_data']['current_price']['usd']
-    except (requests.exceptions.RequestException, KeyError) as e:
+    except (KeyError, requests.exceptions.RequestException) as e:
         logging.error(f"Erreur lors de la récupération du prix historique pour {crypto_id} à la date {date}: {e}")
         return None
 
