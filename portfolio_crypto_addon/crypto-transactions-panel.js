@@ -253,6 +253,10 @@ class CryptoTransactionsPanel extends HTMLElement {
                 <div class="select-container">
                     <select id="cryptoSelect"></select>
                     <button id="deleteCrypto">Supprimer la Crypto</button>
+                    <button id="exportDb">Exporter la DB</button>
+                    <input type="file" id="importDb" style="display:none"/>
+                    <button id="importDbButton">Importer la DB</button>
+
                 </div>
                 <div id="transactionsContainer"></div>
                 <button id="add">Ajouter une transaction</button>
@@ -303,7 +307,18 @@ class CryptoTransactionsPanel extends HTMLElement {
             }
         });
         
-
+        this.shadowRoot.querySelector('#exportDb').addEventListener('click', () => {
+            this.exportDatabase();
+        });
+    
+        this.shadowRoot.querySelector('#importDbButton').addEventListener('click', () => {
+            this.shadowRoot.querySelector('#importDb').click();
+        });
+    
+        this.shadowRoot.querySelector('#importDb').addEventListener('change', (event) => {
+            const file = event.target.files[0];
+            this.importDatabase(file);
+        });
 
         this.shadowRoot.querySelectorAll('.delete').forEach(button => {
             button.addEventListener('click', e => {
@@ -401,6 +416,69 @@ class CryptoTransactionsPanel extends HTMLElement {
         modal.style.display = 'block';
     }
 
+    async exportDatabase() {
+        const entryId = this.panel.config.entry_id;
+        try {
+            const baseUrl = `${window.location.protocol}//${window.location.hostname}`;
+            const url = `${baseUrl}:5000/export_db/${entryId}`;
+    
+            const response = await fetch(url, {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/octet-stream'
+                }
+            });
+    
+            if (response.ok) {
+                const blob = await response.blob();
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.style.display = 'none';
+                a.href = url;
+                a.download = `portfolio_crypto_${entryId}.db`;
+                document.body.appendChild(a);
+                a.click();
+                window.URL.revokeObjectURL(url);
+                alert('Base de données exportée avec succès');
+            } else {
+                const errorText = await response.text();
+                throw new Error(`Erreur ${response.status}: ${errorText}`);
+            }
+        } catch (error) {
+            console.error('Erreur lors de l\'exportation de la base de données:', error);
+            alert('Erreur lors de l\'exportation de la base de données');
+        }
+    }
+
+    async importDatabase(file) {
+        const entryId = this.panel.config.entry_id;
+        const formData = new FormData();
+        formData.append('file', file);
+        formData.append('entry_id', entryId);
+    
+        try {
+            const baseUrl = `${window.location.protocol}//${window.location.hostname}`;
+            const url = `${baseUrl}:5000/import_db`;
+    
+            const response = await fetch(url, {
+                method: 'POST',
+                body: formData
+            });
+    
+            if (response.ok) {
+                alert('Base de données importée avec succès');
+                this.loadCryptos(entryId);  // Recharge les cryptomonnaies après l'importation
+            } else {
+                const errorText = await response.text();
+                throw new Error(`Erreur ${response.status}: ${errorText}`);
+            }
+        } catch (error) {
+            console.error('Erreur lors de l\'importation de la base de données:', error);
+            alert('Erreur lors de l\'importation de la base de données');
+        }
+    }
+
+    
     async saveTransaction() {
         const form = this.shadowRoot.querySelector('#transactionForm');
         const formData = new FormData(form);

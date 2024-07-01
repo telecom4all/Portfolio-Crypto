@@ -2,6 +2,7 @@ import sqlite3
 import os
 import logging
 import requests
+from flask import Flask, jsonify, request, send_file
 
 # Configurer les logs
 logging.basicConfig(level=logging.INFO)
@@ -248,3 +249,20 @@ def delete_crypto_db(entry_id, crypto_id):
         return False
 
 
+def export_db(entry_id):
+    try:
+        db_path = get_database_path(entry_id)
+        return send_file(db_path, as_attachment=True, attachment_filename=f'portfolio_crypto_{entry_id}.db')
+    except Exception as e:
+        logging.error(f"Erreur lors de l'exportation de la base de données pour l'ID d'entrée {entry_id}: {e}")
+        raise
+
+def import_db(entry_id, file):
+    try:
+        db_path = get_database_path(entry_id)
+        with open(db_path, 'wb') as db_file:
+            db_file.write(file.read())
+        logging.info(f"Base de données importée avec succès pour l'ID d'entrée: {entry_id}")
+    except Exception as e:
+        logging.error(f"Erreur lors de l'importation de la base de données: {e}")
+        raise

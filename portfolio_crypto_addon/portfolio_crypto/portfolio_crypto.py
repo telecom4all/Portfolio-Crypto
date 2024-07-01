@@ -11,7 +11,7 @@ import logging
 import time
 from flask import Flask, jsonify, request
 from flask_cors import CORS
-from .db import add_transaction, get_transactions, delete_transaction, update_transaction, get_crypto_transactions, create_table, create_crypto_table, save_crypto, get_cryptos, calculate_crypto_profit_loss, load_crypto_attributes, delete_crypto_db
+from .db import add_transaction, get_transactions, delete_transaction, update_transaction, get_crypto_transactions, create_table, create_crypto_table, save_crypto, get_cryptos, calculate_crypto_profit_loss, load_crypto_attributes, delete_crypto_db, export_db, import_db
 import os
 
 # Configurer les logs
@@ -282,5 +282,24 @@ def delete_crypto(entry_id, crypto_id):
     else:
         return jsonify({"error": "Erreur Interne"}), 500
     
+
+@app.route('/export_db/<entry_id>', methods=['GET'])
+def export_database(entry_id):
+    try:
+        return export_db(entry_id)
+    except Exception as e:
+        return jsonify({"error": "Erreur Interne"}), 500
+
+@app.route('/import_db', methods=['POST'])
+def import_database():
+    try:
+        entry_id = request.form['entry_id']
+        file = request.files['file']
+        import_db(entry_id, file)
+        return jsonify({"message": "Base de données importée avec succès"}), 200
+    except Exception as e:
+        return jsonify({"error": "Erreur Interne"}), 500
+    
+
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=5000)
