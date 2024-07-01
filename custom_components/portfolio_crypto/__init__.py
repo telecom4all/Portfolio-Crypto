@@ -2,6 +2,7 @@ import logging
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 from datetime import timedelta, datetime
 import aiohttp
 import async_timeout
@@ -64,7 +65,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
             _LOGGER.error(f"Aucun coordinator trouvé pour l'entry_id: {entry_id}")
 
         # Recharger l'intégration pour supprimer les cryptomonnaies
-        await self.hass.config_entries.async_reload(self.config_entry.entry_id)
+        await hass.config_entries.async_reload(entry.entry_id)
     hass.services.async_register(DOMAIN, "delete_crypto", async_delete_crypto_service)
 
     async def async_add_crypto_service(call):
@@ -165,11 +166,20 @@ class PortfolioCryptoCoordinator(DataUpdateCoordinator):
         self.hass.config_entries.async_update_entry(self.config_entry, options={**self.config_entry.options, "cryptos": updated_cryptos})
 
         # Supprimer les entités de Home Assistant
-        entity_registry = await self.hass.helpers.entity_registry.async_get_registry()
-        entries = self.hass.helpers.entity_registry.async_entries_for_config_entry(entity_registry, self.config_entry.entry_id)
+        entity_registry = er.async_get(self.hass)
+        device_registry = dr.async_get(self.hass)
+        
+        # Trouver toutes les entités et l'appareil associé à la crypto_id
+        entries = er.async_entries_for_config_entry(entity_registry, self.config_entry.entry_id)
         for entry in entries:
             if entry.unique_id.startswith(f"{self.config_entry.entry_id}_{crypto_id}"):
+                # Supprimer l'entité
                 entity_registry.async_remove(entry.entity_id)
+
+                # Trouver l'appareil associé à cette entité et le supprimer
+                device_entry = device_registry.async_get_device({(DOMAIN, entry.unique_id)})
+                if device_entry is not None:
+                    device_registry.async_remove_device(device_entry.id)
 
         return True
     
