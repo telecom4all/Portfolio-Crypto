@@ -8,7 +8,7 @@ import async_timeout
 import asyncio
 import os
 from .const import DOMAIN, COINGECKO_API_URL
-from .db import save_crypto, load_crypto_attributes
+from .db import save_crypto, load_crypto_attributes, delete_crypto_db
 import ast
 
 _LOGGER = logging.getLogger(__name__)
@@ -321,6 +321,36 @@ class PortfolioCryptoCoordinator(DataUpdateCoordinator):
         except Exception as e:
             _LOGGER.error(f"Exception lors de la sauvegarde de la crypto {crypto_name} avec ID {crypto_id} dans la base de données: {e}")
 
+    async def delete_crypto(self, crypto_id):
+        entry_id = self.config_entry.entry_id
+        # Supprimer la crypto de la base de données
+        success = delete_crypto_db(entry_id, crypto_id)
+        if not success:
+            return False
+
+        # Supprimer la crypto de la configuration
+        cryptos = self.config_entry.options.get("cryptos", [])
+        updated_cryptos = [crypto for crypto in cryptos if crypto["id"] != crypto_id]
+        self.hass.config_entries.async_update_entry(self.config_entry, options={**self.config_entry.options, "cryptos": updated_cryptos})
+
+        # Supprimer les entités de Home Assistant
+        entity_registry = er.async_get(self.hass)
+        device_registry = dr.async_get(self.hass)
+        
+        # Trouver toutes les entités et l'appareil associé à la crypto_id
+        entries = er.async_entries_for_config_entry(entity_registry, self.config_entry.entry_id)
+        for entry in entries:
+            if entry.unique_id.startswith(f"{self.config_entry.entry_id}_{crypto_id}"):
+                # Supprimer l'entité
+                entity_registry.async_remove(entry.entity_id)
+
+                # Trouver l'appareil associé à cette entité et le supprimer
+                device_entry = device_registry.async_get_device({(DOMAIN, entry.unique_id)})
+                if device_entry is not None:
+                    device_registry.async_remove_device(device_entry.id)
+
+        return True
+    
 class PortfolioCryptoSensor(CoordinatorEntity, SensorEntity):
     def __init__(self, coordinator, config_entry, sensor_type):
         super().__init__(coordinator)

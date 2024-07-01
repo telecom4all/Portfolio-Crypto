@@ -286,11 +286,23 @@ class CryptoTransactionsPanel extends HTMLElement {
         </div>
         `;
 
-        this.shadowRoot.querySelector('#deleteCrypto').addEventListener('click', () => {
+        this.shadowRoot.querySelector('#deleteCrypto').addEventListener('click', async () => {
             const selectElement = this.shadowRoot.querySelector('#cryptoSelect');
             const selectedCryptoId = selectElement.value;
-            this.deleteCrypto(selectedCryptoId);
+        
+            if (confirm("Êtes-vous sûr de vouloir supprimer cette crypto?")) {
+                try {
+                    const entryId = this.panel.config.entry_id;
+                    await hass.callService('portfolio_crypto', 'delete_crypto', { crypto_id: selectedCryptoId, entry_id: entryId });
+                    alert('Crypto supprimée avec succès');
+                    this.loadCryptos(entryId);
+                } catch (error) {
+                    console.error('Erreur lors de la suppression de la crypto:', error);
+                    alert('Erreur lors de la suppression de la crypto');
+                }
+            }
         });
+        
 
 
         this.shadowRoot.querySelectorAll('.delete').forEach(button => {
