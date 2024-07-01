@@ -13,6 +13,12 @@ def get_database_path(entry_id):
     logging.info(f"Chemin de la base de données pour l'entrée {entry_id}: {db_path}")
     return db_path
 
+def get_database_path_export(entry_id):
+    """Récupérer le chemin de la base de données pour un ID d'entrée donné"""
+    db_path = os.path.join('/app', f'portfolio_crypto_{entry_id}.db')
+    logging.info(f"Chemin de la base de données pour l'entrée {entry_id}: {db_path}")
+    return db_path
+
 def create_table(entry_id):
     db_path = get_database_path(entry_id)
     try:
@@ -251,7 +257,7 @@ def delete_crypto_db(entry_id, crypto_id):
 
 def export_db(entry_id):
     try:
-        db_path = get_database_path(entry_id)
+        db_path = get_database_path_export(entry_id)
         return send_file(db_path, as_attachment=True, download_name=f'portfolio_crypto_{entry_id}.db')
     except Exception as e:
         logging.error(f"Erreur lors de l'exportation de la base de données pour l'ID d'entrée {entry_id}: {e}")
