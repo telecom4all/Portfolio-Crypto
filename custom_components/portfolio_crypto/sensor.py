@@ -3,6 +3,7 @@ from datetime import timedelta, datetime
 from homeassistant.components.sensor import SensorEntity
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, CoordinatorEntity
 from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers import entity_registry as er, device_registry as dr
 import aiohttp
 import async_timeout
 import asyncio
