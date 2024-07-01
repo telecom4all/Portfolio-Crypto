@@ -235,7 +235,7 @@ class PortfolioCryptoCoordinator(DataUpdateCoordinator):
 
         # Assurez-vous que la crypto n'existe pas déjà
         if any(c["id"] == crypto_id for c in valid_cryptos):
-            _LOGGER.error(f"Crypto {crypto_name} with ID {crypto_id} already exists")
+            _LOGGER.info(f"Crypto {crypto_name} with ID {crypto_id} already exists")
             return False
 
         # Ajoutez la nouvelle crypto à la liste valide

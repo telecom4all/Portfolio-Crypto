@@ -37,7 +37,6 @@ class CryptoTransactionsPanel extends HTMLElement {
         const baseUrl = `${window.location.protocol}//${window.location.hostname}`;
         const url = `${baseUrl}:5000/load_cryptos/${entryId}`;
         
-
         const response = await fetch(url, {
             method: 'GET',
             headers: {
@@ -47,7 +46,6 @@ class CryptoTransactionsPanel extends HTMLElement {
 
         if (response.ok) {
             const jsonResponse = await response.json();
-            
             return jsonResponse;
         } else {
             const errorText = await response.text();
@@ -57,7 +55,6 @@ class CryptoTransactionsPanel extends HTMLElement {
     }
 
     renderCryptoSelect(cryptos) {
-      
         const select = this.shadowRoot.querySelector('#cryptoSelect');
         if (select) {
             select.innerHTML = cryptos.map(([name, id]) => `<option value="${id}">${name} - ${id}</option>`).join('');
@@ -67,21 +64,12 @@ class CryptoTransactionsPanel extends HTMLElement {
     async fetchAndRenderTransactions(entryId, cryptoId) {
         try {
             const transactions = await this.fetchTransactions(entryId);
-          
-           
-            // Filtrer les transactions pour le crypto_id donné
             const filteredTransactions = transactions.filter(transaction => transaction[2] === cryptoId);
-            
-            
-            
-            if(filteredTransactions.length > 0){
+            if (filteredTransactions.length > 0) {
                 this.renderTransactions(filteredTransactions);
-            }
-            else{
+            } else {
                 this.renderTransactions([]);
             }
-            
-            
         } catch (error) {
             console.error('Erreur lors de la récupération des transactions:', error);
             this.renderTransactions([]);  // Render an empty array in case of error
@@ -99,7 +87,6 @@ class CryptoTransactionsPanel extends HTMLElement {
             }
         });
 
-       
         if (response.ok) {
             return await response.json();
         } else {
@@ -200,7 +187,7 @@ class CryptoTransactionsPanel extends HTMLElement {
                 font-size: 16px;
                 border-radius: 5px;
             }
-            #myModal {
+            #myModal, #editModal {
                 display: none;
                 position: fixed;
                 z-index: 1;
@@ -214,7 +201,7 @@ class CryptoTransactionsPanel extends HTMLElement {
                 align-items: center;
                 justify-content: center;
             }
-            #modal-content {
+            #modal-content, #edit-modal-content {
                 background-color: #000;
                 padding: 20px;
                 border: 1px solid #888;
@@ -223,10 +210,11 @@ class CryptoTransactionsPanel extends HTMLElement {
                 border-radius: 10px;
                 box-shadow: 0 4px 8px 0 rgba(0,0,0,0.2), 0 6px 20px 0 rgba(0,0,0,0.19);
             }
-            #transactionForm {
+            #transactionForm, #editTransactionForm {
                 width: 100%;
             }
-            #transactionForm label, #transactionForm input, #transactionForm select, #transactionForm button {
+            #transactionForm label, #transactionForm input, #transactionForm select, #transactionForm button,
+            #editTransactionForm label, #editTransactionForm input, #editTransactionForm select, #editTransactionForm button {
                 width: 100%;
                 box-sizing: border-box;
                 margin-bottom: 10px;
@@ -248,14 +236,15 @@ class CryptoTransactionsPanel extends HTMLElement {
             <div class="content">
                 <h1 style="color: #ffffff;">Transactions pour ${this.panel.config.entry_name}</h1>
                 <div class="info">
+                    <button id="exportDb">Exporter la DB</button>
+                    <input type="file" id="importDb" style="display:none"/>
+                    <button id="importDbButton">Importer la DB</button><br />
                     <strong>Entry ID:</strong> ${this.panel.config.entry_id}
                 </div>
                 <div class="select-container">
                     <select id="cryptoSelect"></select>
-                    <button id="deleteCrypto">Supprimer la Crypto</button>
-                    <button id="exportDb">Exporter la DB</button>
-                    <input type="file" id="importDb" style="display:none"/>
-                    <button id="importDbButton">Importer la DB</button>
+                    <button id="deleteCrypto" style="display:none" >Supprimer la Crypto</button>
+                    
 
                 </div>
                 <div id="transactionsContainer"></div>
@@ -285,6 +274,33 @@ class CryptoTransactionsPanel extends HTMLElement {
                     <label for="date">Date:</label>
                     <input type="date" id="date" name="date" required>
                     <button type="button" id="save">Enregistrer</button>
+                </form>
+            </div>
+        </div>
+        <div id="editModal" class="modal">
+            <div id="edit-modal-content">
+                <span class="close">&times;</span>
+                <h2>Modifier une transaction</h2>
+                <form id="editTransactionForm">
+                    <input type="hidden" id="edit_transaction_id" name="transaction_id" required>
+                    <label for="edit_crypto_id">ID de la crypto:</label>
+                    <input type="text" id="edit_crypto_id" name="crypto_id" required readonly>
+                    <label for="edit_crypto_name">Nom de la crypto:</label>
+                    <input type="text" id="edit_crypto_name" name="crypto_name" required readonly>
+                    <label for="edit_quantity">Quantité:</label>
+                    <input type="number" id="edit_quantity" name="quantity" step="any" required>
+                    <label for="edit_price_usd">Prix (USD):</label>
+                    <input type="number" id="edit_price_usd" name="price_usd" step="any" required>
+                    <label for="edit_transaction_type">Type de transaction:</label>
+                    <select id="edit_transaction_type" name="transaction_type" required>
+                        <option value="buy">Achat</option>
+                        <option value="sell">Vente</option>
+                    </select>
+                    <label for="edit_location">Lieu:</label>
+                    <input type="text" id="edit_location" name="location" required>
+                    <label for="edit_date">Date:</label>
+                    <input type="date" id="edit_date" name="date" required>
+                    <button type="button" id="update">Mettre à jour</button>
                 </form>
             </div>
         </div>
@@ -320,20 +336,6 @@ class CryptoTransactionsPanel extends HTMLElement {
             this.importDatabase(file);
         });
 
-        this.shadowRoot.querySelectorAll('.delete').forEach(button => {
-            button.addEventListener('click', e => {
-                const transactionId = e.target.dataset.id;
-                this.hass.callService('portfolio_crypto', 'delete_transaction', { entry_id: this.panel.config.entry_id, transaction_id: transactionId });
-            });
-        });
-
-        this.shadowRoot.querySelectorAll('.edit').forEach(button => {
-            button.addEventListener('click', e => {
-                const transactionId = e.target.dataset.id;
-                // Open a modal to edit the transaction
-            });
-        });
-
         this.shadowRoot.querySelector('#add').addEventListener('click', () => {
             this.openAddTransactionModal();
         });
@@ -346,17 +348,25 @@ class CryptoTransactionsPanel extends HTMLElement {
         });
 
         const modal = this.shadowRoot.querySelector('#myModal');
-        const closeBtn = this.shadowRoot.querySelector('.close');
-        closeBtn.onclick = function() {
-            modal.style.display = 'none';
-        };
-        window.onclick = function(event) {
-            if (event.target == modal) {
+        const editModal = this.shadowRoot.querySelector('#editModal');
+        const closeBtn = this.shadowRoot.querySelectorAll('.close');
+        closeBtn.forEach(btn => {
+            btn.onclick = function() {
                 modal.style.display = 'none';
+                editModal.style.display = 'none';
+            };
+        });
+        window.onclick = function(event) {
+            if (event.target == modal || event.target == editModal) {
+                modal.style.display = 'none';
+                editModal.style.display = 'none';
             }
         };
         this.shadowRoot.querySelector('#save').addEventListener('click', () => {
             this.saveTransaction();
+        });
+        this.shadowRoot.querySelector('#update').addEventListener('click', () => {
+            this.updateTransaction();
         });
     }
 
@@ -396,13 +406,34 @@ class CryptoTransactionsPanel extends HTMLElement {
                         <td>${transaction[5]}</td>
                         <td>${transaction[7]}</td>
                         <td>
-                            <button class="edit" data-id="${transaction.id}">Modifier</button>
-                            <button class="delete" data-id="${transaction.id}">Supprimer</button>
+                            <button class="edit" data-id="${transaction[0]}" data-crypto-id="${transaction[2]}" data-crypto-name="${transaction[1]}" data-quantity="${transaction[3]}" data-price="${transaction[4]}" data-type="${transaction[5]}" data-location="${transaction[6]}" data-date="${transaction[7]}">Modifier</button>
+                            <button class="delete" data-id="${transaction[0]}">Supprimer</button>
                         </td>
                     </tr>
                 `).join('')}
             </table>
         `;
+
+        this.shadowRoot.querySelectorAll('.delete').forEach(button => {
+            button.addEventListener('click', e => {
+                const transactionId = e.target.dataset.id;
+                this.deleteTransaction(transactionId);
+            });
+        });
+
+        this.shadowRoot.querySelectorAll('.edit').forEach(button => {
+            button.addEventListener('click', e => {
+                const transactionId = e.target.dataset.id;
+                const cryptoId = e.target.dataset.cryptoId;
+                const cryptoName = e.target.dataset.cryptoName;
+                const quantity = e.target.dataset.quantity;
+                const price = e.target.dataset.price;
+                const type = e.target.dataset.type;
+                const location = e.target.dataset.location;
+                const date = e.target.dataset.date;
+                this.openEditTransactionModal(transactionId, cryptoId, cryptoName, quantity, price, type, location, date);
+            });
+        });
     }
 
     openAddTransactionModal() {
@@ -414,6 +445,132 @@ class CryptoTransactionsPanel extends HTMLElement {
             this.updateFormFields(selectedCryptoId, selectedCryptoName);
         }
         modal.style.display = 'block';
+    }
+
+    openEditTransactionModal(transactionId, cryptoId, cryptoName, quantity, price, type, location, date) {
+        const modal = this.shadowRoot.querySelector('#editModal');
+        const transactionIdField = this.shadowRoot.querySelector('#edit_transaction_id');
+        const cryptoIdField = this.shadowRoot.querySelector('#edit_crypto_id');
+        const cryptoNameField = this.shadowRoot.querySelector('#edit_crypto_name');
+        const quantityField = this.shadowRoot.querySelector('#edit_quantity');
+        const priceField = this.shadowRoot.querySelector('#edit_price_usd');
+        const typeField = this.shadowRoot.querySelector('#edit_transaction_type');
+        const locationField = this.shadowRoot.querySelector('#edit_location');
+        const dateField = this.shadowRoot.querySelector('#edit_date');
+
+        transactionIdField.value = transactionId;
+        cryptoIdField.value = cryptoId;
+        cryptoNameField.value = cryptoName;
+        quantityField.value = quantity;
+        priceField.value = price;
+        typeField.value = type;
+        locationField.value = location;
+        dateField.value = date;
+
+        modal.style.display = 'block';
+    }
+
+    async deleteTransaction(transactionId) {
+        const entryId = this.panel.config.entry_id;
+
+        if (confirm("Êtes-vous sûr de vouloir supprimer cette transaction?")) {
+            try {
+                const baseUrl = `${window.location.protocol}//${window.location.hostname}`;
+                const url = `${baseUrl}:5000/transaction/${entryId}/${transactionId}`;
+
+                const response = await fetch(url, {
+                    method: 'DELETE',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                if (response.ok) {
+                    alert('Transaction supprimée avec succès');
+                    // Recharger les transactions
+                    const selectedCryptoId = this.shadowRoot.querySelector('#cryptoSelect').value;
+                    this.fetchAndRenderTransactions(entryId, selectedCryptoId);
+                } else {
+                    const errorText = await response.text();
+                    throw new Error(`Erreur ${response.status}: ${errorText}`);
+                }
+            } catch (error) {
+                console.error('Erreur lors de la suppression de la transaction:', error);
+                alert('Erreur lors de la suppression de la transaction');
+            }
+        }
+    }
+
+    async saveTransaction() {
+        const form = this.shadowRoot.querySelector('#transactionForm');
+        const formData = new FormData(form);
+        const transaction = {};
+        formData.forEach((value, key) => {
+            transaction[key] = value;
+        });
+        transaction.entry_id = this.panel.config.entry_id;
+
+        try {
+            const baseUrl = `${window.location.protocol}//${window.location.hostname}`;
+            const url = `${baseUrl}:5000/transaction/${transaction.entry_id}`;
+            
+            const response = await fetch(url, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(transaction)
+            });
+
+            if (response.ok) {
+                alert('Transaction ajoutée avec succès');
+                const selectedCryptoId = this.shadowRoot.querySelector('#cryptoSelect').value;
+                this.fetchAndRenderTransactions(transaction.entry_id, selectedCryptoId);
+                this.shadowRoot.querySelector('#myModal').style.display = 'none';
+            } else {
+                const errorText = await response.text();
+                throw new Error(`Erreur ${response.status}: ${errorText}`);
+            }
+        } catch (error) {
+            console.error('Erreur lors de l\'ajout de la transaction:', error);
+            alert('Erreur lors de l\'ajout de la transaction');
+        }
+    }
+
+    async updateTransaction() {
+        const form = this.shadowRoot.querySelector('#editTransactionForm');
+        const formData = new FormData(form);
+        const transaction = {};
+        formData.forEach((value, key) => {
+            transaction[key] = value;
+        });
+        transaction.entry_id = this.panel.config.entry_id;
+
+        try {
+            const baseUrl = `${window.location.protocol}//${window.location.hostname}`;
+            const url = `${baseUrl}:5000/transaction/${transaction.entry_id}/${transaction.transaction_id}`;
+
+            const response = await fetch(url, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(transaction)
+            });
+
+            if (response.ok) {
+                alert('Transaction mise à jour avec succès');
+                const selectedCryptoId = this.shadowRoot.querySelector('#cryptoSelect').value;
+                this.fetchAndRenderTransactions(transaction.entry_id, selectedCryptoId);
+                this.shadowRoot.querySelector('#editModal').style.display = 'none';
+            } else {
+                const errorText = await response.text();
+                throw new Error(`Erreur ${response.status}: ${errorText}`);
+            }
+        } catch (error) {
+            console.error('Erreur lors de la mise à jour de la transaction:', error);
+            alert('Erreur lors de la mise à jour de la transaction');
+        }
     }
 
     async exportDatabase() {
@@ -475,44 +632,6 @@ class CryptoTransactionsPanel extends HTMLElement {
         } catch (error) {
             console.error('Erreur lors de l\'importation de la base de données:', error);
             alert('Erreur lors de l\'importation de la base de données');
-        }
-    }
-
-    
-    async saveTransaction() {
-        const form = this.shadowRoot.querySelector('#transactionForm');
-        const formData = new FormData(form);
-        const transaction = {};
-        formData.forEach((value, key) => {
-            transaction[key] = value;
-        });
-        transaction.entry_id = this.panel.config.entry_id;
-
-        try {
-            const baseUrl = `${window.location.protocol}//${window.location.hostname}`;
-            const url = `${baseUrl}:5000/transaction/${transaction.entry_id}`;
-            
-            const response = await fetch(url, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify(transaction)
-            });
-
-            
-            if (response.ok) {
-                alert('Transaction ajoutée avec succès');
-                const selectedCryptoId = this.shadowRoot.querySelector('#cryptoSelect').value;
-                this.fetchAndRenderTransactions(transaction.entry_id, selectedCryptoId);
-                this.shadowRoot.querySelector('#myModal').style.display = 'none';
-            } else {
-                const errorText = await response.text();
-                throw new Error(`Erreur ${response.status}: ${errorText}`);
-            }
-        } catch (error) {
-            console.error('Erreur lors de l\'ajout de la transaction:', error);
-            alert('Erreur lors de l\'ajout de la transaction');
         }
     }
 

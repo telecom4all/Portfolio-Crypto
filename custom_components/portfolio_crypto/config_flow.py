@@ -86,8 +86,8 @@ class PortfolioCryptoOptionsFlowHandler(config_entries.OptionsFlow):
             crypto_name = user_input.get("crypto_name")
             crypto_id = user_input.get("crypto_id")
 
-            _LOGGER.error(f"crypto_name : {crypto_name}")
-            _LOGGER.error(f"crypto_id : {crypto_id}")
+            #_LOGGER.error(f"crypto_name : {crypto_name}")
+            #_LOGGER.error(f"crypto_id : {crypto_id}")
 
             # Vérifier si la crypto est déjà enregistrée dans l'intégration
             cryptos = self.config_entry.options.get("cryptos", [])
