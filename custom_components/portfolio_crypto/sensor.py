@@ -92,8 +92,25 @@ class PortfolioCryptoCoordinator(DataUpdateCoordinator):
 
             crypto_data = await self.fetch_crypto_profit_loss(crypto_id)
             crypto_transactions = await self.fetch_crypto_transactions(crypto_id)
+
+            # Calcul du prix moyen
+            total_quantity = 0
+            total_cost = 0
+            for transaction in crypto_transactions:
+                if transaction[5] == 'buy':  # transaction_type == 'buy'
+                    quantity = transaction[3]  # assuming this is the quantity
+                    price = transaction[4]  # assuming this is the price in USD
+                    total_quantity += quantity
+                    total_cost += price
+
+            if total_quantity > 0:
+                average_price = total_cost / total_quantity
+            else:
+                average_price = 0
+
+
             crypto_data["transactions_count"] = len(crypto_transactions)
-            crypto_data["average_price"] = 0
+            crypto_data["average_price"] = average_price
 
             data[crypto_id] = {
                 "crypto_id": crypto_id,

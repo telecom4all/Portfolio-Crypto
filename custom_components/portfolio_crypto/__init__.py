@@ -8,17 +8,17 @@ import async_timeout
 import asyncio
 import os
 from .const import DOMAIN, COINGECKO_API_URL
-from .db import save_crypto, load_crypto_attributes
+from .db import save_crypto, load_crypto_attributes, delete_crypto_db
 
 
 _LOGGER = logging.getLogger(__name__)
 
 # Configurer la journalisation pour écrire dans un fichier
-log_handler = logging.FileHandler('/config/logs/integration.log')
-log_handler.setLevel(logging.DEBUG)
-log_formatter = logging.Formatter('%(asctime)s %(levelname)s: %(message)s [in %(pathname)s:%(lineno)d]')
-log_handler.setFormatter(log_formatter)
-_LOGGER.addHandler(log_handler)
+#log_handler = logging.FileHandler('/config/logs/integration.log')
+#log_handler.setLevel(logging.DEBUG)
+#log_formatter = logging.Formatter('%(asctime)s %(levelname)s: %(message)s [in %(pathname)s:%(lineno)d]')
+#log_handler.setFormatter(log_formatter)
+#_LOGGER.addHandler(log_handler)
 
 async def async_setup(hass: HomeAssistant, config: dict):
     """Configurer l'intégration via le fichier configuration.yaml (non utilisé ici)"""
@@ -46,6 +46,27 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
 
     await hass.config_entries.async_forward_entry_setup(entry, "sensor")
 
+    async def async_delete_crypto_service(call):
+        crypto_id = call.data.get("crypto_id")
+        entry_id = call.data.get("entry_id")
+        _LOGGER.debug(f"Service delete_crypto appelé avec entry_id: {entry_id} et crypto_id: {crypto_id}")
+        coordinator = hass.data[DOMAIN].get(entry_id)
+        if coordinator:
+            success = await coordinator.delete_crypto(crypto_id)
+            if success:
+                # Recharger les entités après la suppression d'une crypto
+                await hass.config_entries.async_forward_entry_unload(entry, "sensor")
+                await hass.config_entries.async_forward_entry_setup(entry, "sensor")
+                _LOGGER.debug(f"Crypto {crypto_id} supprimée avec succès et les entités ont été rechargées.")
+            else:
+                _LOGGER.error(f"Crypto {crypto_id} introuvable ou déjà supprimée.")
+        else:
+            _LOGGER.error(f"Aucun coordinator trouvé pour l'entry_id: {entry_id}")
+
+        # Recharger l'intégration pour supprimer les cryptomonnaies
+        await self.hass.config_entries.async_reload(self.config_entry.entry_id)
+    hass.services.async_register(DOMAIN, "delete_crypto", async_delete_crypto_service)
+
     async def async_add_crypto_service(call):
         name = call.data.get("crypto_name")
         entry_id = call.data.get("entry_id")
@@ -64,7 +85,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
             _LOGGER.error(f"Aucun coordinator trouvé pour l'entry_id: {entry_id}")
 
         # Recharger l'intégration pour ajouter les nouvelles cryptomonnaies
-        await self.hass.config_entries.async_reload(self.config_entry.entry_id)
+        #await self.hass.config_entries.async_reload(self.config_entry.entry_id)
     hass.services.async_register(DOMAIN, "add_crypto", async_add_crypto_service)
 
     return True
@@ -131,7 +152,27 @@ class PortfolioCryptoCoordinator(DataUpdateCoordinator):
         _LOGGER.info("New data fetched successfully")
         return data
 
+    async def delete_crypto(self, crypto_id):
+        entry_id = self.config_entry.entry_id
+        # Supprimer la crypto de la base de données
+        success = delete_crypto_db(entry_id, crypto_id)
+        if not success:
+            return False
 
+        # Supprimer la crypto de la configuration
+        cryptos = self.config_entry.options.get("cryptos", [])
+        updated_cryptos = [crypto for crypto in cryptos if crypto["id"] != crypto_id]
+        self.hass.config_entries.async_update_entry(self.config_entry, options={**self.config_entry.options, "cryptos": updated_cryptos})
+
+        # Supprimer les entités de Home Assistant
+        entity_registry = await self.hass.helpers.entity_registry.async_get_registry()
+        entries = self.hass.helpers.entity_registry.async_entries_for_config_entry(entity_registry, self.config_entry.entry_id)
+        for entry in entries:
+            if entry.unique_id.startswith(f"{self.config_entry.entry_id}_{crypto_id}"):
+                entity_registry.async_remove(entry.entity_id)
+
+        return True
+    
     async def fetch_all_data(self):
         """Fetch all necessary data."""
         data = {}
@@ -200,6 +241,7 @@ class PortfolioCryptoCoordinator(DataUpdateCoordinator):
         await self.hass.config_entries.async_reload(self.config_entry.entry_id)
 
         return True
+    
     async def fetch_crypto_id(self, crypto_name):
         async with aiohttp.ClientSession() as session:
             try:

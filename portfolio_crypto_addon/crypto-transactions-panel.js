@@ -108,6 +108,37 @@ class CryptoTransactionsPanel extends HTMLElement {
         }
     }
 
+    // Ajout de la méthode deleteCrypto
+    async deleteCrypto(cryptoId) {
+        const entryId = this.panel.config.entry_id;
+
+        if (confirm("Êtes-vous sûr de vouloir supprimer cette crypto?")) {
+            try {
+                const baseUrl = `${window.location.protocol}//${window.location.hostname}`;
+                const url = `${baseUrl}:5000/delete_crypto/${entryId}/${cryptoId}`;
+
+                const response = await fetch(url, {
+                    method: 'DELETE',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                if (response.ok) {
+                    alert('Crypto supprimée avec succès');
+                    // Recharger les cryptos et les transactions
+                    this.loadCryptos(entryId);
+                } else {
+                    const errorText = await response.text();
+                    throw new Error(`Erreur ${response.status}: ${errorText}`);
+                }
+            } catch (error) {
+                console.error('Erreur lors de la suppression de la crypto:', error);
+                alert('Erreur lors de la suppression de la crypto');
+            }
+        }
+    }
+
     render() {
         this.shadowRoot.innerHTML = `
         <style>
@@ -219,7 +250,10 @@ class CryptoTransactionsPanel extends HTMLElement {
                 <div class="info">
                     <strong>Entry ID:</strong> ${this.panel.config.entry_id}
                 </div>
-                <select id="cryptoSelect"></select>
+                <div class="select-container">
+                    <select id="cryptoSelect"></select>
+                    <button id="deleteCrypto">Supprimer la Crypto</button>
+                </div>
                 <div id="transactionsContainer"></div>
                 <button id="add">Ajouter une transaction</button>
             </div>
@@ -251,6 +285,13 @@ class CryptoTransactionsPanel extends HTMLElement {
             </div>
         </div>
         `;
+
+        this.shadowRoot.querySelector('#deleteCrypto').addEventListener('click', () => {
+            const selectElement = this.shadowRoot.querySelector('#cryptoSelect');
+            const selectedCryptoId = selectElement.value;
+            this.deleteCrypto(selectedCryptoId);
+        });
+
 
         this.shadowRoot.querySelectorAll('.delete').forEach(button => {
             button.addEventListener('click', e => {
