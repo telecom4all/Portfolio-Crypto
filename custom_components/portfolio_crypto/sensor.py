@@ -323,31 +323,49 @@ class PortfolioCryptoCoordinator(DataUpdateCoordinator):
 
     async def delete_crypto(self, crypto_id):
         entry_id = self.config_entry.entry_id
+        _LOGGER.info(f"Tentative de suppression de la crypto avec ID: {crypto_id}")
+
         # Supprimer la crypto de la base de données
         success = delete_crypto_db(entry_id, crypto_id)
         if not success:
+            _LOGGER.error(f"Échec de la suppression de la crypto avec ID: {crypto_id} de la base de données")
             return False
+
+        _LOGGER.info(f"Crypto avec ID: {crypto_id} supprimée de la base de données")
 
         # Supprimer la crypto de la configuration
         cryptos = self.config_entry.options.get("cryptos", [])
         updated_cryptos = [crypto for crypto in cryptos if crypto["id"] != crypto_id]
         self.hass.config_entries.async_update_entry(self.config_entry, options={**self.config_entry.options, "cryptos": updated_cryptos})
 
+        _LOGGER.info(f"Crypto avec ID: {crypto_id} supprimée de la configuration")
+
         # Supprimer les entités de Home Assistant
         entity_registry = er.async_get(self.hass)
         device_registry = dr.async_get(self.hass)
-        
+
         # Trouver toutes les entités et l'appareil associé à la crypto_id
         entries = er.async_entries_for_config_entry(entity_registry, self.config_entry.entry_id)
         for entry in entries:
             if entry.unique_id.startswith(f"{self.config_entry.entry_id}_{crypto_id}"):
+                _LOGGER.info(f"Suppression de l'entité avec ID: {entry.entity_id}")
                 # Supprimer l'entité
                 entity_registry.async_remove(entry.entity_id)
 
-                # Trouver l'appareil associé à cette entité et le supprimer
-                device_entry = device_registry.async_get_device({(DOMAIN, entry.unique_id)})
-                if device_entry is not None:
-                    device_registry.async_remove_device(device_entry.id)
+        # Forcer la suppression de l'appareil associé à cette crypto_id
+        devices = dr.async_entries_for_config_entry(device_registry, self.config_entry.entry_id)
+        for device in devices:
+            if device.name == crypto_id:
+                _LOGGER.info(f"Suppression de l'appareil avec ID: {device.id}")
+                device_registry.async_remove_device(device.id)
+
+        # Attendre un court instant pour s'assurer que les suppressions sont complètes
+        await asyncio.sleep(1)
+        
+        # Recharger l'intégration pour mettre à jour les entités restantes
+        await self.hass.config_entries.async_reload(self.config_entry.entry_id)
+
+        _LOGGER.info(f"Rechargement de l'intégration pour entry_id: {self.config_entry.entry_id}")
 
         return True
     
