@@ -63,6 +63,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
         else:
             _LOGGER.error(f"Aucun coordinator trouvé pour l'entry_id: {entry_id}")
 
+        # Recharger l'intégration pour ajouter les nouvelles cryptomonnaies
+        await self.hass.config_entries.async_reload(self.config_entry.entry_id)
     hass.services.async_register(DOMAIN, "add_crypto", async_add_crypto_service)
 
     return True
@@ -175,36 +177,29 @@ class PortfolioCryptoCoordinator(DataUpdateCoordinator):
         })
 
     async def add_crypto(self, crypto_name, crypto_id):
-        _LOGGER.debug(f"Adding crypto {crypto_name}")
-        
-       # try:
-       #     crypto_id = await self.fetch_crypto_id(crypto_name)
-       # except Exception as e:
-       #     _LOGGER.error(f"Error fetching crypto ID for {crypto_name}: {e}")
-       #     return False
+        cryptos = self.config_entry.options.get("cryptos", [])
 
-        if crypto_id:
-            _LOGGER.debug(f"Found crypto ID {crypto_id} for {crypto_name}")
-            cryptos = self.config_entry.options.get("cryptos", [])
-            if any(c["id"] == crypto_id for c in cryptos):
-                _LOGGER.error(f"Crypto {crypto_name} (ID: {crypto_id}) already exists")
-                return False
+        # Vérifiez que la structure est correcte
+        valid_cryptos = [crypto for crypto in cryptos if isinstance(crypto, dict) and "id" in crypto]
 
-            cryptos.append({"name": crypto_name, "id": crypto_id})
-            self.hass.config_entries.async_update_entry(self.config_entry, options={**self.config_entry.options, "cryptos": cryptos})
+        # Assurez-vous que la crypto n'existe pas déjà
+        if any(c["id"] == crypto_id for c in valid_cryptos):
+            _LOGGER.error(f"Crypto {crypto_name} with ID {crypto_id} already exists")
+            return False
 
-            # Sauvegarder les informations de crypto dans la base de données
-            await self.save_crypto_to_db(self.config_entry.entry_id, crypto_name, crypto_id)
+        # Ajoutez la nouvelle crypto à la liste valide
+        valid_cryptos.append({"name": crypto_name, "id": crypto_id})
 
-            # Reconfigurer les entités pour ajouter les nouvelles cryptomonnaies
-            await self.hass.config_entries.async_forward_entry_unload(self.config_entry, "sensor")
-            await self.hass.config_entries.async_forward_entry_setup(self.config_entry, "sensor")
+        # Mettez à jour les options de configuration avec la liste valide
+        self.hass.config_entries.async_update_entry(self.config_entry, options={**self.config_entry.options, "cryptos": valid_cryptos})
 
-            return True
-        _LOGGER.error(f"Crypto {crypto_name} not found")
-        return False
+        # Sauvegarder les informations de crypto dans la base de données
+        await self.save_crypto_to_db(self.config_entry.entry_id, crypto_name, crypto_id)
 
+        # Recharger l'intégration pour ajouter les nouvelles cryptomonnaies
+        await self.hass.config_entries.async_reload(self.config_entry.entry_id)
 
+        return True
     async def fetch_crypto_id(self, crypto_name):
         async with aiohttp.ClientSession() as session:
             try:

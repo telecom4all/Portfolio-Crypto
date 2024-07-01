@@ -91,7 +91,9 @@ class PortfolioCryptoOptionsFlowHandler(config_entries.OptionsFlow):
 
             # Vérifier si la crypto est déjà enregistrée dans l'intégration
             cryptos = self.config_entry.options.get("cryptos", [])
-            if any(crypto["id"] == crypto_id for crypto in cryptos):
+            valid_cryptos = [crypto for crypto in cryptos if isinstance(crypto, dict) and "id" in crypto]
+
+            if any(crypto["id"] == crypto_id for crypto in valid_cryptos):
                 errors["base"] = "crypto_already_exists"
             else:
                 # Vérifier si la crypto existe déjà dans la base de données
@@ -108,7 +110,8 @@ class PortfolioCryptoOptionsFlowHandler(config_entries.OptionsFlow):
                                 success = await coordinator.add_crypto(crypto_name, crypto_id)
                                 if success:
                                     # Met à jour les options de l'entrée de configuration
-                                    self.hass.config_entries.async_update_entry(self.config_entry, options={**self.config_entry.options, "cryptos": cryptos})
+                                    valid_cryptos.append({"name": crypto_name, "id": crypto_id})
+                                    self.hass.config_entries.async_update_entry(self.config_entry, options={**self.config_entry.options, "cryptos": valid_cryptos})
 
                                     # Reconfigure les entités pour ajouter les nouvelles cryptomonnaies
                                     await self.hass.config_entries.async_forward_entry_unload(self.config_entry, "sensor")
@@ -126,3 +129,5 @@ class PortfolioCryptoOptionsFlowHandler(config_entries.OptionsFlow):
             }),
             errors=errors,
         )
+
+

@@ -245,18 +245,27 @@ class PortfolioCryptoCoordinator(DataUpdateCoordinator):
         crypto_id = await self.fetch_crypto_id(crypto_name)
         if crypto_id:
             cryptos = self.config_entry.options.get("cryptos", [])
-            cryptos.append({"name": crypto_name, "id": crypto_id})
-            self.hass.config_entries.async_update_entry(self.config_entry, options={**self.config_entry.options, "cryptos": cryptos})
+
+            # Vérifiez que la structure est correcte
+            valid_cryptos = [crypto for crypto in cryptos if isinstance(crypto, dict) and "id" in crypto]
+
+            if any((isinstance(crypto, dict) and crypto.get("id") == crypto_id) or 
+                (isinstance(crypto, list) and len(crypto) > 1 and crypto[1] == crypto_id) for crypto in valid_cryptos):
+                _LOGGER.error(f"Crypto {crypto_name} with ID {crypto_id} already exists")
+                return False
+            
+            # Ajoutez la nouvelle crypto à la liste valide
+            valid_cryptos.append({"name": crypto_name, "id": crypto_id})
+            
+            # Mettez à jour les options de configuration avec la liste valide
+            self.hass.config_entries.async_update_entry(self.config_entry, options={**self.config_entry.options, "cryptos": valid_cryptos})
 
             # Sauvegarder les informations de crypto dans la base de données
             await self.save_crypto_to_db(self.config_entry.entry_id, crypto_name, crypto_id)
 
-            # Reconfigurer les entités pour ajouter les nouvelles cryptomonnaies
-            await self.hass.config_entries.async_forward_entry_unload(self.config_entry, "sensor")
-            await self.hass.config_entries.async_forward_entry_setup(self.config_entry, "sensor")
-
+            # Recharger l'intégration pour ajouter les nouvelles cryptomonnaies
             await self.hass.config_entries.async_reload(self.config_entry.entry_id)
-            
+
             return True
         return False
 
