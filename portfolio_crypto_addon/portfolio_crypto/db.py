@@ -252,7 +252,7 @@ def delete_crypto_db(entry_id, crypto_id):
 def export_db(entry_id):
     try:
         db_path = get_database_path(entry_id)
-        return send_file(db_path, as_attachment=True, attachment_filename=f'portfolio_crypto_{entry_id}.db')
+        return send_file(db_path, as_attachment=True, download_name=f'portfolio_crypto_{entry_id}.db')
     except Exception as e:
         logging.error(f"Erreur lors de l'exportation de la base de données pour l'ID d'entrée {entry_id}: {e}")
         raise
