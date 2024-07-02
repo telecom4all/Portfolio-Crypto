@@ -23,7 +23,7 @@ L'intégration "Portfolio Crypto" permet de gérer et surveiller vos investissem
 
 1. Accédez à votre interface Home Assistant.
 2. Cliquez sur `Paramètres` dans le menu de gauche.
-3. Sélectionnez `Modules complémentaires` puis cliquez sur `Boutique des modules complémentaires` et cliquez sur l'icone avec les 3 point en haut à droite, puis cliquez sur 'Dépots'.
+3. Sélectionnez `Modules complémentaires` puis cliquez sur `Boutique des modules complémentaires` et cliquez sur l'icone avec les 3 point en haut à droite, puis cliquez sur `Dépots`.
    ![Modules complémentaires](images/1.png)
 4. Recherchez `Portfolio Crypto` et cliquez sur `Installer`.
    ![Installer Portfolio Crypto](link_to_image_34.png)
