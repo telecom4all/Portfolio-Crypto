@@ -63,27 +63,41 @@ L'intégration "Portfolio Crypto" permet de gérer et surveiller vos investissem
 3. Vérifiez que le `nom` et l'`id` a bien été trouvé et cliquez sur `valider` pour ajouter la crypto
    ![Rechercher Portfolio Crypto](images/18.png)
 
-3. cliquez sur l'icone avec les 3 point du `portefeuille` pour recharger l'intégration (a faire a chaque fois que l'on ajoute une crypto)
+4. cliquez sur l'icone avec les 3 point du `portefeuille` pour recharger l'intégration (a faire a chaque fois que l'on ajoute une crypto)
    ![Rechercher Portfolio Crypto](images/20.png)
 
-3. Vous pourrez voir les `entités` qui on été crée
+5. Vous pourrez voir les `entités` qui on été crée
    ![Rechercher Portfolio Crypto](images/29.png)
 
+6. Vous pourrez voir les `appareils` qui on été crée
+   ![Rechercher Portfolio Crypto](images/31.png)
 
-### Supprimer une Cryptomonnaie
+### Configurer le panel de la sidebar
 
-1. **Utiliser le Service Personnalisé** :
+1. Retournez dans `Paramètres` - `Modules complémentaires`
+   ![Rechercher Portfolio Crypto](images/36.png)
 
-    Utilisez le service `portfolio_crypto.delete_crypto` avec l'ID de la cryptomonnaie et l'ID de l'entrée.
+2. Cliquez sur l'addon `Portfolio Crypto`
+   ![Rechercher Portfolio Crypto](images/37.png)
 
-    Exemple de YAML pour appeler le service :
+3. Recherchez l'`entry id` de votre db 
+   ![Rechercher Portfolio Crypto](images/38.png)
+
+3. Modifier votre `configuration.yaml`, un bout de code a été ajouter 
+    modifiez `sidebar_title`, `entry_id` et `entry_name` selon votre configuration :
 
     ```yaml
-    service: portfolio_crypto.delete_crypto
-    data:
-      entry_id: your_entry_id
-      crypto_id: bitcoin
+    panel_custom:
+        - name: crypto-transactions-panel
+            sidebar_title: 'Transactions Wallet 1' #Nom affiché sur la sidebar
+            sidebar_icon: 'mdi:currency-usd' #icone de la sidebar
+            js_url: '/local/crypto-transactions-panel.js'
+            config:
+            entry_id: 11111111111111111111111111  # entry_id de votre db
+            entry_name: "Wallet 1" # nom du portefeuille 
     ```
+   ![Rechercher Portfolio Crypto](images/39.png)
+    
 
 ## Utilisation
 
