@@ -9,18 +9,19 @@ cp -r /app/custom_components/portfolio_crypto/* /config/custom_components/portfo
 
 # Copiez le fichier JavaScript du panneau personnalisé dans le répertoire www de Home Assistant
 cp /app/crypto-transactions-panel.js /config/www/
+cp /app/icon_portfolio_crypto.png /config/www/
 
 # Ajouter la configuration du panneau personnalisé dans configuration.yaml
 CONFIG_FILE="/config/configuration.yaml"
 PANEL_CONFIG="
 panel_custom:
   - name: crypto-transactions-panel
-    sidebar_title: 'Transactions Crypto'
-    sidebar_icon: 'mdi:currency-usd'
+    sidebar_title: 'Transactions Crypto' #Nom affiché sur la sidebar
+    sidebar_icon: 'mdi:currency-usd' #icone de la sidebar
     js_url: '/local/crypto-transactions-panel.js'
     config:
-      entry_id: your_entry_id
-      entry_name: your_entry_name
+      entry_id: your_entry_id # entry_id de votre db
+      entry_name: your_entry_name # nom du portefeuille 
 "
 
 if ! grep -q "panel_custom:" "$CONFIG_FILE"; then
