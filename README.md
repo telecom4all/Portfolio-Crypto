@@ -83,7 +83,7 @@ L'intégration "Portfolio Crypto" permet de gérer et surveiller vos investissem
 3. Recherchez l'`entry id` de votre db 
    ![Rechercher Portfolio Crypto](images/38.png)
 
-3. Modifier votre `configuration.yaml`, un bout de code a été ajouter 
+4. Modifier votre `configuration.yaml`, un bout de code a été ajouter 
     modifiez `sidebar_title`, `entry_id` et `entry_name` selon votre configuration :
 
     ```yaml
@@ -130,7 +130,11 @@ L'intégration "Portfolio Crypto" permet de gérer et surveiller vos investissem
             entry_id: 24157454865546546544564654  # entry_id de votre db
             entry_name: "Wallet 2" # nom du portefeuille 
     ```
-    
+
+5. Redémarez `homeassistant` pour prendre en compte les modification 
+   ![Rechercher Portfolio Crypto](images/40.png)
+
+
 ## Utilisation
 
 ### Suivi des Transactions
@@ -148,6 +152,10 @@ L'intégration "Portfolio Crypto" permet de suivre toutes vos transactions d'ach
     - Lieu
     - Date
 
+    ![Rechercher Portfolio Crypto](images/41.png)
+    ![Rechercher Portfolio Crypto](images/42.png)
+    ![Rechercher Portfolio Crypto](images/44.png)
+
 - **Modifier une Transaction** :
 
     Sélectionnez une transaction existante et modifiez les informations selon vos besoins.
@@ -156,60 +164,69 @@ L'intégration "Portfolio Crypto" permet de suivre toutes vos transactions d'ach
 
     Supprimez une transaction en utilisant le panneau personnalisé.
 
+- **Exportez votre fichier de base de donnée sql** :
+
+    Cliquez sur le boutton `Exporter Db` cela téléchargera cotre db sur votre ordinateur.
+    ![Rechercher Portfolio Crypto](images/46.png)
+
+- **Importez votre fichier de base de donnée sql** :
+
+    Cliquez sur le boutton `Importer Db` et aller chercher votre fichier sur l'ordinateur.
+    ![Rechercher Portfolio Crypto](images/47.png)
+
 ### Calcul des Profits et Pertes
 
-L'intégration calcule automatiquement vos profits et pertes basés sur les transactions enregistrées. Les informations suivantes sont disponibles :
+L'intégration calcule automatiquement vos profits et pertes basés sur les transactions enregistrées. 
+
+Les informations suivantes sont disponibles pour le portefeuille:
 - Investissement Total
 - Valeur Actuelle
 - Profit/Perte Total
 - Pourcentage de Profit/Perte
+- Nombre de transactions
 
-## Personnalisation
+Les informations suivantes sont disponibles pour le portefeuille:
+- Investissement Total
+- Valeur Actuelle
+- Profit/Perte Total
+- Pourcentage de Profit/Perte
+- Nombre de transactions
+- prix d'achat moyen
 
-### Icônes
+![Rechercher Portfolio Crypto](images/49.png)
 
-Tous les appareils afficheront l'icône "mdi:currency-usd-circle". Si vous souhaitez utiliser une autre icône, vous pouvez modifier la méthode `icon` dans le fichier `sensor.py` :
+## Dépannage
 
-```python
-@property
-def icon(self):
-    return "mdi:currency-usd-circle"  # Icône globale pour tous les appareils
-Ajouter de Nouvelles Icônes
-Pour ajouter une icône spécifique à une cryptomonnaie, vous pouvez personnaliser cette méthode selon vos besoins :
+### Problèmes de Connexion
 
-python
-Copier le code
-@property
-def icon(self):
-    if self._crypto['name'].lower() == "bitcoin":
-        return "mdi:currency-btc"
-    elif self._crypto['name'].lower() == "ethereum":
-        return "mdi:ethereum"
-    else:
-        return "mdi:currency-usd-circle"
-Dépannage
-Problèmes de Connexion
 Si vous rencontrez des problèmes de connexion avec l'API CoinGecko, assurez-vous que votre instance Home Assistant a accès à Internet et que toutes les dépendances sont correctement installées.
 
-Erreurs de Base de Données
+### Erreurs de Base de Données
+
 Si vous rencontrez des erreurs liées à la base de données, vérifiez les logs de Home Assistant et assurez-vous que les bases de données sont correctement initialisées et accessibles.
 
-Contribution
+
+## Contribution
+
 Les contributions sont les bienvenues ! Si vous souhaitez contribuer à ce projet, veuillez suivre ces étapes :
 
-Forker le Dépôt :
+- Forkez le dépôt sur GitHub.
 
-Forkez le dépôt sur GitHub.
+- Créez une branche pour votre fonctionnalité ou correction de bug.
 
-Créer une Branche :
+- Soumettez une pull request avec une description détaillée de vos modifications.
 
-Créez une branche pour votre fonctionnalité ou correction de bug.
-
-Soumettre une Pull Request :
-
-Soumettez une pull request avec une description détaillée de vos modifications.
-
-Licence
-Ce projet est sous licence MIT. Voir le fichier LICENSE pour plus de détails.
 
 Merci d'utiliser "Portfolio Crypto" pour Home Assistant. Nous espérons que cette intégration vous aidera à mieux gérer et suivre vos investissements en cryptomonnaie.
+
+## Soutien
+
+Ce code est disponible pour tous si vous voulez me "soutenir :-)" voici un lien d'affiliation Bitget : https://partner.bitget.com/bg/85MZE2
+
+ou en cryptos :
+
+BTC --> 1CetuWt9PuppZ338MzBzQZSvtMW3NnpjMr
+ETH (Réseau ERC20) --> 0x18f71abd7c2ee05eab7292d8f34177e7a1b62236
+MATIC (Réseau Polygon) --> 0x18f71abd7c2ee05eab7292d8f34177e7a1b62236
+BNB (Réseau BSC BEP20) --> 0x18f71abd7c2ee05eab7292d8f34177e7a1b62236
+SOL --> AsLvBCG1fpmpaueTYBmU5JN5QKVkt9a1dLR44BAGUZbV
