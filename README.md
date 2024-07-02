@@ -25,9 +25,20 @@ L'intégration "Portfolio Crypto" permet de gérer et surveiller vos investissem
 2. Cliquez sur `Paramètres` dans le menu de gauche.
 3. Sélectionnez `Modules complémentaires` puis cliquez sur `Boutique des modules complémentaires` et cliquez sur l'icone avec les 3 point en haut à droite, puis cliquez sur `Dépots`.
    ![Modules complémentaires](images/1.png)
-4. Recherchez `Portfolio Crypto` et cliquez sur `Installer`.
-   ![Installer Portfolio Crypto](link_to_image_34.png)
+3. Ajoutez l'adresse :  `https://github.com/telecom4all/Portfolio-Crypto` et cliquez sur `Ajouter`.
+   ![Installer Repo Portfolio Crypto](images/2.png)   
+4. Rafraîchissez le cache du navigateur `CTRL-F5`.
+5. Recherchez `Portfolio Crypto` et cliquez sur `Installer`.
+   ![Rechercher Portfolio Crypto](images/4.png)
+   ![Installer Portfolio Crypto](images/5.png)
+6. Démarez `Portfolio Crypto` et cliquez sur `Chien de Garde`.
+   ![Rechercher Portfolio Crypto](images/6.png)
 
+
+
+
+
+   
 3. **Ajouter la Configuration au Fichier `configuration.yaml`** :
 
     Ajoutez la configuration suivante pour le panneau personnalisé :
