@@ -16,20 +16,17 @@ L'intégration "Portfolio Crypto" permet de gérer et surveiller vos investissem
 
 ### Pré-requis
 
-- Home Assistant (dernière version recommandée)
-- Docker (pour l'add-on)
+- Home Assistant installé et configuré
+- Accès à l'interface de Home Assistant
 
 ### Étapes d'installation
 
-1. **Cloner le dépôt dans le répertoire `custom_components` de Home Assistant** :
-
-    ```sh
-    git clone https://github.com/telecom4all/Portfolio-Crypto.git /config/custom_components/portfolio_crypto
-    ```
-
-2. **Configurer l'Add-on Docker** :
-
-    Copiez le répertoire `portfolio_crypto_addon` dans le répertoire des add-ons de Home Assistant.
+1. Accédez à votre interface Home Assistant.
+2. Cliquez sur `Paramètres` dans le menu de gauche.
+3. Sélectionnez `Modules complémentaires` puis cliquez sur `Boutique des modules complémentaires` et cliquez sur l'icone avec les 3 point en haut à droite, puis cliquez sur Dépots.
+   ![Modules complémentaires](images/1.png)
+4. Recherchez `Portfolio Crypto` et cliquez sur `Installer`.
+   ![Installer Portfolio Crypto](link_to_image_34.png)
 
 3. **Ajouter la Configuration au Fichier `configuration.yaml`** :
 
