@@ -98,7 +98,39 @@ L'intégration "Portfolio Crypto" permet de gérer et surveiller vos investissem
     ```
    ![Rechercher Portfolio Crypto](images/39.png)
     
+    Vous pouvez ajoutez autant de panel que de portefeuille crypto que vous créez en rajoutant cette partie 
 
+    ```yaml
+    panel_custom:
+        - name: crypto-transactions-panel
+            sidebar_title: 'Transactions Wallet 1' #Nom affiché sur la sidebar
+            sidebar_icon: 'mdi:currency-usd' #icone de la sidebar
+            js_url: '/local/crypto-transactions-panel.js'
+            config:
+            entry_id: 11111111111111111111111111  # entry_id de votre db
+            entry_name: "Wallet 1" # nom du portefeuille 
+    ```
+
+    ce qui donnerai 
+
+    ```yaml
+    panel_custom:
+        - name: crypto-transactions-panel
+            sidebar_title: 'Transactions Wallet 1' #Nom affiché sur la sidebar
+            sidebar_icon: 'mdi:currency-usd' #icone de la sidebar
+            js_url: '/local/crypto-transactions-panel.js'
+            config:
+            entry_id: 11111111111111111111111111  # entry_id de votre db
+            entry_name: "Wallet 1" # nom du portefeuille 
+        - name: crypto-transactions-panel
+            sidebar_title: 'Transactions Wallet 2' #Nom affiché sur la sidebar
+            sidebar_icon: 'mdi:currency-usd' #icone de la sidebar
+            js_url: '/local/crypto-transactions-panel.js'
+            config:
+            entry_id: 24157454865546546544564654  # entry_id de votre db
+            entry_name: "Wallet 2" # nom du portefeuille 
+    ```
+    
 ## Utilisation
 
 ### Suivi des Transactions
