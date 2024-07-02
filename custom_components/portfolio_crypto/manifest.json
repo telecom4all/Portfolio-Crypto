@@ -14,6 +14,6 @@
   "codeowners": ["@AngelZ"],
   "iot_class": "cloud_polling",
   "config_flow": true,
-  "icon": "https://raw.githubusercontent.com/telecom4all/Portfolio-Crypto/main/custom_components/portfolio_crypto/icon.png"
+  "icon": "custom_components/portfolio_crypto/icon.png"
 }
 
