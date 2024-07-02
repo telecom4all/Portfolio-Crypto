@@ -41,47 +41,34 @@ L'intégration "Portfolio Crypto" permet de gérer et surveiller vos investissem
 
 ### Étapes d'installation Intégration
 
-1. **Accédez à `Paramètres` - `Appareils et Services`.**
+1. Accédez à `Paramètres` - `Appareils et Services`.
    ![Rechercher Portfolio Crypto](images/10.png)
-2. **Cliquez sur `Ajouter une intégration` et recherchez `Portfolio Crypto` cliquez dessus pour l'installer.**
+2. Cliquez sur `Ajouter une intégration` et recherchez `Portfolio Crypto` cliquez dessus pour l'installer.
    ![Rechercher Portfolio Crypto](images/12.png)
-3. **Donner un nom a votre `Portefeuille` **
+3. Donner un nom a votre `Portefeuille` 
    ![Rechercher Portfolio Crypto](images/13.png)
-4. **Vous verrez l'intégration `Portfolio Crypto` la liste et un nouveau panel dans la sidebar**
+4. Vous verrez l'intégration `Portfolio Crypto` la liste et un nouveau panel dans la sidebar
    ![Rechercher Portfolio Crypto](images/15.png)
 
 
-
-
 ## Configuration
-
-### Ajouter une Nouvelle Intégration
-
-1. **Accéder aux Intégrations** :
-
-    Allez dans Configuration > Intégrations.
-
-2. **Ajouter l'Intégration "Portfolio Crypto"** :
-
-    Cliquez sur "Ajouter une intégration" et sélectionnez "Portfolio Crypto".
-
-3. **Suivre les Instructions** :
-
-    Suivez les instructions à l'écran pour configurer l'intégration. Vous devrez fournir un nom pour votre portfolio.
-
 ### Ajouter une Cryptomonnaie
 
-1. **Accéder aux Options de l'Intégration** :
+1. Une Fois dans votre `Portefeuille` cliquer sur `configurer` pour ajouter une `crypto`
+   ![Rechercher Portfolio Crypto](images/16.png)
 
-    Allez dans Configuration > Intégrations et sélectionnez "Options" pour l'intégration "Portfolio Crypto".
+2. Rentrez `l'id coingecko` ou le `nom de la crypto` que vous voulez ajouter puis  `Portefeuille` cliquer sur `Valider` pour rechercher le bon id sur coingecko
+   ![Rechercher Portfolio Crypto](images/17.png)
 
-2. **Ajouter une Cryptomonnaie** :
+3. Vérifiez que le `nom` et l'`id` a bien été trouvé et cliquez sur `valider` pour ajouter la crypto
+   ![Rechercher Portfolio Crypto](images/18.png)
 
-    Entrez le nom ou l'ID de la cryptomonnaie que vous souhaitez ajouter.
+3. cliquez sur l'icone avec les 3 point du `portefeuille` pour recharger l'intégration (a faire a chaque fois que l'on ajoute une crypto)
+   ![Rechercher Portfolio Crypto](images/20.png)
 
-3. **Confirmer l'Ajout** :
+3. Vous pourrez voir les `entités` qui on été crée
+   ![Rechercher Portfolio Crypto](images/29.png)
 
-    Suivez les instructions pour confirmer l'ajout de la cryptomonnaie à votre portfolio.
 
 ### Supprimer une Cryptomonnaie
 
