@@ -21,33 +21,33 @@ L'intégration "Portfolio Crypto" permet de gérer et surveiller vos investissem
 
 ### Étapes d'installation Addon
 
-1. Accédez à votre interface Home Assistant.
-2. Cliquez sur `Paramètres` dans le menu de gauche.
-3. Sélectionnez `Modules complémentaires` puis cliquez sur `Boutique des modules complémentaires` et cliquez sur l'icone avec les 3 point en haut à droite, puis cliquez sur `Dépots`.
+1. **Accédez à votre interface Home Assistant.**
+2. **Cliquez sur `Paramètres` dans le menu de gauche.**
+3. **Sélectionnez `Modules complémentaires` puis cliquez sur `Boutique des modules complémentaires` et cliquez sur l'icone avec les 3 point en haut à droite, puis cliquez sur `Dépots`.**
    ![Modules complémentaires](images/1.png)
-3. Ajoutez l'adresse :  `https://github.com/telecom4all/Portfolio-Crypto` et cliquez sur `Ajouter`.
+3. **Ajoutez l'adresse :  `https://github.com/telecom4all/Portfolio-Crypto` et cliquez sur `Ajouter`.**
    ![Installer Repo Portfolio Crypto](images/2.png)   
-4. Rafraîchissez le cache du navigateur `CTRL-F5`.
-5. Recherchez `Portfolio Crypto` et cliquez sur `Installer`.
+4. **Rafraîchissez le cache du navigateur `CTRL-F5`.**
+5. **Recherchez `Portfolio Crypto` et cliquez sur `Installer`.**
    ![Rechercher Portfolio Crypto](images/4.png)
    ![Installer Portfolio Crypto](images/5.png)
-6. Démarez `Portfolio Crypto` et cliquez sur `Chien de Garde`.
+6. **Démarez `Portfolio Crypto` et cliquez sur `Chien de Garde`.**
    ![Rechercher Portfolio Crypto](images/6.png)
-7. Aller dans  `Journal`, actualisez jusqu'au moment ou vous verrez `Insatallation est terminée ...` 
+7. **Aller dans  `Journal`, actualisez jusqu'au moment ou vous verrez `Insatallation est terminée ...` **
    ![Rechercher Portfolio Crypto](images/8.png)
-8. Redémarrez `Homeassisant`
+8. **Redémarrez `Homeassisant`**
    ![Rechercher Portfolio Crypto](images/9.png)
 
 
 ### Étapes d'installation Intégration
 
-1. Accédez à `Paramètres` - `Appareils et Services`.
+1. **Accédez à `Paramètres` - `Appareils et Services`.**
    ![Rechercher Portfolio Crypto](images/10.png)
-2. Cliquez sur `Ajouter une intégration` et recherchez `Portfolio Crypto` cliquez dessus pour l'installer.
+2. **Cliquez sur `Ajouter une intégration` et recherchez `Portfolio Crypto` cliquez dessus pour l'installer.**
    ![Rechercher Portfolio Crypto](images/12.png)
-3. Donner un nom a votre `Portefeuille` 
+3. **Donner un nom a votre `Portefeuille` **
    ![Rechercher Portfolio Crypto](images/13.png)
-4. Vous verrez l'intégration `Portfolio Crypto` la liste et un nouveau panel dans la sidebar
+4. **Vous verrez l'intégration `Portfolio Crypto` la liste et un nouveau panel dans la sidebar**
    ![Rechercher Portfolio Crypto](images/15.png)
 
 
