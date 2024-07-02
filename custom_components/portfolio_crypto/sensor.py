@@ -427,7 +427,10 @@ class CryptoSensor(CoordinatorEntity, SensorEntity):
             "crypto_name": crypto['name'],
         }
         
-
+     @property
+    def icon(self):
+        return "mdi:currency-usd-circle"  # Icône globale pour tous les appareils
+    
     @property
     def name(self):
         return self._name
