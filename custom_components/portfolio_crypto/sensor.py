@@ -15,7 +15,7 @@ import ast
 _LOGGER = logging.getLogger(__name__)
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
-    coordinator = PortfolioCryptoCoordinator(hass, config_entry, update_interval=1)  # Fixing update interval to 1 minute
+    coordinator = PortfolioCryptoCoordinator(hass, config_entry, update_interval=5)  # Fixing update interval to 1 minute
     await coordinator.async_config_entry_first_refresh()
 
     entities = []
