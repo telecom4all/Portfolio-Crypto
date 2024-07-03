@@ -5,6 +5,7 @@ class CryptoTransactionsPanel extends HTMLElement {
     }
 
     set hass(hass) {
+        this._hass = hass;
         if (!this.panel.config) {
             console.error('Configuration non définie');
             return;
@@ -34,24 +35,7 @@ class CryptoTransactionsPanel extends HTMLElement {
     }
 
     async fetchCryptos(entryId) {
-        const baseUrl = `${window.location.protocol}//${window.location.hostname}`;
-        const url = `${baseUrl}:5000/load_cryptos/${entryId}`;
-        
-        const response = await fetch(url, {
-            method: 'GET',
-            headers: {
-                'Content-Type': 'application/json'
-            }
-        });
-
-        if (response.ok) {
-            const jsonResponse = await response.json();
-            return jsonResponse;
-        } else {
-            const errorText = await response.text();
-            console.error('Error response text:', errorText);
-            throw new Error(`Erreur ${response.status}: ${errorText}`);
-        }
+        return await this._hass.callApi('GET', `portfolio_crypto/fetchCryptos/${entryId}`);
     }
 
     renderCryptoSelect(cryptos) {
@@ -73,22 +57,7 @@ class CryptoTransactionsPanel extends HTMLElement {
     }
 
     async fetchTransactions(entryId) {
-        const baseUrl = `${window.location.protocol}//${window.location.hostname}`;
-        const url = `${baseUrl}:5000/transactions/${entryId}`;
-
-        const response = await fetch(url, {
-            method: 'GET',
-            headers: {
-                'Content-Type': 'application/json'
-            }
-        });
-
-        if (response.ok) {
-            return await response.json();
-        } else {
-            const errorText = await response.text();
-            throw new Error(`Erreur ${response.status}: ${errorText}`);
-        }
+        return await this._hass.callApi('GET', `portfolio_crypto/fetchTransactions/${entryId}`);
     }
 
     async deleteCrypto(cryptoId) {
@@ -96,7 +65,7 @@ class CryptoTransactionsPanel extends HTMLElement {
 
         if (confirm("Êtes-vous sûr de vouloir supprimer cette crypto?")) {
             try {
-                await this.hass.callService('portfolio_crypto', 'delete_crypto', { crypto_id: cryptoId, entry_id: entryId });
+                await this._hass.callService('portfolio_crypto', 'delete_crypto', { crypto_id: cryptoId, entry_id: entryId });
                 alert('Crypto supprimée avec succès');
                 this.loadCryptos(entryId);
             } catch (error) {
@@ -291,7 +260,7 @@ class CryptoTransactionsPanel extends HTMLElement {
             if (confirm("Êtes-vous sûr de vouloir supprimer cette crypto?")) {
                 try {
                     const entryId = this.panel.config.entry_id;
-                    await hass.callService('portfolio_crypto', 'delete_crypto', { crypto_id: selectedCryptoId, entry_id: entryId });
+                    await this._hass.callService('portfolio_crypto', 'delete_crypto', { crypto_id: selectedCryptoId, entry_id: entryId });
                     alert('Crypto supprimée avec succès');
                     this.loadCryptos(entryId);
                 } catch (error) {
@@ -453,24 +422,10 @@ class CryptoTransactionsPanel extends HTMLElement {
 
         if (confirm("Êtes-vous sûr de vouloir supprimer cette transaction?")) {
             try {
-                const baseUrl = `${window.location.protocol}//${window.location.hostname}`;
-                const url = `${baseUrl}:5000/transaction/${entryId}/${transactionId}`;
-
-                const response = await fetch(url, {
-                    method: 'DELETE',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    }
-                });
-
-                if (response.ok) {
-                    alert('Transaction supprimée avec succès');
-                    const selectedCryptoId = this.shadowRoot.querySelector('#cryptoSelect').value;
-                    this.fetchAndRenderTransactions(entryId, selectedCryptoId);
-                } else {
-                    const errorText = await response.text();
-                    throw new Error(`Erreur ${response.status}: ${errorText}`);
-                }
+                await this._hass.callService('portfolio_crypto', 'delete_transaction', { transaction_id: transactionId, entry_id: entryId });
+                alert('Transaction supprimée avec succès');
+                const selectedCryptoId = this.shadowRoot.querySelector('#cryptoSelect').value;
+                this.fetchAndRenderTransactions(entryId, selectedCryptoId);
             } catch (error) {
                 console.error('Erreur lors de la suppression de la transaction:', error);
                 alert('Erreur lors de la suppression de la transaction');
@@ -488,26 +443,11 @@ class CryptoTransactionsPanel extends HTMLElement {
         transaction.entry_id = this.panel.config.entry_id;
 
         try {
-            const baseUrl = `${window.location.protocol}//${window.location.hostname}`;
-            const url = `${baseUrl}:5000/transaction/${transaction.entry_id}`;
-            
-            const response = await fetch(url, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify(transaction)
-            });
-
-            if (response.ok) {
-                alert('Transaction ajoutée avec succès');
-                const selectedCryptoId = this.shadowRoot.querySelector('#cryptoSelect').value;
-                this.fetchAndRenderTransactions(transaction.entry_id, selectedCryptoId);
-                this.shadowRoot.querySelector('#myModal').style.display = 'none';
-            } else {
-                const errorText = await response.text();
-                throw new Error(`Erreur ${response.status}: ${errorText}`);
-            }
+            await this._hass.callService('portfolio_crypto', 'save_transaction', transaction);
+            alert('Transaction ajoutée avec succès');
+            const selectedCryptoId = this.shadowRoot.querySelector('#cryptoSelect').value;
+            this.fetchAndRenderTransactions(transaction.entry_id, selectedCryptoId);
+            this.shadowRoot.querySelector('#myModal').style.display = 'none';
         } catch (error) {
             console.error('Erreur lors de l\'ajout de la transaction:', error);
             alert('Erreur lors de l\'ajout de la transaction');
@@ -524,26 +464,11 @@ class CryptoTransactionsPanel extends HTMLElement {
         transaction.entry_id = this.panel.config.entry_id;
 
         try {
-            const baseUrl = `${window.location.protocol}//${window.location.hostname}`;
-            const url = `${baseUrl}:5000/transaction/${transaction.entry_id}/${transaction.transaction_id}`;
-
-            const response = await fetch(url, {
-                method: 'PUT',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify(transaction)
-            });
-
-            if (response.ok) {
-                alert('Transaction mise à jour avec succès');
-                const selectedCryptoId = this.shadowRoot.querySelector('#cryptoSelect').value;
-                this.fetchAndRenderTransactions(transaction.entry_id, selectedCryptoId);
-                this.shadowRoot.querySelector('#editModal').style.display = 'none';
-            } else {
-                const errorText = await response.text();
-                throw new Error(`Erreur ${response.status}: ${errorText}`);
-            }
+            await this._hass.callService('portfolio_crypto', 'update_transaction', transaction);
+            alert('Transaction mise à jour avec succès');
+            const selectedCryptoId = this.shadowRoot.querySelector('#cryptoSelect').value;
+            this.fetchAndRenderTransactions(transaction.entry_id, selectedCryptoId);
+            this.shadowRoot.querySelector('#editModal').style.display = 'none';
         } catch (error) {
             console.error('Erreur lors de la mise à jour de la transaction:', error);
             alert('Erreur lors de la mise à jour de la transaction');

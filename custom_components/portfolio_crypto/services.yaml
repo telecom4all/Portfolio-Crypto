@@ -1,5 +1,5 @@
-#Fichier services.yaml
-#Ce fichier décrit les services personnalisés pour l'intégration Portfolio Crypto.
+# Fichier services.yaml
+# Ce fichier décrit les services personnalisés pour l'intégration Portfolio Crypto.
 
 search_crypto_id:
   description: "Rechercher l'ID d'une cryptomonnaie"
@@ -99,3 +99,37 @@ delete_transaction:
     transaction_id:
       description: "ID de la transaction"
       example: 1
+
+fetch_cryptos:
+  description: "Récupérer toutes les cryptomonnaies"
+  fields:
+    entry_id:
+      description: "ID de l'entrée"
+      example: "entry_id"
+
+fetch_transactions:
+  description: "Récupérer toutes les transactions"
+  fields:
+    entry_id:
+      description: "ID de l'entrée"
+      example: "entry_id"
+    crypto_id:
+      description: "ID de la cryptomonnaie"
+      example: "bitcoin"
+      
+export_database:
+  description: "Exporter la base de données"
+  fields:
+    entry_id:
+      description: "ID de l'entrée"
+      example: "entry_id"
+
+import_database:
+  description: "Importer la base de données"
+  fields:
+    entry_id:
+      description: "ID de l'entrée"
+      example: "entry_id"
+    file:
+      description: "Fichier de base de données"
+      example: "/path/to/file.db"
