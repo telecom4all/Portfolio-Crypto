@@ -172,6 +172,41 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
 
     hass.services.async_register(DOMAIN, "import_db", async_import_db_service)
 
+    async def async_fetch_cryptos_service(call):
+        entry_id = call.data.get("entry_id")
+        _LOGGER.debug(f"Service fetch_cryptos appelé avec entry_id: {entry_id}")
+        coordinator = hass.data[DOMAIN].get(entry_id)
+        if coordinator:
+            cryptos = await coordinator.load_cryptos_from_db(entry_id)
+            if cryptos is not None:
+                _LOGGER.debug(f"Cryptomonnaies récupérées: {cryptos}")
+                # Process or return the cryptos as needed
+            else:
+                _LOGGER.error("Erreur lors de la récupération des cryptomonnaies")
+        else:
+            _LOGGER.error(f"Aucun coordinator trouvé pour l'entry_id: {entry_id}")
+
+    hass.services.async_register(DOMAIN, "fetch_cryptos", async_fetch_cryptos_service)
+
+    async def async_fetch_transactions_service(call):
+        entry_id = call.data.get("entry_id")
+        crypto_id = call.data.get("crypto_id")
+        _LOGGER.debug(f"Service fetch_transactions appelé avec entry_id: {entry_id} et crypto_id: {crypto_id}")
+        coordinator = hass.data[DOMAIN].get(entry_id)
+        if coordinator:
+            transactions = await coordinator.fetch_transactions()
+            if transactions is not None:
+                _LOGGER.debug(f"Transactions récupérées: {transactions}")
+                # Filter transactions by crypto_id if needed and process or return them
+            else:
+                _LOGGER.error("Erreur lors de la récupération des transactions")
+        else:
+            _LOGGER.error(f"Aucun coordinator trouvé pour l'entry_id: {entry_id}")
+
+    hass.services.async_register(DOMAIN, "fetch_transactions", async_fetch_transactions_service)
+
+
+
     return True
 
 
