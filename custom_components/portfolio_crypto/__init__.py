@@ -11,15 +11,7 @@ import os
 from .const import DOMAIN, COINGECKO_API_URL
 from .db import save_crypto, load_crypto_attributes, delete_crypto_db
 
-
 _LOGGER = logging.getLogger(__name__)
-
-# Configurer la journalisation pour écrire dans un fichier
-#log_handler = logging.FileHandler('/config/logs/integration.log')
-#log_handler.setLevel(logging.DEBUG)
-#log_formatter = logging.Formatter('%(asctime)s %(levelname)s: %(message)s [in %(pathname)s:%(lineno)d]')
-#log_handler.setFormatter(log_formatter)
-#_LOGGER.addHandler(log_handler)
 
 async def async_setup(hass: HomeAssistant, config: dict):
     """Configurer l'intégration via le fichier configuration.yaml (non utilisé ici)"""
@@ -89,8 +81,59 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
         #await self.hass.config_entries.async_reload(self.config_entry.entry_id)
     hass.services.async_register(DOMAIN, "add_crypto", async_add_crypto_service)
 
-    return True
+    async def async_register_services(hass: HomeAssistant):
+        """Register services for the integration."""
+        
+        async def handle_save_transaction(call):
+            entry_id = call.data.get('entry_id')
+            crypto_name = call.data.get('crypto_name')
+            crypto_id = call.data.get('crypto_id')
+            quantity = call.data.get('quantity')
+            price_usd = call.data.get('price_usd')
+            transaction_type = call.data.get('transaction_type')
+            location = call.data.get('location')
+            date = call.data.get('date')
+            
+            try:
+                await add_transaction(entry_id, crypto_name, crypto_id, quantity, price_usd, transaction_type, location, date, price_usd/quantity)
+                _LOGGER.info(f"Transaction saved: {crypto_name}, {crypto_id}, {quantity}, {price_usd}, {transaction_type}, {location}, {date}")
+            except Exception as e:
+                _LOGGER.error(f"Error saving transaction: {e}")
 
+        async def handle_update_transaction(call):
+            entry_id = call.data.get('entry_id')
+            transaction_id = call.data.get('transaction_id')
+            crypto_name = call.data.get('crypto_name')
+            crypto_id = call.data.get('crypto_id')
+            quantity = call.data.get('quantity')
+            price_usd = call.data.get('price_usd')
+            transaction_type = call.data.get('transaction_type')
+            location = call.data.get('location')
+            date = call.data.get('date')
+
+            try:
+                await update_transaction(entry_id, transaction_id, crypto_name, crypto_id, quantity, price_usd, transaction_type, location, date, price_usd/quantity)
+                _LOGGER.info(f"Transaction updated: {crypto_name}, {crypto_id}, {quantity}, {price_usd}, {transaction_type}, {location}, {date}")
+            except Exception as e:
+                _LOGGER.error(f"Error updating transaction: {e}")
+
+        async def handle_delete_transaction(call):
+            entry_id = call.data.get('entry_id')
+            transaction_id = call.data.get('transaction_id')
+
+            try:
+                await delete_transaction(entry_id, transaction_id)
+                _LOGGER.info(f"Transaction deleted: {transaction_id} in entry {entry_id}")
+            except Exception as e:
+                _LOGGER.error(f"Error deleting transaction: {e}")
+
+        hass.services.async_register(DOMAIN, 'save_transaction', handle_save_transaction)
+        hass.services.async_register(DOMAIN, 'update_transaction', handle_update_transaction)
+        hass.services.async_register(DOMAIN, 'delete_transaction', handle_delete_transaction)
+        
+    await async_register_services(hass)
+
+    return True
 
 async def initialize_database(entry: ConfigEntry, hass: HomeAssistant):
     """Initialize the database for the new portfolio by calling the addon service."""
@@ -274,8 +317,6 @@ class PortfolioCryptoCoordinator(DataUpdateCoordinator):
                 _LOGGER.error(f"Error fetching CoinGecko data: {e}")
                 return None
         return None
-
-
 
     async def save_crypto_to_db(self, entry_id, crypto_name, crypto_id):
         try:

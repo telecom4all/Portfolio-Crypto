@@ -30,3 +30,72 @@ delete_crypto:
     entry_id:
       description: "ID de l'entrée"
       example: "entry_id"
+
+save_transaction:
+  description: "Enregistrer une nouvelle transaction"
+  fields:
+    entry_id:
+      description: "ID de l'entrée"
+      example: "entry_id"
+    crypto_name:
+      description: "Nom de la cryptomonnaie"
+      example: "Bitcoin"
+    crypto_id:
+      description: "ID de la cryptomonnaie"
+      example: "bitcoin"
+    quantity:
+      description: "Quantité"
+      example: 0.5
+    price_usd:
+      description: "Prix en USD"
+      example: 1000
+    transaction_type:
+      description: "Type de transaction"
+      example: "buy"
+    location:
+      description: "Lieu"
+      example: "Binance"
+    date:
+      description: "Date"
+      example: "2024-01-01"
+
+update_transaction:
+  description: "Mettre à jour une transaction"
+  fields:
+    entry_id:
+      description: "ID de l'entrée"
+      example: "entry_id"
+    transaction_id:
+      description: "ID de la transaction"
+      example: 1
+    crypto_name:
+      description: "Nom de la cryptomonnaie"
+      example: "Bitcoin"
+    crypto_id:
+      description: "ID de la cryptomonnaie"
+      example: "bitcoin"
+    quantity:
+      description: "Quantité"
+      example: 0.5
+    price_usd:
+      description: "Prix en USD"
+      example: 1000
+    transaction_type:
+      description: "Type de transaction"
+      example: "buy"
+    location:
+      description: "Lieu"
+      example: "Binance"
+    date:
+      description: "Date"
+      example: "2024-01-01"
+
+delete_transaction:
+  description: "Supprimer une transaction"
+  fields:
+    entry_id:
+      description: "ID de l'entrée"
+      example: "entry_id"
+    transaction_id:
+      description: "ID de la transaction"
+      example: 1

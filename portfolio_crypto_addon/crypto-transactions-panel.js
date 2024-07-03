@@ -57,19 +57,15 @@ class CryptoTransactionsPanel extends HTMLElement {
     renderCryptoSelect(cryptos) {
         const select = this.shadowRoot.querySelector('#cryptoSelect');
         if (select) {
-            select.innerHTML = cryptos.map(([name, id]) => `<option value="${id}">${name} - ${id}</option>`).join('');
+            select.innerHTML = cryptos.map(crypto => `<option value="${crypto.id}">${crypto.name} - ${crypto.id}</option>`).join('');
         }
     }
 
     async fetchAndRenderTransactions(entryId, cryptoId) {
         try {
             const transactions = await this.fetchTransactions(entryId);
-            const filteredTransactions = transactions.filter(transaction => transaction[2] === cryptoId);
-            if (filteredTransactions.length > 0) {
-                this.renderTransactions(filteredTransactions);
-            } else {
-                this.renderTransactions([]);
-            }
+            const filteredTransactions = transactions.filter(transaction => transaction.crypto_id === cryptoId);
+            this.renderTransactions(filteredTransactions);
         } catch (error) {
             console.error('Erreur lors de la récupération des transactions:', error);
             this.renderTransactions([]);  // Render an empty array in case of error
@@ -95,30 +91,14 @@ class CryptoTransactionsPanel extends HTMLElement {
         }
     }
 
-    // Ajout de la méthode deleteCrypto
     async deleteCrypto(cryptoId) {
         const entryId = this.panel.config.entry_id;
 
         if (confirm("Êtes-vous sûr de vouloir supprimer cette crypto?")) {
             try {
-                const baseUrl = `${window.location.protocol}//${window.location.hostname}`;
-                const url = `${baseUrl}:5000/delete_crypto/${entryId}/${cryptoId}`;
-
-                const response = await fetch(url, {
-                    method: 'DELETE',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    }
-                });
-
-                if (response.ok) {
-                    alert('Crypto supprimée avec succès');
-                    // Recharger les cryptos et les transactions
-                    this.loadCryptos(entryId);
-                } else {
-                    const errorText = await response.text();
-                    throw new Error(`Erreur ${response.status}: ${errorText}`);
-                }
+                await this.hass.callService('portfolio_crypto', 'delete_crypto', { crypto_id: cryptoId, entry_id: entryId });
+                alert('Crypto supprimée avec succès');
+                this.loadCryptos(entryId);
             } catch (error) {
                 console.error('Erreur lors de la suppression de la crypto:', error);
                 alert('Erreur lors de la suppression de la crypto');
@@ -244,8 +224,6 @@ class CryptoTransactionsPanel extends HTMLElement {
                 <div class="select-container">
                     <select id="cryptoSelect"></select>
                     <button id="deleteCrypto" style="display:none" >Supprimer la Crypto</button>
-                    
-
                 </div>
                 <div id="transactionsContainer"></div>
                 <button id="add">Ajouter une transaction</button>
@@ -399,15 +377,15 @@ class CryptoTransactionsPanel extends HTMLElement {
                 </tr>
                 ${transactions.map(transaction => `
                     <tr>
-                        <td>${transaction[0]}</td>
-                        <td>${transaction[1]}</td>
-                        <td>${transaction[3]}</td>
-                        <td>${transaction[4]}</td>
-                        <td>${transaction[5]}</td>
-                        <td>${transaction[7]}</td>
+                        <td>${transaction.transaction_id}</td>
+                        <td>${transaction.crypto_name}</td>
+                        <td>${transaction.quantity}</td>
+                        <td>${transaction.price_usd}</td>
+                        <td>${transaction.transaction_type}</td>
+                        <td>${transaction.date}</td>
                         <td>
-                            <button class="edit" data-id="${transaction[0]}" data-crypto-id="${transaction[2]}" data-crypto-name="${transaction[1]}" data-quantity="${transaction[3]}" data-price="${transaction[4]}" data-type="${transaction[5]}" data-location="${transaction[6]}" data-date="${transaction[7]}">Modifier</button>
-                            <button class="delete" data-id="${transaction[0]}">Supprimer</button>
+                            <button class="edit" data-id="${transaction.transaction_id}" data-crypto-id="${transaction.crypto_id}" data-crypto-name="${transaction.crypto_name}" data-quantity="${transaction.quantity}" data-price="${transaction.price_usd}" data-type="${transaction.transaction_type}" data-location="${transaction.location}" data-date="${transaction.date}">Modifier</button>
+                            <button class="delete" data-id="${transaction.transaction_id}">Supprimer</button>
                         </td>
                     </tr>
                 `).join('')}
@@ -487,7 +465,6 @@ class CryptoTransactionsPanel extends HTMLElement {
 
                 if (response.ok) {
                     alert('Transaction supprimée avec succès');
-                    // Recharger les transactions
                     const selectedCryptoId = this.shadowRoot.querySelector('#cryptoSelect').value;
                     this.fetchAndRenderTransactions(entryId, selectedCryptoId);
                 } else {
