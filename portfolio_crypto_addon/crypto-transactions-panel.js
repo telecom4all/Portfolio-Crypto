@@ -11,14 +11,13 @@ class CryptoTransactionsPanel extends HTMLElement {
         }
 
         const entryId = this.panel.config.entry_id;
-        const ipLocal = this.panel.config.ip_local;
         this.render(); // Render the basic layout including the select element
-        this.loadCryptos(entryId, ipLocal);
+        this.loadCryptos(entryId);
     }
 
-    async loadCryptos(entryId, ipLocal) {
+    async loadCryptos(entryId) {
         try {
-            const cryptos = await this.fetchCryptos(entryId, ipLocal);
+            const cryptos = await this.fetchCryptos(entryId);
             if (cryptos.length > 0) {
                 this.renderCryptoSelect(cryptos);
                 const selectElement = this.shadowRoot.querySelector('#cryptoSelect');
@@ -26,7 +25,7 @@ class CryptoTransactionsPanel extends HTMLElement {
                     const selectedCryptoId = selectElement.value;
                     const selectedCryptoName = selectElement.options[selectElement.selectedIndex].text.split(' - ')[0];
                     this.updateFormFields(selectedCryptoId, selectedCryptoName);
-                    this.fetchAndRenderTransactions(entryId, selectedCryptoId, ipLocal);
+                    this.fetchAndRenderTransactions(entryId, selectedCryptoId);
                 }
             }
         } catch (error) {
@@ -34,8 +33,9 @@ class CryptoTransactionsPanel extends HTMLElement {
         }
     }
 
-    async fetchCryptos(entryId, ipLocal) {
-        const url = `http://${ipLocal}:5000/load_cryptos/${entryId}`;
+    async fetchCryptos(entryId) {
+        const baseUrl = `${window.location.protocol}//${window.location.hostname}`;
+        const url = `${baseUrl}:5000/load_cryptos/${entryId}`;
         
         const response = await fetch(url, {
             method: 'GET',
@@ -61,9 +61,9 @@ class CryptoTransactionsPanel extends HTMLElement {
         }
     }
 
-    async fetchAndRenderTransactions(entryId, cryptoId, ipLocal) {
+    async fetchAndRenderTransactions(entryId, cryptoId) {
         try {
-            const transactions = await this.fetchTransactions(entryId, ipLocal);
+            const transactions = await this.fetchTransactions(entryId);
             const filteredTransactions = transactions.filter(transaction => transaction[2] === cryptoId);
             if (filteredTransactions.length > 0) {
                 this.renderTransactions(filteredTransactions);
@@ -76,8 +76,9 @@ class CryptoTransactionsPanel extends HTMLElement {
         }
     }
 
-    async fetchTransactions(entryId, ipLocal) {
-        const url = `http://${ipLocal}:5000/transactions/${entryId}`;
+    async fetchTransactions(entryId) {
+        const baseUrl = `${window.location.protocol}//${window.location.hostname}`;
+        const url = `${baseUrl}:5000/transactions/${entryId}`;
 
         const response = await fetch(url, {
             method: 'GET',
@@ -94,13 +95,14 @@ class CryptoTransactionsPanel extends HTMLElement {
         }
     }
 
+    // Ajout de la méthode deleteCrypto
     async deleteCrypto(cryptoId) {
         const entryId = this.panel.config.entry_id;
-        const ipLocal = this.panel.config.ip_local;
 
         if (confirm("Êtes-vous sûr de vouloir supprimer cette crypto?")) {
             try {
-                const url = `http://${ipLocal}:5000/delete_crypto/${entryId}/${cryptoId}`;
+                const baseUrl = `${window.location.protocol}//${window.location.hostname}`;
+                const url = `${baseUrl}:5000/delete_crypto/${entryId}/${cryptoId}`;
 
                 const response = await fetch(url, {
                     method: 'DELETE',
@@ -112,7 +114,7 @@ class CryptoTransactionsPanel extends HTMLElement {
                 if (response.ok) {
                     alert('Crypto supprimée avec succès');
                     // Recharger les cryptos et les transactions
-                    this.loadCryptos(entryId, ipLocal);
+                    this.loadCryptos(entryId);
                 } else {
                     const errorText = await response.text();
                     throw new Error(`Erreur ${response.status}: ${errorText}`);
@@ -242,6 +244,8 @@ class CryptoTransactionsPanel extends HTMLElement {
                 <div class="select-container">
                     <select id="cryptoSelect"></select>
                     <button id="deleteCrypto" style="display:none" >Supprimer la Crypto</button>
+                    
+
                 </div>
                 <div id="transactionsContainer"></div>
                 <button id="add">Ajouter une transaction</button>
@@ -302,8 +306,6 @@ class CryptoTransactionsPanel extends HTMLElement {
         </div>
         `;
 
-        const ipLocal = this.panel.config.ip_local;
-
         this.shadowRoot.querySelector('#deleteCrypto').addEventListener('click', async () => {
             const selectElement = this.shadowRoot.querySelector('#cryptoSelect');
             const selectedCryptoId = selectElement.value;
@@ -311,9 +313,9 @@ class CryptoTransactionsPanel extends HTMLElement {
             if (confirm("Êtes-vous sûr de vouloir supprimer cette crypto?")) {
                 try {
                     const entryId = this.panel.config.entry_id;
-                    await this.deleteCrypto(selectedCryptoId, entryId, ipLocal);
+                    await hass.callService('portfolio_crypto', 'delete_crypto', { crypto_id: selectedCryptoId, entry_id: entryId });
                     alert('Crypto supprimée avec succès');
-                    this.loadCryptos(entryId, ipLocal);
+                    this.loadCryptos(entryId);
                 } catch (error) {
                     console.error('Erreur lors de la suppression de la crypto:', error);
                     alert('Erreur lors de la suppression de la crypto');
@@ -322,7 +324,7 @@ class CryptoTransactionsPanel extends HTMLElement {
         });
         
         this.shadowRoot.querySelector('#exportDb').addEventListener('click', () => {
-            this.exportDatabase(ipLocal);
+            this.exportDatabase();
         });
     
         this.shadowRoot.querySelector('#importDbButton').addEventListener('click', () => {
@@ -331,7 +333,7 @@ class CryptoTransactionsPanel extends HTMLElement {
     
         this.shadowRoot.querySelector('#importDb').addEventListener('change', (event) => {
             const file = event.target.files[0];
-            this.importDatabase(file, ipLocal);
+            this.importDatabase(file);
         });
 
         this.shadowRoot.querySelector('#add').addEventListener('click', () => {
@@ -342,7 +344,7 @@ class CryptoTransactionsPanel extends HTMLElement {
             const selectedCryptoId = e.target.value;
             const selectedCryptoName = e.target.options[e.target.selectedIndex].text.split(' - ')[0];
             this.updateFormFields(selectedCryptoId, selectedCryptoName);
-            this.fetchAndRenderTransactions(this.panel.config.entry_id, selectedCryptoId, ipLocal);
+            this.fetchAndRenderTransactions(this.panel.config.entry_id, selectedCryptoId);
         });
 
         const modal = this.shadowRoot.querySelector('#myModal');
@@ -361,10 +363,10 @@ class CryptoTransactionsPanel extends HTMLElement {
             }
         };
         this.shadowRoot.querySelector('#save').addEventListener('click', () => {
-            this.saveTransaction(ipLocal);
+            this.saveTransaction();
         });
         this.shadowRoot.querySelector('#update').addEventListener('click', () => {
-            this.updateTransaction(ipLocal);
+            this.updateTransaction();
         });
     }
 
@@ -470,11 +472,11 @@ class CryptoTransactionsPanel extends HTMLElement {
 
     async deleteTransaction(transactionId) {
         const entryId = this.panel.config.entry_id;
-        const ipLocal = this.panel.config.ip_local;
 
         if (confirm("Êtes-vous sûr de vouloir supprimer cette transaction?")) {
             try {
-                const url = `http://${ipLocal}:5000/transaction/${entryId}/${transactionId}`;
+                const baseUrl = `${window.location.protocol}//${window.location.hostname}`;
+                const url = `${baseUrl}:5000/transaction/${entryId}/${transactionId}`;
 
                 const response = await fetch(url, {
                     method: 'DELETE',
@@ -487,7 +489,7 @@ class CryptoTransactionsPanel extends HTMLElement {
                     alert('Transaction supprimée avec succès');
                     // Recharger les transactions
                     const selectedCryptoId = this.shadowRoot.querySelector('#cryptoSelect').value;
-                    this.fetchAndRenderTransactions(entryId, selectedCryptoId, ipLocal);
+                    this.fetchAndRenderTransactions(entryId, selectedCryptoId);
                 } else {
                     const errorText = await response.text();
                     throw new Error(`Erreur ${response.status}: ${errorText}`);
@@ -499,7 +501,7 @@ class CryptoTransactionsPanel extends HTMLElement {
         }
     }
 
-    async saveTransaction(ipLocal) {
+    async saveTransaction() {
         const form = this.shadowRoot.querySelector('#transactionForm');
         const formData = new FormData(form);
         const transaction = {};
@@ -509,7 +511,8 @@ class CryptoTransactionsPanel extends HTMLElement {
         transaction.entry_id = this.panel.config.entry_id;
 
         try {
-            const url = `http://${ipLocal}:5000/transaction/${transaction.entry_id}`;
+            const baseUrl = `${window.location.protocol}//${window.location.hostname}`;
+            const url = `${baseUrl}:5000/transaction/${transaction.entry_id}`;
             
             const response = await fetch(url, {
                 method: 'POST',
@@ -522,7 +525,7 @@ class CryptoTransactionsPanel extends HTMLElement {
             if (response.ok) {
                 alert('Transaction ajoutée avec succès');
                 const selectedCryptoId = this.shadowRoot.querySelector('#cryptoSelect').value;
-                this.fetchAndRenderTransactions(transaction.entry_id, selectedCryptoId, ipLocal);
+                this.fetchAndRenderTransactions(transaction.entry_id, selectedCryptoId);
                 this.shadowRoot.querySelector('#myModal').style.display = 'none';
             } else {
                 const errorText = await response.text();
@@ -534,7 +537,7 @@ class CryptoTransactionsPanel extends HTMLElement {
         }
     }
 
-    async updateTransaction(ipLocal) {
+    async updateTransaction() {
         const form = this.shadowRoot.querySelector('#editTransactionForm');
         const formData = new FormData(form);
         const transaction = {};
@@ -544,7 +547,8 @@ class CryptoTransactionsPanel extends HTMLElement {
         transaction.entry_id = this.panel.config.entry_id;
 
         try {
-            const url = `http://${ipLocal}:5000/transaction/${transaction.entry_id}/${transaction.transaction_id}`;
+            const baseUrl = `${window.location.protocol}//${window.location.hostname}`;
+            const url = `${baseUrl}:5000/transaction/${transaction.entry_id}/${transaction.transaction_id}`;
 
             const response = await fetch(url, {
                 method: 'PUT',
@@ -557,7 +561,7 @@ class CryptoTransactionsPanel extends HTMLElement {
             if (response.ok) {
                 alert('Transaction mise à jour avec succès');
                 const selectedCryptoId = this.shadowRoot.querySelector('#cryptoSelect').value;
-                this.fetchAndRenderTransactions(transaction.entry_id, selectedCryptoId, ipLocal);
+                this.fetchAndRenderTransactions(transaction.entry_id, selectedCryptoId);
                 this.shadowRoot.querySelector('#editModal').style.display = 'none';
             } else {
                 const errorText = await response.text();
@@ -569,10 +573,11 @@ class CryptoTransactionsPanel extends HTMLElement {
         }
     }
 
-    async exportDatabase(ipLocal) {
+    async exportDatabase() {
         const entryId = this.panel.config.entry_id;
         try {
-            const url = `http://${ipLocal}:5000/export_db/${entryId}`;
+            const baseUrl = `${window.location.protocol}//${window.location.hostname}`;
+            const url = `${baseUrl}:5000/export_db/${entryId}`;
     
             const response = await fetch(url, {
                 method: 'GET',
@@ -602,14 +607,15 @@ class CryptoTransactionsPanel extends HTMLElement {
         }
     }
 
-    async importDatabase(file, ipLocal) {
+    async importDatabase(file) {
         const entryId = this.panel.config.entry_id;
         const formData = new FormData();
         formData.append('file', file);
         formData.append('entry_id', entryId);
     
         try {
-            const url = `http://${ipLocal}:5000/import_db`;
+            const baseUrl = `${window.location.protocol}//${window.location.hostname}`;
+            const url = `${baseUrl}:5000/import_db`;
     
             const response = await fetch(url, {
                 method: 'POST',
@@ -618,7 +624,7 @@ class CryptoTransactionsPanel extends HTMLElement {
     
             if (response.ok) {
                 alert('Base de données importée avec succès');
-                this.loadCryptos(entryId, ipLocal);  // Recharge les cryptomonnaies après l'importation
+                this.loadCryptos(entryId);  // Recharge les cryptomonnaies après l'importation
             } else {
                 const errorText = await response.text();
                 throw new Error(`Erreur ${response.status}: ${errorText}`);
@@ -630,8 +636,8 @@ class CryptoTransactionsPanel extends HTMLElement {
     }
 
     setConfig(config) {
-        if (!config.entry_id || !config.integration_name || !config.ip_local) {
-            throw new Error('Vous devez définir un entry_id, un integration_name, et un ip_local');
+        if (!config.entry_id || !config.integration_name) {
+            throw new Error('Vous devez définir un entry_id, un crypto_id, un crypto_name, et un integration_name');
         }
         this.panel.config = config;
     }

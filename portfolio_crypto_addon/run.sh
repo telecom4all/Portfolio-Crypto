@@ -22,7 +22,6 @@ panel_custom:
     config:
       entry_id: your_entry_id # entry_id de votre db
       entry_name: your_entry_name # nom du portefeuille 
-      ip_local: 192.168.1.100 # Votre ip local hhtp
 "
 
 if ! grep -q "panel_custom:" "$CONFIG_FILE"; then
