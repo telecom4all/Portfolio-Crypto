@@ -11,15 +11,7 @@ import os
 from .const import DOMAIN, COINGECKO_API_URL
 from .db import save_crypto, load_crypto_attributes, delete_crypto_db
 
-
 _LOGGER = logging.getLogger(__name__)
-
-# Configurer la journalisation pour écrire dans un fichier
-#log_handler = logging.FileHandler('/config/logs/integration.log')
-#log_handler.setLevel(logging.DEBUG)
-#log_formatter = logging.Formatter('%(asctime)s %(levelname)s: %(message)s [in %(pathname)s:%(lineno)d]')
-#log_handler.setFormatter(log_formatter)
-#_LOGGER.addHandler(log_handler)
 
 async def async_setup(hass: HomeAssistant, config: dict):
     """Configurer l'intégration via le fichier configuration.yaml (non utilisé ici)"""
@@ -55,7 +47,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
         if coordinator:
             success = await coordinator.delete_crypto(crypto_id)
             if success:
-                # Recharger les entités après la suppression d'une crypto
                 await hass.config_entries.async_forward_entry_unload(entry, "sensor")
                 await hass.config_entries.async_forward_entry_setup(entry, "sensor")
                 _LOGGER.debug(f"Crypto {crypto_id} supprimée avec succès et les entités ont été rechargées.")
@@ -64,7 +55,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
         else:
             _LOGGER.error(f"Aucun coordinator trouvé pour l'entry_id: {entry_id}")
 
-        # Recharger l'intégration pour supprimer les cryptomonnaies
         await hass.config_entries.async_reload(entry.entry_id)
     hass.services.async_register(DOMAIN, "delete_crypto", async_delete_crypto_service)
 
@@ -76,7 +66,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
         if coordinator:
             success = await coordinator.add_crypto(name)
             if success:
-                # Recharger les entités après l'ajout d'une nouvelle crypto
                 await hass.config_entries.async_forward_entry_unload(entry, "sensor")
                 await hass.config_entries.async_forward_entry_setup(entry, "sensor")
                 _LOGGER.debug(f"Crypto {name} ajoutée avec succès et les entités ont été rechargées.")
@@ -85,9 +74,103 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
         else:
             _LOGGER.error(f"Aucun coordinator trouvé pour l'entry_id: {entry_id}")
 
-        # Recharger l'intégration pour ajouter les nouvelles cryptomonnaies
-        #await self.hass.config_entries.async_reload(self.config_entry.entry_id)
     hass.services.async_register(DOMAIN, "add_crypto", async_add_crypto_service)
+
+    async def async_save_transaction_service(call):
+        entry_id = call.data.get("entry_id")
+        transaction = {
+            "crypto_id": call.data.get("crypto_id"),
+            "crypto_name": call.data.get("crypto_name"),
+            "quantity": call.data.get("quantity"),
+            "price_usd": call.data.get("price_usd"),
+            "transaction_type": call.data.get("transaction_type"),
+            "location": call.data.get("location"),
+            "date": call.data.get("date"),
+        }
+        _LOGGER.debug(f"Service save_transaction appelé avec entry_id: {entry_id} et transaction: {transaction}")
+        coordinator = hass.data[DOMAIN].get(entry_id)
+        if coordinator:
+            success = await coordinator.save_transaction(transaction)
+            if success:
+                _LOGGER.debug("Transaction ajoutée avec succès")
+            else:
+                _LOGGER.error("Erreur lors de l'ajout de la transaction")
+        else:
+            _LOGGER.error(f"Aucun coordinator trouvé pour l'entry_id: {entry_id}")
+
+    hass.services.async_register(DOMAIN, "save_transaction", async_save_transaction_service)
+
+    async def async_delete_transaction_service(call):
+        entry_id = call.data.get("entry_id")
+        transaction_id = call.data.get("transaction_id")
+        _LOGGER.debug(f"Service delete_transaction appelé avec entry_id: {entry_id} et transaction_id: {transaction_id}")
+        coordinator = hass.data[DOMAIN].get(entry_id)
+        if coordinator:
+            success = await coordinator.delete_transaction(transaction_id)
+            if success:
+                _LOGGER.debug("Transaction supprimée avec succès")
+            else:
+                _LOGGER.error("Erreur lors de la suppression de la transaction")
+        else:
+            _LOGGER.error(f"Aucun coordinator trouvé pour l'entry_id: {entry_id}")
+
+    hass.services.async_register(DOMAIN, "delete_transaction", async_delete_transaction_service)
+
+    async def async_update_transaction_service(call):
+        entry_id = call.data.get("entry_id")
+        transaction = {
+            "transaction_id": call.data.get("transaction_id"),
+            "crypto_id": call.data.get("crypto_id"),
+            "crypto_name": call.data.get("crypto_name"),
+            "quantity": call.data.get("quantity"),
+            "price_usd": call.data.get("price_usd"),
+            "transaction_type": call.data.get("transaction_type"),
+            "location": call.data.get("location"),
+            "date": call.data.get("date"),
+        }
+        _LOGGER.debug(f"Service update_transaction appelé avec entry_id: {entry_id} et transaction: {transaction}")
+        coordinator = hass.data[DOMAIN].get(entry_id)
+        if coordinator:
+            success = await coordinator.update_transaction(transaction)
+            if success:
+                _LOGGER.debug("Transaction mise à jour avec succès")
+            else:
+                _LOGGER.error("Erreur lors de la mise à jour de la transaction")
+        else:
+            _LOGGER.error(f"Aucun coordinator trouvé pour l'entry_id: {entry_id}")
+
+    hass.services.async_register(DOMAIN, "update_transaction", async_update_transaction_service)
+
+    async def async_export_db_service(call):
+        entry_id = call.data.get("entry_id")
+        _LOGGER.debug(f"Service export_db appelé avec entry_id: {entry_id}")
+        coordinator = hass.data[DOMAIN].get(entry_id)
+        if coordinator:
+            success = await coordinator.export_db(entry_id)
+            if success:
+                _LOGGER.debug("Base de données exportée avec succès")
+            else:
+                _LOGGER.error("Erreur lors de l'exportation de la base de données")
+        else:
+            _LOGGER.error(f"Aucun coordinator trouvé pour l'entry_id: {entry_id}")
+
+    hass.services.async_register(DOMAIN, "export_db", async_export_db_service)
+
+    async def async_import_db_service(call):
+        entry_id = call.data.get("entry_id")
+        file = call.data.get("file")
+        _LOGGER.debug(f"Service import_db appelé avec entry_id: {entry_id} et fichier: {file}")
+        coordinator = hass.data[DOMAIN].get(entry_id)
+        if coordinator:
+            success = await coordinator.import_db(entry_id, file)
+            if success:
+                _LOGGER.debug("Base de données importée avec succès")
+            else:
+                _LOGGER.error("Erreur lors de l'importation de la base de données")
+        else:
+            _LOGGER.error(f"Aucun coordinator trouvé pour l'entry_id: {entry_id}")
+
+    hass.services.async_register(DOMAIN, "import_db", async_import_db_service)
 
     return True
 
@@ -325,3 +408,122 @@ class PortfolioCryptoCoordinator(DataUpdateCoordinator):
             _LOGGER.error(f"Exception lors du chargement des cryptos depuis la base de données pour l'ID d'entrée {entry_id}: {e}")
             return []
 
+    async def save_transaction(self, transaction):
+        entry_id = transaction["entry_id"]
+        try:
+            async with aiohttp.ClientSession() as session:
+                supervisor_token = os.getenv("SUPERVISOR_TOKEN")
+                headers = {
+                    "Authorization": f"Bearer {supervisor_token}",
+                    "Content-Type": "application/json",
+                }
+                url = f"http://localhost:5000/transaction/{entry_id}"
+                _LOGGER.debug(f"Envoi de la requête à {url} avec transaction: {transaction}")
+                async with session.post(url, json=transaction, headers=headers) as response:
+                    response_text = await response.text()
+                    _LOGGER.debug(f"Réponse reçue: {response.status}, {response_text}")
+                    if response.status == 200:
+                        _LOGGER.info("Transaction sauvegardée avec succès.")
+                        return True
+                    else:
+                        _LOGGER.error(f"Erreur lors de la sauvegarde de la transaction. Statut: {response.status}, Réponse: {response_text}")
+                        return False
+        except Exception as e:
+            _LOGGER.error(f"Exception lors de la sauvegarde de la transaction: {e}")
+            return False
+
+    async def delete_transaction(self, transaction_id):
+        entry_id = self.config_entry.entry_id
+        try:
+            async with aiohttp.ClientSession() as session:
+                supervisor_token = os.getenv("SUPERVISOR_TOKEN")
+                headers = {
+                    "Authorization": f"Bearer {supervisor_token}",
+                    "Content-Type": "application/json",
+                }
+                url = f"http://localhost:5000/transaction/{entry_id}/{transaction_id}"
+                async with session.delete(url, headers=headers) as response:
+                    response_text = await response.text()
+                    _LOGGER.debug(f"Réponse reçue: {response.status}, {response_text}")
+                    if response.status == 200:
+                        _LOGGER.info("Transaction supprimée avec succès.")
+                        return True
+                    else:
+                        _LOGGER.error(f"Erreur lors de la suppression de la transaction. Statut: {response.status}, Réponse: {response_text}")
+                        return False
+        except Exception as e:
+            _LOGGER.error(f"Exception lors de la suppression de la transaction: {e}")
+            return False
+
+    async def update_transaction(self, transaction):
+        entry_id = transaction["entry_id"]
+        transaction_id = transaction["transaction_id"]
+        try:
+            async with aiohttp.ClientSession() as session:
+                supervisor_token = os.getenv("SUPERVISOR_TOKEN")
+                headers = {
+                    "Authorization": f"Bearer {supervisor_token}",
+                    "Content-Type": "application/json",
+                }
+                url = f"http://localhost:5000/transaction/{entry_id}/{transaction_id}"
+                _LOGGER.debug(f"Envoi de la requête à {url} avec transaction: {transaction}")
+                async with session.put(url, json=transaction, headers=headers) as response:
+                    response_text = await response.text()
+                    _LOGGER.debug(f"Réponse reçue: {response.status}, {response_text}")
+                    if response.status == 200:
+                        _LOGGER.info("Transaction mise à jour avec succès.")
+                        return True
+                    else:
+                        _LOGGER.error(f"Erreur lors de la mise à jour de la transaction. Statut: {response.status}, Réponse: {response_text}")
+                        return False
+        except Exception as e:
+            _LOGGER.error(f"Exception lors de la mise à jour de la transaction: {e}")
+            return False
+
+    async def export_db(self, entry_id):
+        try:
+            async with aiohttp.ClientSession() as session:
+                supervisor_token = os.getenv("SUPERVISOR_TOKEN")
+                headers = {
+                    "Authorization": f"Bearer {supervisor_token}",
+                    "Content-Type": "application/octet-stream"
+                }
+                url = f"http://localhost:5000/export_db/{entry_id}"
+                _LOGGER.debug(f"Envoi de la requête à {url}")
+                async with session.get(url, headers=headers) as response:
+                    response_text = await response.text()
+                    _LOGGER.debug(f"Réponse reçue: {response.status}, {response_text}")
+                    if response.status == 200:
+                        _LOGGER.info("Base de données exportée avec succès.")
+                        return True
+                    else:
+                        _LOGGER.error(f"Erreur lors de l'exportation de la base de données. Statut: {response.status}, Réponse: {response_text}")
+                        return False
+        except Exception as e:
+            _LOGGER.error(f"Exception lors de l'exportation de la base de données: {e}")
+            return False
+
+    async def import_db(self, entry_id, file):
+        try:
+            form_data = aiohttp.FormData()
+            form_data.add_field('file', file, filename=file.name)
+            form_data.add_field('entry_id', entry_id)
+            async with aiohttp.ClientSession() as session:
+                supervisor_token = os.getenv("SUPERVISOR_TOKEN")
+                headers = {
+                    "Authorization": f"Bearer {supervisor_token}",
+                }
+                url = f"http://localhost:5000/import_db"
+                _LOGGER.debug(f"Envoi de la requête à {url} avec le fichier {file.name}")
+                async with session.post(url, data=form_data, headers=headers) as response:
+                    response_text = await response.text()
+                    _LOGGER.debug(f"Réponse reçue: {response.status}, {response_text}")
+                    if response.status == 200:
+                        _LOGGER.info("Base de données importée avec succès.")
+                        return True
+                    else:
+                        _LOGGER.error(f"Erreur lors de l'importation de la base de données. Statut: {response.status}, Réponse: {response_text}")
+                        return False
+        except Exception as e:
+            _LOGGER.error(f"Exception lors de l'importation de la base de données: {e}")
+            return False
