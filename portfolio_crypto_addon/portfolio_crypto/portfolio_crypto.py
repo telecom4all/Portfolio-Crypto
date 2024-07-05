@@ -7,7 +7,12 @@ import time
 from flask import Flask, jsonify, request, send_file
 from flask_cors import CORS
 from flask_socketio import SocketIO, emit
-from .db import add_transaction, get_transactions, delete_transaction, update_transaction, get_crypto_transactions, create_table, create_crypto_table, save_crypto, get_cryptos, calculate_crypto_profit_loss, load_crypto_attributes, delete_crypto_db, export_db, import_db
+from .db import (
+    add_transaction, get_transactions, delete_transaction, update_transaction,
+    get_crypto_transactions, create_table, create_crypto_table, save_crypto,
+    get_cryptos, calculate_crypto_profit_loss, load_crypto_attributes, delete_crypto_db,
+    export_db, import_db
+)
 import os
 
 # Configurer les logs
@@ -21,6 +26,13 @@ requests_cache.install_cache('coingecko_cache', expire_after=expire_after)
 app = Flask(__name__)
 CORS(app)  # Cette ligne permet d'ajouter les en-têtes CORS à toutes les routes
 socketio = SocketIO(app, cors_allowed_origins="*")
+
+@app.after_request
+def add_cors_headers(response):
+    response.headers['Access-Control-Allow-Origin'] = '*'
+    response.headers['Access-Control-Allow-Methods'] = 'GET, POST, PUT, DELETE, OPTIONS'
+    response.headers['Access-Control-Allow-Headers'] = 'Content-Type, Authorization'
+    return response
 
 @app.route('/initialize', methods=['POST'])
 def initialize():
@@ -222,7 +234,6 @@ def create_transaction(entry_id):
         logging.error(f"Erreur lors de l'ajout de la transaction: {e}")
         return jsonify({"error": "Erreur Interne"}), 500
 
-
 @app.route('/transaction/<entry_id>/<int:transaction_id>', methods=['DELETE'])
 def delete_transaction_endpoint(entry_id, transaction_id):
     """Supprimer une transaction pour un ID d'entrée donné"""
@@ -278,7 +289,6 @@ def delete_crypto(entry_id, crypto_id):
         return jsonify({"message": "Crypto supprimée"}), 200
     else:
         return jsonify({"error": "Erreur Interne"}), 500
-    
 
 @app.route('/export_db/<entry_id>', methods=['GET'])
 def export_database(entry_id):
