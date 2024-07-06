@@ -1,19 +1,17 @@
+"""
+Fichier portfolio_crypto.py
+Ce fichier gère l'application Flask et les routes API pour l'addon Portfolio Crypto.
+"""
+
 import json
 import requests
 import requests_cache
 from datetime import datetime, timedelta
 import logging
 import time
-from flask import Flask, jsonify, request, send_file
+from flask import Flask, jsonify, request
 from flask_cors import CORS
-from flask_socketio import SocketIO, emit
-from werkzeug.middleware.proxy_fix import ProxyFix
-from .db import (
-    add_transaction, get_transactions, delete_transaction, update_transaction,
-    get_crypto_transactions, create_table, create_crypto_table, save_crypto,
-    get_cryptos, calculate_crypto_profit_loss, load_crypto_attributes, delete_crypto_db,
-    export_db, import_db
-)
+from .db import add_transaction, get_transactions, delete_transaction, update_transaction, get_crypto_transactions, create_table, create_crypto_table, save_crypto, get_cryptos, calculate_crypto_profit_loss, load_crypto_attributes, delete_crypto_db, export_db, import_db
 import os
 
 # Configurer les logs
@@ -25,19 +23,7 @@ requests_cache.install_cache('coingecko_cache', expire_after=expire_after)
 
 # Configuration de l'application Flask
 app = Flask(__name__)
-CORS(app, resources={r"/*": {"origins": ["*", "http://192.168.1.231:5000", "http://192.168.1.231:8123", "https://hstest.cuesmes.be"]}})
-socketio = SocketIO(app, cors_allowed_origins=["*", "http://192.168.1.231:5000", "http://192.168.1.231:8123", "https://hstest.cuesmes.be"])
-
-# Middleware Proxy Fix pour gérer les proxys de confiance
-app.wsgi_app = ProxyFix(app.wsgi_app, x_for=1, x_proto=1, x_host=1, x_port=1, x_prefix=1)
-
-# Middleware CORS pour ajouter des en-têtes à toutes les réponses
-@app.after_request
-def add_cors_headers(response):
-    response.headers['Access-Control-Allow-Origin'] = '*'
-    response.headers['Access-Control-Allow-Methods'] = 'GET, POST, PUT, DELETE, OPTIONS'
-    response.headers['Access-Control-Allow-Headers'] = 'Content-Type, Authorization'
-    return response
+CORS(app)  # Cette ligne permet d'ajouter les en-têtes CORS à toutes les routes
 
 @app.route('/initialize', methods=['POST'])
 def initialize():
@@ -295,6 +281,7 @@ def delete_crypto(entry_id, crypto_id):
         return jsonify({"message": "Crypto supprimée"}), 200
     else:
         return jsonify({"error": "Erreur Interne"}), 500
+    
 
 @app.route('/export_db/<entry_id>', methods=['GET'])
 def export_database(entry_id):
@@ -312,19 +299,7 @@ def import_database():
         return jsonify({"message": "Base de données importée avec succès"}), 200
     except Exception as e:
         return jsonify({"error": "Erreur Interne"}), 500
-
-@socketio.on('fetch_cryptos')
-def handle_fetch_cryptos(data):
-    entry_id = data.get('entry_id')
-    if not entry_id:
-        emit('error', {'message': 'entry_id is required'})
-        return
-    try:
-        cryptos = get_cryptos(entry_id)
-        emit('cryptos_response', {'cryptos': cryptos})
-    except Exception as e:
-        logging.error(f"Erreur lors du chargement des cryptos pour l'ID d'entrée {entry_id}: {e}")
-        emit('error', {'message': 'Erreur Interne'})
+    
 
 if __name__ == "__main__":
-    socketio.run(app, host="0.0.0.0", port=5000)
+    app.run(host="0.0.0.0", port=5000)
