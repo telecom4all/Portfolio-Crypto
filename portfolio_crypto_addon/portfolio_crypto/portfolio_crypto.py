@@ -67,7 +67,7 @@ def load_cryptos(entry_id):
 def load_cryptos_api(entry_id):
     try:
         cryptos = get_cryptos(entry_id)
-        return jsonify(cryptos)s
+        return jsonify(cryptos)
     except Exception as e:
         logging.error(f"Erreur lors du chargement des cryptos pour l'ID d'entrée {entry_id}: {e}")
         return jsonify({"error": "Erreur Interne"}), 500
