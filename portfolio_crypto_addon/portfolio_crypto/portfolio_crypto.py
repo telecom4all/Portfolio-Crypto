@@ -1,4 +1,8 @@
-import os
+"""
+Fichier portfolio_crypto.py
+Ce fichier gère l'application Flask et les routes API pour l'addon Portfolio Crypto.
+"""
+
 import json
 import requests
 import requests_cache
@@ -8,6 +12,7 @@ import time
 from flask import Flask, jsonify, request
 from flask_cors import CORS
 from .db import add_transaction, get_transactions, delete_transaction, update_transaction, get_crypto_transactions, create_table, create_crypto_table, save_crypto, get_cryptos, calculate_crypto_profit_loss, load_crypto_attributes, delete_crypto_db, export_db, import_db
+import os
 
 # Configurer les logs
 logging.basicConfig(level=logging.INFO)
@@ -57,6 +62,16 @@ def load_cryptos(entry_id):
     except Exception as e:
         logging.error(f"Erreur lors du chargement des cryptos pour l'ID d'entrée {entry_id}: {e}")
         return jsonify({"error": "Erreur Interne"}), 500
+
+@app.route('/api/portfolio_crypto/load_cryptos/<entry_id>', methods=['GET'])
+def load_cryptos_api(entry_id):
+    try:
+        cryptos = get_cryptos(entry_id)
+        return jsonify(cryptos)s
+    except Exception as e:
+        logging.error(f"Erreur lors du chargement des cryptos pour l'ID d'entrée {entry_id}: {e}")
+        return jsonify({"error": "Erreur Interne"}), 500
+   
 
 @app.route('/crypto_profit_loss/<entry_id>/<crypto_name>', methods=['GET'])
 def crypto_profit_loss(entry_id, crypto_name):
@@ -296,6 +311,6 @@ def import_database():
         return jsonify({"error": "Erreur Interne"}), 500
     
 
+
 if __name__ == "__main__":
-    port = int(os.getenv('INGRESS_PORT', 5000))
-    app.run(host="0.0.0.0", port=port)
+    app.run(host="0.0.0.0", port=5000)
