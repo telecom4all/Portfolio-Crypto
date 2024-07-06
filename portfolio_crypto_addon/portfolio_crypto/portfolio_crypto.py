@@ -7,6 +7,7 @@ import time
 from flask import Flask, jsonify, request, send_file
 from flask_cors import CORS
 from flask_socketio import SocketIO, emit
+from werkzeug.middleware.proxy_fix import ProxyFix
 from .db import (
     add_transaction, get_transactions, delete_transaction, update_transaction,
     get_crypto_transactions, create_table, create_crypto_table, save_crypto,
@@ -24,9 +25,13 @@ requests_cache.install_cache('coingecko_cache', expire_after=expire_after)
 
 # Configuration de l'application Flask
 app = Flask(__name__)
-CORS(app)  # Cette ligne permet d'ajouter les en-têtes CORS à toutes les routes
-socketio = SocketIO(app, cors_allowed_origins="*")
+CORS(app, resources={r"/*": {"origins": ["*", "http://localhost:5000", "http://localhost:8123"]}})
+socketio = SocketIO(app, cors_allowed_origins=["*", "http://localhost:5000", "http://localhost:8123"])
 
+# Middleware Proxy Fix pour gérer les proxys de confiance
+app.wsgi_app = ProxyFix(app.wsgi_app, x_for=1, x_proto=1, x_host=1, x_port=1, x_prefix=1)
+
+# Middleware CORS pour ajouter des en-têtes à toutes les réponses
 @app.after_request
 def add_cors_headers(response):
     response.headers['Access-Control-Allow-Origin'] = '*'
@@ -233,6 +238,7 @@ def create_transaction(entry_id):
     except Exception as e:
         logging.error(f"Erreur lors de l'ajout de la transaction: {e}")
         return jsonify({"error": "Erreur Interne"}), 500
+
 
 @app.route('/transaction/<entry_id>/<int:transaction_id>', methods=['DELETE'])
 def delete_transaction_endpoint(entry_id, transaction_id):
