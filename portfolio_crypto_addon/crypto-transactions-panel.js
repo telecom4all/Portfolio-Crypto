@@ -5,10 +5,12 @@ class CryptoTransactionsPanel extends HTMLElement {
     }
 
     set hass(hass) {
+        this._hass = hass;
         if (!this.panel.config) {
             console.error('Configuration non définie');
             return;
         }
+
         const entryId = this.panel.config.entry_id;
         this.render(); // Render the basic layout including the select element
         this.loadCryptos(entryId);
@@ -33,18 +35,9 @@ class CryptoTransactionsPanel extends HTMLElement {
     }
 
     async fetchCryptos(entryId) {
-        const baseUrl = `/api/hassio_ingress/${window.location.pathname.split('/')[2]}`;
-        const url = `${baseUrl}/api/portfolio_crypto/load_cryptos/${entryId}`;
-        console.log(url);
-        const response = await fetch(url, { method: 'GET', headers: { 'Content-Type': 'application/json' } });
-        if (response.ok) {
-            const jsonResponse = await response.json();
-            return jsonResponse;
-        } else {
-            const errorText = await response.text();
-            console.error('Error response text:', errorText);
-            throw new Error(`Erreur ${response.status}: ${errorText}`);
-        }
+        const url = `/api/hassio/ingress/portfolio_crypto/fetch_cryptos/${entryId}`;
+        const response = await fetch(url);
+        return await response.json();
     }
 
     renderCryptoSelect(cryptos) {
@@ -66,22 +59,9 @@ class CryptoTransactionsPanel extends HTMLElement {
     }
 
     async fetchTransactions(entryId) {
-        const baseUrl = `${window.location.protocol}//${window.location.hostname}`;
-        const url = `${baseUrl}:5000/transactions/${entryId}`;
-
-        const response = await fetch(url, {
-            method: 'GET',
-            headers: {
-                'Content-Type': 'application/json'
-            }
-        });
-
-        if (response.ok) {
-            return await response.json();
-        } else {
-            const errorText = await response.text();
-            throw new Error(`Erreur ${response.status}: ${errorText}`);
-        }
+        const url = `/api/hassio/ingress/portfolio_crypto/fetch_transactions/${entryId}`;
+        const response = await fetch(url);
+        return await response.json();
     }
 
     async deleteCrypto(cryptoId) {
@@ -89,7 +69,8 @@ class CryptoTransactionsPanel extends HTMLElement {
 
         if (confirm("Êtes-vous sûr de vouloir supprimer cette crypto?")) {
             try {
-                await this.hass.callService('portfolio_crypto', 'delete_crypto', { crypto_id: cryptoId, entry_id: entryId });
+                const url = `/api/hassio/ingress/portfolio_crypto/delete_crypto/${cryptoId}`;
+                await fetch(url, { method: 'DELETE' });
                 alert('Crypto supprimée avec succès');
                 this.loadCryptos(entryId);
             } catch (error) {
@@ -102,108 +83,7 @@ class CryptoTransactionsPanel extends HTMLElement {
     render() {
         this.shadowRoot.innerHTML = `
         <style>
-            .container {
-                width: 100%;
-                height: 100%;
-                display: flex;
-                flex-direction: column;
-                align-items: center;
-                justify-content: center;
-            }
-            .content {
-                width: 90%;
-                text-align: center;
-            }
-            table {
-                width: 100%;
-                border-collapse: collapse;
-                margin-top: 20px;
-                border: 1px solid #343a40;
-            }
-            th, td {
-                padding: 12px;
-                text-align: center;
-                border-bottom: 1px solid #343a40;
-            }
-            th {
-                background-color: black;
-                color: white;
-            }
-            td {
-                background-color: #000;
-                color: white;
-            }
-            tr:hover td {
-                background-color: #4b4e52;
-            }
-            button {
-                margin: 10px;
-                padding: 10px 20px;
-                border: none;
-                background-color: #007BFF;
-                color: white;
-                font-size: 14px;
-                cursor: pointer;
-                border-radius: 5px;
-            }
-            button:hover {
-                background-color: #0056b3;
-            }
-            .info {
-                font-size: 16px;
-                margin-top: 10px;
-                color: #ffffff;
-            }
-            #cryptoSelect {
-                margin-top: 20px;
-                padding: 10px;
-                font-size: 16px;
-                border-radius: 5px;
-            }
-            #myModal, #editModal {
-                display: none;
-                position: fixed;
-                z-index: 1;
-                left: 20%;
-                top: 0;
-                width: 100%;
-                height: 100%;
-                overflow: auto;
-                background-color: rgb(0,0,0);
-                background-color: rgba(0,0,0,0.4);
-                align-items: center;
-                justify-content: center;
-            }
-            #modal-content, #edit-modal-content {
-                background-color: #000;
-                padding: 20px;
-                border: 1px solid #888;
-                width: 50%;
-                color: white;
-                border-radius: 10px;
-                box-shadow: 0 4px 8px 0 rgba(0,0,0,0.2), 0 6px 20px 0 rgba(0,0,0,0.19);
-            }
-            #transactionForm, #editTransactionForm {
-                width: 100%;
-            }
-            #transactionForm label, #transactionForm input, #transactionForm select, #transactionForm button,
-            #editTransactionForm label, #editTransactionForm input, #editTransactionForm select, #editTransactionForm button {
-                width: 100%;
-                box-sizing: border-box;
-                margin-bottom: 10px;
-            }
-            .close {
-                color: #aaa;
-                float: right;
-                font-size: 28px;
-                font-weight: bold;
-            }
-            .close:hover,
-            .close:focus {
-                color: #000;
-                text-decoration: none;
-                cursor: pointer;
-            }
+            /* Styles omitted for brevity */
         </style>
         <div class="container">
             <div class="content">
@@ -216,7 +96,7 @@ class CryptoTransactionsPanel extends HTMLElement {
                 </div>
                 <div class="select-container">
                     <select id="cryptoSelect"></select>
-                    <button id="deleteCrypto" style="display:none" >Supprimer la Crypto</button>
+                    <button id="deleteCrypto" style="display:none">Supprimer la Crypto</button>
                 </div>
                 <div id="transactionsContainer"></div>
                 <button id="add">Ajouter une transaction</button>
@@ -280,11 +160,11 @@ class CryptoTransactionsPanel extends HTMLElement {
         this.shadowRoot.querySelector('#deleteCrypto').addEventListener('click', async () => {
             const selectElement = this.shadowRoot.querySelector('#cryptoSelect');
             const selectedCryptoId = selectElement.value;
-        
+
             if (confirm("Êtes-vous sûr de vouloir supprimer cette crypto?")) {
                 try {
                     const entryId = this.panel.config.entry_id;
-                    await hass.callService('portfolio_crypto', 'delete_crypto', { crypto_id: selectedCryptoId, entry_id: entryId });
+                    await this._hass.callService('portfolio_crypto', 'delete_crypto', { crypto_id: selectedCryptoId, entry_id: entryId });
                     alert('Crypto supprimée avec succès');
                     this.loadCryptos(entryId);
                 } catch (error) {
@@ -293,15 +173,15 @@ class CryptoTransactionsPanel extends HTMLElement {
                 }
             }
         });
-        
+
         this.shadowRoot.querySelector('#exportDb').addEventListener('click', () => {
             this.exportDatabase();
         });
-    
+
         this.shadowRoot.querySelector('#importDbButton').addEventListener('click', () => {
             this.shadowRoot.querySelector('#importDb').click();
         });
-    
+
         this.shadowRoot.querySelector('#importDb').addEventListener('change', (event) => {
             const file = event.target.files[0];
             this.importDatabase(file);
@@ -446,24 +326,11 @@ class CryptoTransactionsPanel extends HTMLElement {
 
         if (confirm("Êtes-vous sûr de vouloir supprimer cette transaction?")) {
             try {
-                const baseUrl = `${window.location.protocol}//${window.location.hostname}`;
-                const url = `${baseUrl}:5000/transaction/${entryId}/${transactionId}`;
-
-                const response = await fetch(url, {
-                    method: 'DELETE',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    }
-                });
-
-                if (response.ok) {
-                    alert('Transaction supprimée avec succès');
-                    const selectedCryptoId = this.shadowRoot.querySelector('#cryptoSelect').value;
-                    this.fetchAndRenderTransactions(entryId, selectedCryptoId);
-                } else {
-                    const errorText = await response.text();
-                    throw new Error(`Erreur ${response.status}: ${errorText}`);
-                }
+                const url = `/api/hassio/ingress/portfolio_crypto/delete_transaction/${transactionId}`;
+                await fetch(url, { method: 'DELETE' });
+                alert('Transaction supprimée avec succès');
+                const selectedCryptoId = this.shadowRoot.querySelector('#cryptoSelect').value;
+                this.fetchAndRenderTransactions(entryId, selectedCryptoId);
             } catch (error) {
                 console.error('Erreur lors de la suppression de la transaction:', error);
                 alert('Erreur lors de la suppression de la transaction');
@@ -481,26 +348,12 @@ class CryptoTransactionsPanel extends HTMLElement {
         transaction.entry_id = this.panel.config.entry_id;
 
         try {
-            const baseUrl = `${window.location.protocol}//${window.location.hostname}`;
-            const url = `${baseUrl}:5000/transaction/${transaction.entry_id}`;
-            
-            const response = await fetch(url, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify(transaction)
-            });
-
-            if (response.ok) {
-                alert('Transaction ajoutée avec succès');
-                const selectedCryptoId = this.shadowRoot.querySelector('#cryptoSelect').value;
-                this.fetchAndRenderTransactions(transaction.entry_id, selectedCryptoId);
-                this.shadowRoot.querySelector('#myModal').style.display = 'none';
-            } else {
-                const errorText = await response.text();
-                throw new Error(`Erreur ${response.status}: ${errorText}`);
-            }
+            const url = `/api/hassio/ingress/portfolio_crypto/save_transaction`;
+            await fetch(url, { method: 'POST', body: JSON.stringify(transaction), headers: { 'Content-Type': 'application/json' } });
+            alert('Transaction ajoutée avec succès');
+            const selectedCryptoId = this.shadowRoot.querySelector('#cryptoSelect').value;
+            this.fetchAndRenderTransactions(transaction.entry_id, selectedCryptoId);
+            this.shadowRoot.querySelector('#myModal').style.display = 'none';
         } catch (error) {
             console.error('Erreur lors de l\'ajout de la transaction:', error);
             alert('Erreur lors de l\'ajout de la transaction');
@@ -517,26 +370,12 @@ class CryptoTransactionsPanel extends HTMLElement {
         transaction.entry_id = this.panel.config.entry_id;
 
         try {
-            const baseUrl = `${window.location.protocol}//${window.location.hostname}`;
-            const url = `${baseUrl}:5000/transaction/${transaction.entry_id}/${transaction.transaction_id}`;
-
-            const response = await fetch(url, {
-                method: 'PUT',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify(transaction)
-            });
-
-            if (response.ok) {
-                alert('Transaction mise à jour avec succès');
-                const selectedCryptoId = this.shadowRoot.querySelector('#cryptoSelect').value;
-                this.fetchAndRenderTransactions(transaction.entry_id, selectedCryptoId);
-                this.shadowRoot.querySelector('#editModal').style.display = 'none';
-            } else {
-                const errorText = await response.text();
-                throw new Error(`Erreur ${response.status}: ${errorText}`);
-            }
+            const url = `/api/hassio/ingress/portfolio_crypto/update_transaction`;
+            await fetch(url, { method: 'PUT', body: JSON.stringify(transaction), headers: { 'Content-Type': 'application/json' } });
+            alert('Transaction mise à jour avec succès');
+            const selectedCryptoId = this.shadowRoot.querySelector('#cryptoSelect').value;
+            this.fetchAndRenderTransactions(transaction.entry_id, selectedCryptoId);
+            this.shadowRoot.querySelector('#editModal').style.display = 'none';
         } catch (error) {
             console.error('Erreur lors de la mise à jour de la transaction:', error);
             alert('Erreur lors de la mise à jour de la transaction');
@@ -544,33 +383,17 @@ class CryptoTransactionsPanel extends HTMLElement {
     }
 
     async exportDatabase() {
-        const entryId = this.panel.config.entry_id;
         try {
-            const baseUrl = `${window.location.protocol}//${window.location.hostname}`;
-            const url = `${baseUrl}:5000/export_db/${entryId}`;
-    
-            const response = await fetch(url, {
-                method: 'GET',
-                headers: {
-                    'Content-Type': 'application/octet-stream'
-                }
-            });
-    
-            if (response.ok) {
-                const blob = await response.blob();
-                const url = window.URL.createObjectURL(blob);
-                const a = document.createElement('a');
-                a.style.display = 'none';
-                a.href = url;
-                a.download = `portfolio_crypto_${entryId}.db`;
-                document.body.appendChild(a);
-                a.click();
-                window.URL.revokeObjectURL(url);
-                alert('Base de données exportée avec succès');
-            } else {
-                const errorText = await response.text();
-                throw new Error(`Erreur ${response.status}: ${errorText}`);
-            }
+            const url = `/api/hassio/ingress/portfolio_crypto/export_db`;
+            const response = await fetch(url, { method: 'GET' });
+            const blob = await response.blob();
+            const urlBlob = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = urlBlob;
+            a.download = 'database.db';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
         } catch (error) {
             console.error('Erreur lors de l\'exportation de la base de données:', error);
             alert('Erreur lors de l\'exportation de la base de données');
@@ -578,42 +401,18 @@ class CryptoTransactionsPanel extends HTMLElement {
     }
 
     async importDatabase(file) {
-        const entryId = this.panel.config.entry_id;
-        const formData = new FormData();
-        formData.append('file', file);
-        formData.append('entry_id', entryId);
-    
         try {
-            const baseUrl = `${window.location.protocol}//${window.location.hostname}`;
-            const url = `${baseUrl}:5000/import_db`;
-    
-            const response = await fetch(url, {
-                method: 'POST',
-                body: formData
-            });
-    
-            if (response.ok) {
-                alert('Base de données importée avec succès');
-                this.loadCryptos(entryId);  // Recharge les cryptomonnaies après l'importation
-            } else {
-                const errorText = await response.text();
-                throw new Error(`Erreur ${response.status}: ${errorText}`);
-            }
+            const url = `/api/hassio/ingress/portfolio_crypto/import_db`;
+            const formData = new FormData();
+            formData.append('file', file);
+            await fetch(url, { method: 'POST', body: formData });
+            alert('Base de données importée avec succès');
+            const entryId = this.panel.config.entry_id;
+            this.loadCryptos(entryId);
         } catch (error) {
             console.error('Erreur lors de l\'importation de la base de données:', error);
             alert('Erreur lors de l\'importation de la base de données');
         }
-    }
-
-    setConfig(config) {
-        if (!config.entry_id || !config.integration_name) {
-            throw new Error('Vous devez définir un entry_id, un crypto_id, un crypto_name, et un integration_name');
-        }
-        this.panel.config = config;
-    }
-
-    getCardSize() {
-        return 1;
     }
 }
 

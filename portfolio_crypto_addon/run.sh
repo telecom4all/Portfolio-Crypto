@@ -16,18 +16,12 @@ CONFIG_FILE="/config/configuration.yaml"
 PANEL_CONFIG="
 panel_custom:
   - name: crypto-transactions-panel
-    sidebar_title: 'Transactions Crypto' # Nom affiché sur la sidebar
-    sidebar_icon: 'mdi:currency-usd' # icone de la sidebar
+    sidebar_title: 'Transactions Crypto' #Nom affiché sur la sidebar
+    sidebar_icon: 'mdi:currency-usd' #icone de la sidebar
     js_url: '/local/crypto-transactions-panel.js'
     config:
       entry_id: your_entry_id # entry_id de votre db
       entry_name: your_entry_name # nom du portefeuille 
-ingress:
-  panel_custom:
-    - name: ingress
-      title: 'Crypto Transactions'
-      icon: 'mdi:currency-usd'
-      url_path: 'portfolio_crypto'
 "
 
 if ! grep -q "panel_custom:" "$CONFIG_FILE"; then
@@ -36,5 +30,14 @@ else
     echo "La configuration du panneau personnalisé existe déjà dans configuration.yaml"
 fi
 
-# Lancez l'application
-exec python3 -m portfolio_crypto.portfolio_crypto
+# Démarrer l'application Flask avec Gunicorn
+gunicorn --bind 0.0.0.0:8099 portfolio_crypto.portfolio_crypto:app &
+
+# Attendre que l'application Flask démarre correctement
+sleep 5
+
+# Afficher un message à l'utilisateur pour redémarrer Home Assistant
+echo "L'installation est terminée. Veuillez redémarrer Home Assistant pour terminer la configuration."
+
+# Continuer à exécuter Gunicorn en premier plan
+wait
