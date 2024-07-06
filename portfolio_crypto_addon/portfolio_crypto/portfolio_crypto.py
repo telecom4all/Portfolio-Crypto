@@ -25,8 +25,8 @@ requests_cache.install_cache('coingecko_cache', expire_after=expire_after)
 
 # Configuration de l'application Flask
 app = Flask(__name__)
-CORS(app, resources={r"/*": {"origins": ["*", "http://192.168.1.231:5000", "http://192.168.1.231:8123"]}})
-socketio = SocketIO(app, cors_allowed_origins=["*", "http://192.168.1.231:5000", "http://192.168.1.231:8123"])
+CORS(app, resources={r"/*": {"origins": ["*", "http://192.168.1.231:5000", "http://192.168.1.231:8123", "https://hstest.cuesmes.be"]}})
+socketio = SocketIO(app, cors_allowed_origins=["*", "http://192.168.1.231:5000", "http://192.168.1.231:8123", "https://hstest.cuesmes.be"])
 
 # Middleware Proxy Fix pour gérer les proxys de confiance
 app.wsgi_app = ProxyFix(app.wsgi_app, x_for=1, x_proto=1, x_host=1, x_port=1, x_prefix=1)
