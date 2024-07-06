@@ -24,7 +24,7 @@ RUN pip list
 RUN apt-get update && apt-get install -y nginx && mkdir -p /run/nginx && rm -rf /var/lib/apt/lists/*
 
 # Copier le fichier de configuration Nginx
-COPY ingress.conf /etc/nginx/http.d/
+COPY portfolio_crypto_addon/ingress.conf /etc/nginx/http.d/
 
 # Rendre run.sh exécutable
 RUN chmod +x /app/run.sh
