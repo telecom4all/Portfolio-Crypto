@@ -11,12 +11,16 @@
   "schema": {},
   "image": "telecom4all/portfolio_crypto",
   "ports": {
-    "5000/tcp": 5000
+      "5000/tcp": 5000
   },
   "map": ["config:rw", "ssl"],
   "privileged": ["SYS_ADMIN"],
   "host_dbus": true,
   "full_access": true,
   "hassio_api": true,
-  "homeassistant_api": true
+  "homeassistant_api": true,
+  "ingress": true,
+  "ingress_port": 8099,
+  "ingress_entry": "/"
 }
+

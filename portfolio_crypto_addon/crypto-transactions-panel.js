@@ -9,7 +9,6 @@ class CryptoTransactionsPanel extends HTMLElement {
             console.error('Configuration non définie');
             return;
         }
-
         const entryId = this.panel.config.entry_id;
         this.render(); // Render the basic layout including the select element
         this.loadCryptos(entryId);
@@ -34,16 +33,10 @@ class CryptoTransactionsPanel extends HTMLElement {
     }
 
     async fetchCryptos(entryId) {
-        const baseUrl = `${window.location.protocol}//${window.location.hostname}`;
-        const url = `${baseUrl}:5000/load_cryptos/${entryId}`;
-        
-        const response = await fetch(url, {
-            method: 'GET',
-            headers: {
-                'Content-Type': 'application/json'
-            }
-        });
-
+        const baseUrl = `/api/hassio_ingress/${window.location.pathname.split('/')[2]}`;
+        const url = `${baseUrl}/api/portfolio_crypto/load_cryptos/${entryId}`;
+        console.log(url);
+        const response = await fetch(url, { method: 'GET', headers: { 'Content-Type': 'application/json' } });
         if (response.ok) {
             const jsonResponse = await response.json();
             return jsonResponse;
