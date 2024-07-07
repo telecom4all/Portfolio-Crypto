@@ -63,16 +63,6 @@ def load_cryptos(entry_id):
         logging.error(f"Erreur lors du chargement des cryptos pour l'ID d'entrée {entry_id}: {e}")
         return jsonify({"error": "Erreur Interne"}), 500
 
-@app.route('/api/portfolio_crypto/load_cryptos/<entry_id>', methods=['GET'])
-def load_cryptos_api(entry_id):
-    try:
-        cryptos = get_cryptos(entry_id)
-        return jsonify(cryptos)
-    except Exception as e:
-        logging.error(f"Erreur lors du chargement des cryptos pour l'ID d'entrée {entry_id}: {e}")
-        return jsonify({"error": "Erreur Interne"}), 500
-   
-
 @app.route('/crypto_profit_loss/<entry_id>/<crypto_name>', methods=['GET'])
 def crypto_profit_loss(entry_id, crypto_name):
     """Calculer et retourner le profit/perte pour une crypto-monnaie spécifique et un ID d'entrée donné"""
@@ -310,7 +300,6 @@ def import_database():
     except Exception as e:
         return jsonify({"error": "Erreur Interne"}), 500
     
-
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=5000)

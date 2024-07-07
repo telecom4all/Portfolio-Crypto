@@ -272,3 +272,4 @@ def import_db(entry_id, file):
     except Exception as e:
         logging.error(f"Erreur lors de l'importation de la base de données: {e}")
         raise
+
