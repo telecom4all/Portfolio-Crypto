@@ -14,18 +14,6 @@ class PortfolioCryptoConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_user(self, user_input=None):
         if user_input is not None:
-            entry_id = self.hass.helpers.entity_registry.async_get_or_create(DOMAIN, DOMAIN, user_input["name"]).entry_id
-            # Création de l'entrée de configuration
-            config_entry = await self.async_set_unique_id(entry_id)
-            self._abort_if_unique_id_configured()
-            
-            # Sauvegarder l'ID et le nom du portefeuille
-            self.hass.states.async_set(f"{DOMAIN}.{entry_id}", user_input["name"], {
-                "id": entry_id,
-                "name": user_input["name"]
-            })
-            
-            # Créer et configurer l'entrée
             return self.async_create_entry(title=user_input["name"], data={"name": user_input["name"], "cryptos": [], "initialized": False})
 
         return self.async_show_form(
@@ -141,3 +129,5 @@ class PortfolioCryptoOptionsFlowHandler(config_entries.OptionsFlow):
             }),
             errors=errors,
         )
+
+

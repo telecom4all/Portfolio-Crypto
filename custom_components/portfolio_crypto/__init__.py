@@ -583,5 +583,3 @@ class PortfolioCryptoCoordinator(DataUpdateCoordinator):
             _LOGGER.error(f"Exception lors de l'importation de la base de données: {e}")
             return False
 
-
-
