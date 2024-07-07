@@ -22,12 +22,19 @@ expire_after = timedelta(minutes=10)
 requests_cache.install_cache('coingecko_cache', expire_after=expire_after)
 
 # Configuration de l'application Flask
-app = Flask(__name__)
+#app = Flask(__name__)
+app = Flask(__name__, template_folder='/config/custom_components/portfolio_crypto/templates')
+
 CORS(app)  # Cette ligne permet d'ajouter les en-têtes CORS à toutes les routes
 
 @app.route('/')
 def index():
-    return 'Portfolio Crypto - Flask App is running'
+    try:
+        return render_template('index.html')
+    except Exception as e:
+        app.logger.error(f"Error rendering template: {e}")
+        return str(e), 500
+
 
 @app.route('/wallets')
 def wallets():
