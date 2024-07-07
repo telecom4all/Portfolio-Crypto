@@ -38,7 +38,7 @@
     <script>
         async function fetchWallets() {
             try {
-                const response = await fetch('/api/wallets');
+                const response = await fetch('http://localhost:8099/api/wallets');
                 const wallets = await response.json();
                 console.log(wallets)
                 const walletSelect = document.getElementById('walletSelect');
