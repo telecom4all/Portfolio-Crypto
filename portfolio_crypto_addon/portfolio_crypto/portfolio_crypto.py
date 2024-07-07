@@ -9,7 +9,7 @@ import requests_cache
 from datetime import datetime, timedelta
 import logging
 import time
-from flask import Flask, jsonify, request
+from flask import Flask, jsonify, request, render_template
 from flask_cors import CORS
 from .db import add_transaction, get_transactions, delete_transaction, update_transaction, get_crypto_transactions, create_table, create_crypto_table, save_crypto, get_cryptos, calculate_crypto_profit_loss, load_crypto_attributes, delete_crypto_db, export_db, import_db
 import os
@@ -27,7 +27,14 @@ CORS(app)  # Cette ligne permet d'ajouter les en-têtes CORS à toutes les route
 
 @app.route('/')
 def index():
-    return 'Portfolio Crypto - Flask App is running'
+    return render_template('index.html')
+
+@app.route('/wallets')
+def wallets():
+    # Ici, nous récupérons les portefeuilles enregistrés dans Home Assistant
+    states = app.config['hass'].states.async_all()
+    list_wallets = [(state.attributes.get('name'), state.attributes.get('id')) for state in states if state.domain == DOMAIN]
+    return jsonify(list_wallets)
 
 
 @app.route('/initialize', methods=['POST'])
