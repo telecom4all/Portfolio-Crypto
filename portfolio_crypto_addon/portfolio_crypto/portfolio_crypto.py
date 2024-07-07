@@ -119,7 +119,6 @@ def get_historical_price(crypto_id, date):
         logging.error(f"Erreur lors de la récupération du prix historique pour {crypto_id} à la date {date}: {e}")
         return None
 
-
 def calculate_profit_loss(entry_id):
     """Calculer le profit/perte pour un ID d'entrée donné"""
     transactions = get_transactions(entry_id)
@@ -179,7 +178,7 @@ def list_transactions(entry_id):
 
 @app.route('/all_transactions', methods=['GET'])
 def all_transactions():
-    """Lister toutes les transactions pour tous les portfolios"""
+    """Lister toutes les transactions de toutes les bases de données"""
     entry_ids = []  # Remplacer par une méthode pour récupérer tous les ID d'entrée si nécessaire
     all_transactions = []
     for entry_id in entry_ids:
