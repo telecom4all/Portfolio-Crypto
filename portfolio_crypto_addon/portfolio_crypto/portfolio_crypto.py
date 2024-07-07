@@ -36,12 +36,36 @@ def index():
         return str(e), 500
 
 
-@app.route('/wallets')
-def wallets():
-    # Ici, nous récupérons les portefeuilles enregistrés dans Home Assistant
-    states = app.config['hass'].states.async_all()
-    list_wallets = [(state.attributes.get('name'), state.attributes.get('id')) for state in states if state.domain == DOMAIN]
-    return jsonify(list_wallets)
+@app.route('/api/wallets', methods=['GET'])
+def get_wallets():
+    home_assistant_url = os.getenv('HASSIO', 'http://supervisor/core')  # Utilise l'URL par défaut si HASSIO n'est pas défini
+    access_token = os.getenv('HASSIO_TOKEN', '')  # Utilise le token du superviseur
+
+    if not access_token:
+        return jsonify({'error': 'Supervisor token is missing'}), 500
+
+    headers = {
+        'Authorization': f'Bearer {access_token}',
+        'Content-Type': 'application/json'
+    }
+
+    response = requests.get(f'{home_assistant_url}/api/states', headers=headers)
+
+    if response.status_code != 200:
+        return jsonify({'error': 'Unable to fetch data from Home Assistant'}), 500
+
+    sensors = response.json()
+    wallets = []
+
+    for sensor in sensors:
+        if sensor['entity_id'].startswith('sensor.') and 'total_investment' in sensor['attributes']['friendly_name']:
+            wallet_name = sensor['attributes']['friendly_name'].replace(' total_investment', '')
+            wallets.append({
+                'entry_id': sensor['attributes']['entry_id'],
+                'name': wallet_name
+            })
+
+    return jsonify(wallets)
 
 
 @app.route('/initialize', methods=['POST'])

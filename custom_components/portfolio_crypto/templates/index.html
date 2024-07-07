@@ -36,7 +36,24 @@
         </select>
     </div>
     <script>
-       console.log("start ingress")
+        async function fetchWallets() {
+            try {
+                const response = await fetch('/api/wallets');
+                const wallets = await response.json();
+                const walletSelect = document.getElementById('walletSelect');
+
+                wallets.forEach(wallet => {
+                    const option = document.createElement('option');
+                    option.value = wallet.entry_id;
+                    option.textContent = wallet.name;
+                    walletSelect.appendChild(option);
+                });
+            } catch (error) {
+                console.error('Error fetching wallets:', error);
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', fetchWallets);
     </script>
 </body>
 </html>
