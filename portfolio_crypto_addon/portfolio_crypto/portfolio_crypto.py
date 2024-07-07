@@ -25,6 +25,11 @@ requests_cache.install_cache('coingecko_cache', expire_after=expire_after)
 app = Flask(__name__)
 CORS(app)  # Cette ligne permet d'ajouter les en-têtes CORS à toutes les routes
 
+@app.route('/')
+def index():
+    return 'Portfolio Crypto - Flask App is running'
+
+
 @app.route('/initialize', methods=['POST'])
 def initialize():
     """Initialiser la base de données pour un nouveau portfolio"""
