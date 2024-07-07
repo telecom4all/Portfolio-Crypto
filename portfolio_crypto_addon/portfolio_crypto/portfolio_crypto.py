@@ -27,7 +27,7 @@ CORS(app)  # Cette ligne permet d'ajouter les en-têtes CORS à toutes les route
 
 @app.route('/')
 def index():
-    return render_template('index.html')
+    return 'Portfolio Crypto - Flask App is running'
 
 @app.route('/wallets')
 def wallets():
