@@ -36,20 +36,7 @@
         </select>
     </div>
     <script>
-        document.addEventListener('DOMContentLoaded', function () {
-            const walletSelect = document.getElementById('walletSelect');
-            fetch('/wallets')
-                .then(response => response.json())
-                .then(wallets => {
-                    wallets.forEach(wallet => {
-                        const option = document.createElement('option');
-                        option.value = wallet[1];
-                        option.text = `${wallet[0]} (ID: ${wallet[1]})`;
-                        walletSelect.appendChild(option);
-                    });
-                })
-                .catch(error => console.error('Erreur:', error));
-        });
+       console.log("start ingress")
     </script>
 </body>
 </html>
