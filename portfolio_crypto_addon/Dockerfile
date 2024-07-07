@@ -30,7 +30,7 @@ COPY portfolio_crypto_addon/ingress.conf /etc/nginx/http.d/
 RUN chmod +x /app/run.sh
 
 # Exposer les ports
-EXPOSE 5000 8099
-
+EXPOSE 5000 
+EXPOSE 8099
 # Commande pour exécuter l'application
 CMD ["/app/run.sh"]

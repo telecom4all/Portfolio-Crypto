@@ -31,11 +31,9 @@ else
 fi
 
 # Démarrer l'application Flask avec Gunicorn
-if [ "${INGRESS}" == "true" ]; then
-    gunicorn --bind 0.0.0.0:8099 portfolio_crypto.portfolio_crypto:app &
-else
-    gunicorn --bind 0.0.0.0:5000 portfolio_crypto.portfolio_crypto:app &
-fi
+gunicorn --bind 0.0.0.0:5000 portfolio_crypto.portfolio_crypto:app &
+gunicorn --bind 0.0.0.0:8099 portfolio_crypto.portfolio_crypto:app &
+
 
 # Attendre que l'application Flask démarre correctement
 sleep 5
