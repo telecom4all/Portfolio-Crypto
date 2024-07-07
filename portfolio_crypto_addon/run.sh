@@ -31,9 +31,11 @@ else
 fi
 
 # Démarrer l'application Flask avec Gunicorn
-gunicorn --bind 0.0.0.0:5000 portfolio_crypto.portfolio_crypto:app &
-gunicorn --bind 0.0.0.0:8099 portfolio_crypto.portfolio_crypto:app &
-
+#gunicorn --bind 0.0.0.0:5000 portfolio_crypto.portfolio_crypto:app &
+#gunicorn --bind 0.0.0.0:8099 portfolio_crypto.portfolio_crypto:app &
+# Démarrer l'application Flask avec Gunicorn
+gunicorn --bind 0.0.0.0:5000 portfolio_crypto.portfolio_crypto:app --access-logfile /config/gunicorn_access.log --error-logfile /config/gunicorn_error.log &
+gunicorn --bind 0.0.0.0:8099 portfolio_crypto.portfolio_crypto:app --access-logfile /config/gunicorn_access_ingress.log --error-logfile /config/gunicorn_access_ingress.log &
 
 # Attendre que l'application Flask démarre correctement
 sleep 5
