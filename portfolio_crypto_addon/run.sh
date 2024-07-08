@@ -8,7 +8,7 @@ mkdir -p /config/www
 cp -r /app/custom_components/portfolio_crypto/* /config/custom_components/portfolio_crypto/
 
 # Copiez le fichier JavaScript du panneau personnalisé dans le répertoire www de Home Assistant
-cp /app/crypto-transactions-panel.js /config/www/
+#cp /app/crypto-transactions-panel.js /config/www/
 cp /app/icon_portfolio_crypto.png /config/www/
 
 # Ajouter la configuration du panneau personnalisé dans configuration.yaml
