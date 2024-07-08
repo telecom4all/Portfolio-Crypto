@@ -119,10 +119,9 @@
                     const baseUrl = window.location.origin + window.location.pathname.replace(/\/$/, '');
                     const apiUrl = `${baseUrl}/api/wallets`;
                     const response = await fetch(apiUrl);
-                    const textResponse = await response.text(); // log
-                    console.log('Raw response:', textResponse); // log
+                    const wallets = await response.json(); // read JSON directly
+                    console.log('Wallets:', wallets); // log
 
-                    const wallets = await response.json();
                     wallets.forEach(wallet => {
                         const option = document.createElement('option');
                         option.value = wallet.entry_id;
@@ -139,10 +138,10 @@
                     const baseUrl = window.location.origin + window.location.pathname.replace(/\/$/, '');
                     const apiUrl = `${baseUrl}/load_cryptos/${entryId}`;
                     const response = await fetch(apiUrl);
-                    const textResponse = await response.text(); // log
-                    console.log('Raw response:', textResponse); // log
+                    const cryptos = await response.json(); // read JSON directly
+                    console.log('Cryptos:', cryptos); // log
 
-                    return await response.json();
+                    return cryptos;
                 } catch (error) {
                     console.error('Erreur lors de la récupération des cryptos:', error);
                 }
@@ -157,9 +156,9 @@
                     const baseUrl = window.location.origin + window.location.pathname.replace(/\/$/, '');
                     const apiUrl = `${baseUrl}/transactions/${entryId}/${cryptoId}`;
                     const response = await fetch(apiUrl);
-                    const textResponse = await response.text(); // log
-                    console.log('Raw response:', textResponse); // log
-                    const transactions = await response.json();
+                    const transactions = await response.json(); // read JSON directly
+                    console.log('Transactions:', transactions); // log
+
                     renderTransactions(transactions);
                 } catch (error) {
                     console.error('Erreur lors de la récupération des transactions:', error);
@@ -233,26 +232,11 @@
                 }
             }
 
-
-            /*
-            const baseUrl = window.location.origin + window.location.pathname.replace(/\/$/, '');
-                const apiUrl = `${baseUrl}/api/wallets`;
-
-                console.log(apiUrl);
-
-                const response = await fetch(apiUrl);
-                const textResponse = await response.text();
-
-                console.log('Raw response:', textResponse);
-            
-            */
-
             async function deleteTransaction(transactionId) {
                 const entryId = walletSelect.value;
 
                 if (confirm("Êtes-vous sûr de vouloir supprimer cette transaction?")) {
                     try {
-                        
                         const baseUrl = window.location.origin + window.location.pathname.replace(/\/$/, '');
                         const apiUrl = `${baseUrl}/transaction/${entryId}/${transactionId}`;
                         await fetch(apiUrl, { method: 'DELETE' });
@@ -337,13 +321,12 @@
             async function importDatabase(file) {
                 try {
                     const entryId = walletSelect.value;
-                    const url = `/api/portfolio_crypto/import_db`;
                     const baseUrl = window.location.origin + window.location.pathname.replace(/\/$/, '');
                     const apiUrl = `${baseUrl}/import_db`;
                     const formData = new FormData();
                     formData.append('file', file);
                     formData.append('entry_id', entryId);
-                    await fetch(url, { method: 'POST', body: formData });
+                    await fetch(apiUrl, { method: 'POST', body: formData });
                     alert('Base de données importée avec succès');
                     loadCryptos(entryId);
                 } catch (error) {
