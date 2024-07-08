@@ -72,64 +72,17 @@ L'intégration "Portfolio Crypto" permet de gérer et surveiller vos investissem
 6. Vous pourrez voir les `appareils` qui on été crée
    ![Rechercher Portfolio Crypto](images/31.png)
 
-### Configurer le panel de la sidebar
+### Configurer l'ingress et l'url externe
 
-1. Retournez dans `Paramètres` - `Modules complémentaires`
-   ![Rechercher Portfolio Crypto](images/36.png)
-
-2. Cliquez sur l'addon `Portfolio Crypto`
-   ![Rechercher Portfolio Crypto](images/37.png)
-
-3. Recherchez l'`entry id` de votre db 
-   ![Rechercher Portfolio Crypto](images/38.png)
-
-4. Modifier votre `configuration.yaml`, un bout de code a été ajouter 
-    modifiez `sidebar_title`, `entry_id` et `entry_name` selon votre configuration :
+1. Modifier votre `configuration.yaml`, un bout de code a été ajouter 
+    modifiez `external_url` selon votre configuration :
 
     ```yaml
-    panel_custom:
-        - name: crypto-transactions-panel
-            sidebar_title: 'Transactions Wallet 1' #Nom affiché sur la sidebar
-            sidebar_icon: 'mdi:currency-usd' #icone de la sidebar
-            js_url: '/local/crypto-transactions-panel.js'
-            config:
-            entry_id: 11111111111111111111111111  # entry_id de votre db
-            entry_name: "Wallet 1" # nom du portefeuille 
+    homeassistant:
+        external_url: "https://domain"
     ```
-   ![Rechercher Portfolio Crypto](images/39.png)
+ 
     
-    Vous pouvez ajoutez autant de panel que de portefeuille crypto que vous créez en rajoutant cette partie 
-
-    ```yaml
-    panel_custom:
-        - name: crypto-transactions-panel
-            sidebar_title: 'Transactions Wallet 1' #Nom affiché sur la sidebar
-            sidebar_icon: 'mdi:currency-usd' #icone de la sidebar
-            js_url: '/local/crypto-transactions-panel.js'
-            config:
-            entry_id: 11111111111111111111111111  # entry_id de votre db
-            entry_name: "Wallet 1" # nom du portefeuille 
-    ```
-
-    ce qui donnerai 
-
-    ```yaml
-    panel_custom:
-        - name: crypto-transactions-panel
-            sidebar_title: 'Transactions Wallet 1' #Nom affiché sur la sidebar
-            sidebar_icon: 'mdi:currency-usd' #icone de la sidebar
-            js_url: '/local/crypto-transactions-panel.js'
-            config:
-            entry_id: 11111111111111111111111111  # entry_id de votre db
-            entry_name: "Wallet 1" # nom du portefeuille 
-        - name: crypto-transactions-panel
-            sidebar_title: 'Transactions Wallet 2' #Nom affiché sur la sidebar
-            sidebar_icon: 'mdi:currency-usd' #icone de la sidebar
-            js_url: '/local/crypto-transactions-panel.js'
-            config:
-            entry_id: 24157454865546546544564654  # entry_id de votre db
-            entry_name: "Wallet 2" # nom du portefeuille 
-    ```
 
 5. Redémarez `homeassistant` pour prendre en compte les modification 
    ![Rechercher Portfolio Crypto](images/40.png)
