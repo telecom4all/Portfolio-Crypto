@@ -144,9 +144,9 @@ def get_crypto_id(name):
 
 def get_crypto_price(crypto_id):
     """Récupérer le prix actuel d'une crypto-monnaie"""
-    logging.error(f"crypto_id {crypto_id}")
+    #logging.error(f"crypto_id {crypto_id}")
     url = f"https://api.coingecko.com/api/v3/simple/price?ids={crypto_id}&vs_currencies=usd"
-    logging.error(f"url {url}")
+    logging.error(f"url coingecko : {url}")
     data = get_data_with_retry(url)
     if crypto_id in data:
         return data[crypto_id]['usd']
@@ -218,7 +218,7 @@ def calculate_profit_loss(entry_id):
 def list_transactions(entry_id):
     """Lister toutes les transactions pour un ID d'entrée donné"""
     transactions = get_transactions(entry_id)
-    logging.info(f"Transactions récupérées pour l'entrée {entry_id}: {transactions}")
+    #logging.info(f"Transactions récupérées pour l'entrée {entry_id}: {transactions}")
     return jsonify(transactions)
 
 @app.route('/all_transactions', methods=['GET'])
@@ -229,7 +229,7 @@ def all_transactions():
     for entry_id in entry_ids:
         transactions = get_transactions(entry_id)
         all_transactions.extend(transactions)
-    logging.info(f"Toutes les transactions récupérées: {all_transactions}")
+    #logging.info(f"Toutes les transactions récupérées: {all_transactions}")
     return jsonify(all_transactions)
 
 @app.route('/profit_loss/<entry_id>', methods=['GET'])
@@ -244,7 +244,7 @@ def create_transaction(entry_id):
     """Créer une nouvelle transaction pour un ID d'entrée donné"""
     try:
         data = request.json
-        logging.info(f"Données reçues pour une nouvelle transaction dans l'entrée {entry_id}: {data}")
+        #logging.info(f"Données reçues pour une nouvelle transaction dans l'entrée {entry_id}: {data}")
         crypto_name = data['crypto_name']
         crypto_id = get_crypto_id(crypto_name)
         if not crypto_id:
@@ -274,7 +274,7 @@ def create_transaction(entry_id):
 def delete_transaction_endpoint(entry_id, transaction_id):
     """Supprimer une transaction pour un ID d'entrée donné"""
     try:
-        logging.info(f"Tentative de suppression de la transaction avec ID: {transaction_id} dans l'entrée {entry_id}")
+        #logging.info(f"Tentative de suppression de la transaction avec ID: {transaction_id} dans l'entrée {entry_id}")
         delete_transaction(entry_id, transaction_id)
         logging.info(f"Transaction avec ID: {transaction_id} supprimée dans l'entrée {entry_id}")
         return jsonify({"message": "Transaction supprimée"}), 200
@@ -287,7 +287,7 @@ def update_transaction_endpoint(entry_id, transaction_id):
     """Mettre à jour une transaction pour un ID d'entrée donné"""
     try:
         data = request.json
-        logging.info(f"Données reçues pour la mise à jour de la transaction dans l'entrée {entry_id}: {data}")
+        #logging.info(f"Données reçues pour la mise à jour de la transaction dans l'entrée {entry_id}: {data}")
         crypto_name = data['crypto_name']
         crypto_id = get_crypto_id(crypto_name)
         if not crypto_id:

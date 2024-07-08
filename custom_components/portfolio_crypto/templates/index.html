@@ -270,6 +270,28 @@
                 }
             }
 
+            function openEditTransactionModal(transactionId, cryptoId, cryptoName, quantity, price, type, location, date) {
+                const editTransactionIdField = document.getElementById('edit_transaction_id');
+                const editCryptoIdField = document.getElementById('edit_crypto_id');
+                const editCryptoNameField = document.getElementById('edit_crypto_name');
+                const editQuantityField = document.getElementById('edit_quantity');
+                const editPriceField = document.getElementById('edit_price_usd');
+                const editTypeField = document.getElementById('edit_transaction_type');
+                const editLocationField = document.getElementById('edit_location');
+                const editDateField = document.getElementById('edit_date');
+
+                editTransactionIdField.value = transactionId;
+                editCryptoIdField.value = cryptoId;
+                editCryptoNameField.value = cryptoName;
+                editQuantityField.value = quantity;
+                editPriceField.value = price;
+                editTypeField.value = type;
+                editLocationField.value = location;
+                editDateField.value = date;
+
+                editModal.style.display = 'block';
+            }
+
             async function deleteTransaction(transactionId) {
                 const entryId = walletSelect.value;
 

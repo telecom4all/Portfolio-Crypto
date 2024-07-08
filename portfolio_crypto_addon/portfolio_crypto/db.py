@@ -10,13 +10,13 @@ logging.basicConfig(level=logging.INFO)
 def get_database_path(entry_id):
     """Récupérer le chemin de la base de données pour un ID d'entrée donné"""
     db_path = os.path.join(os.getenv('HASS_CONFIG', '.'), f'portfolio_crypto_{entry_id}.db')
-    logging.info(f"Chemin de la base de données pour l'entrée {entry_id}: {db_path}")
+    #logging.info(f"Chemin de la base de données pour l'entrée {entry_id}: {db_path}")
     return db_path
 
 def get_database_path_export(entry_id):
     """Récupérer le chemin de la base de données pour un ID d'entrée donné"""
     db_path = os.path.join('/app', f'portfolio_crypto_{entry_id}.db')
-    logging.info(f"Chemin de la base de données pour l'entrée {entry_id}: {db_path}")
+    #logging.info(f"Chemin de la base de données pour l'entrée {entry_id}: {db_path}")
     return db_path
 
 def create_table(entry_id):
