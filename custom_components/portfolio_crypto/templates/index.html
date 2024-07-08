@@ -14,10 +14,10 @@
             align-items: center;
             justify-content: center;
             height: 100vh;
-            background-color: #f0f0f0;
         }
         .container {
-            background-color: white;
+            background-color: var(--container-bg-color);
+            color: var(--text-color);
             padding: 20px;
             border-radius: 10px;
             box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
@@ -34,7 +34,6 @@
             width: 100%;
             height: 100%;
             overflow: auto;
-            background-color: rgb(0,0,0);
             background-color: rgba(0,0,0,0.4);
             padding-top: 60px;
         }
@@ -56,6 +55,14 @@
             color: black;
             text-decoration: none;
             cursor: pointer;
+        }
+        :root {
+            --container-bg-color: #ffffff;
+            --text-color: #000000;
+        }
+        .dark-theme {
+            --container-bg-color: #333333;
+            --text-color: #ffffff;
         }
     </style>
 </head>
@@ -217,15 +224,15 @@
                         </tr>
                         ${transactions.map(transaction => `
                             <tr>
-                                <td>${transaction.transaction_id}</td>
-                                <td>${transaction.crypto_name}</td>
-                                <td>${transaction.quantity}</td>
-                                <td>${transaction.price_usd}</td>
-                                <td>${transaction.transaction_type}</td>
-                                <td>${transaction.date}</td>
+                                <td>${transaction[0]}</td>
+                                <td>${transaction[1]}</td>
+                                <td>${transaction[3]}</td>
+                                <td>${transaction[4]}</td>
+                                <td>${transaction[5]}</td>
+                                <td>${transaction[7]}</td>
                                 <td>
-                                    <button class="edit" data-id="${transaction.transaction_id}" data-crypto-id="${transaction.crypto_id}" data-crypto-name="${transaction.crypto_name}" data-quantity="${transaction.quantity}" data-price="${transaction.price_usd}" data-type="${transaction.transaction_type}" data-location="${transaction.location}" data-date="${transaction.date}">Modifier</button>
-                                    <button class="delete" data-id="${transaction.transaction_id}">Supprimer</button>
+                                    <button class="edit" data-id="${transaction[0]}" data-crypto-id="${transaction[2]}" data-crypto-name="${transaction[1]}" data-quantity="${transaction[3]}" data-price="${transaction[4]}" data-type="${transaction[5]}" data-location="${transaction[6]}" data-date="${transaction[7]}">Modifier</button>
+                                    <button class="delete" data-id="${transaction[0]}">Supprimer</button>
                                 </td>
                             </tr>
                         `).join('')}
@@ -408,6 +415,16 @@
                 }
             };
 
+            function applyTheme() {
+                const theme = document.body.getAttribute('data-theme');
+                if (theme === 'dark') {
+                    document.body.classList.add('dark-theme');
+                } else {
+                    document.body.classList.remove('dark-theme');
+                }
+            }
+
+            applyTheme();
             fetchWallets();
         });
     </script>
