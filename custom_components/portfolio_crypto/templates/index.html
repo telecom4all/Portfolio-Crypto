@@ -34,37 +34,331 @@
         <select id="walletSelect">
             <option value="">Sélectionner un portefeuille</option>
         </select>
+        <div id="portfolioContainer" style="display:none;">
+            <div class="info">
+                <button id="exportDb">Exporter la DB</button>
+                <input type="file" id="importDb" style="display:none"/>
+                <button id="importDbButton">Importer la DB</button><br />
+                <strong>Entry ID:</strong> <span id="entryId"></span>
+            </div>
+            <div class="select-container">
+                <select id="cryptoSelect"></select>
+                <button id="deleteCrypto" style="display:none">Supprimer la Crypto</button>
+            </div>
+            <div id="transactionsContainer"></div>
+            <button id="add">Ajouter une transaction</button>
+        </div>
     </div>
+
+    <!-- Modals for adding and editing transactions -->
+    <div id="myModal" class="modal">
+        <div id="modal-content">
+            <span class="close">&times;</span>
+            <h2>Ajouter une nouvelle transaction</h2>
+            <form id="transactionForm">
+                <label for="crypto_id">ID de la crypto:</label>
+                <input type="text" id="crypto_id" name="crypto_id" required readonly>
+                <label for="crypto_name">Nom de la crypto:</label>
+                <input type="text" id="crypto_name" name="crypto_name" required readonly>
+                <label for="quantity">Quantité:</label>
+                <input type="number" id="quantity" name="quantity" step="any" required>
+                <label for="price_usd">Prix (USD):</label>
+                <input type="number" id="price_usd" name="price_usd" step="any" required>
+                <label for="transaction_type">Type de transaction:</label>
+                <select id="transaction_type" name="transaction_type" required>
+                    <option value="buy">Achat</option>
+                    <option value="sell">Vente</option>
+                </select>
+                <label for="location">Lieu:</label>
+                <input type="text" id="location" name="location" required>
+                <label for="date">Date:</label>
+                <input type="date" id="date" name="date" required>
+                <button type="button" id="save">Enregistrer</button>
+            </form>
+        </div>
+    </div>
+    <div id="editModal" class="modal">
+        <div id="edit-modal-content">
+            <span class="close">&times;</span>
+            <h2>Modifier une transaction</h2>
+            <form id="editTransactionForm">
+                <input type="hidden" id="edit_transaction_id" name="transaction_id" required>
+                <label for="edit_crypto_id">ID de la crypto:</label>
+                <input type="text" id="edit_crypto_id" name="crypto_id" required readonly>
+                <label for="edit_crypto_name">Nom de la crypto:</label>
+                <input type="text" id="edit_crypto_name" name="crypto_name" required readonly>
+                <label for="edit_quantity">Quantité:</label>
+                <input type="number" id="edit_quantity" name="quantity" step="any" required>
+                <label for="edit_price_usd">Prix (USD):</label>
+                <input type="number" id="edit_price_usd" name="price_usd" step="any" required>
+                <label for="edit_transaction_type">Type de transaction:</label>
+                <select id="edit_transaction_type" name="transaction_type" required>
+                    <option value="buy">Achat</option>
+                    <option value="sell">Vente</option>
+                </select>
+                <label for="edit_location">Lieu:</label>
+                <input type="text" id="edit_location" name="location" required>
+                <label for="edit_date">Date:</label>
+                <input type="date" id="edit_date" name="date" required>
+                <button type="button" id="update">Mettre à jour</button>
+            </form>
+        </div>
+    </div>
+
     <script>
-        async function fetchWallets() {
-            try {
-                console.log("start ingress");
+        document.addEventListener('DOMContentLoaded', () => {
+            const walletSelect = document.getElementById('walletSelect');
+            const portfolioContainer = document.getElementById('portfolioContainer');
+            const cryptoSelect = document.getElementById('cryptoSelect');
+            const entryIdSpan = document.getElementById('entryId');
+            const deleteCryptoButton = document.getElementById('deleteCrypto');
 
-                const baseUrl = window.location.origin + window.location.pathname.replace(/\/$/, '');
-                const apiUrl = `${baseUrl}/api/wallets`;
-
-                console.log(apiUrl);
-
-                const response = await fetch(apiUrl);
-                const textResponse = await response.text();
-
-                console.log('Raw response:', textResponse);
-
-                const wallets = JSON.parse(textResponse);
-
-                const walletSelect = document.getElementById('walletSelect');
-                wallets.forEach(wallet => {
-                    const option = document.createElement('option');
-                    option.value = wallet.entry_id;
-                    option.text = wallet.name;
-                    walletSelect.appendChild(option);
-                });
-            } catch (error) {
-                console.error('Error fetching wallets:', error);
+            async function fetchWallets() {
+                try {
+                    const response = await fetch('/api/wallets');
+                    const wallets = await response.json();
+                    wallets.forEach(wallet => {
+                        const option = document.createElement('option');
+                        option.value = wallet.entry_id;
+                        option.text = wallet.name;
+                        walletSelect.appendChild(option);
+                    });
+                } catch (error) {
+                    console.error('Error fetching wallets:', error);
+                }
             }
-        }
 
-        fetchWallets();
+            async function fetchCryptos(entryId) {
+                try {
+                    const response = await fetch(`/api/portfolio_crypto/load_cryptos/${entryId}`);
+                    return await response.json();
+                } catch (error) {
+                    console.error('Erreur lors de la récupération des cryptos:', error);
+                }
+            }
+
+            function renderCryptoSelect(cryptos) {
+                cryptoSelect.innerHTML = cryptos.map(crypto => `<option value="${crypto.crypto_id}">${crypto.crypto_name} - ${crypto.crypto_id}</option>`).join('');
+            }
+
+            async function fetchAndRenderTransactions(entryId, cryptoId) {
+                try {
+                    const response = await fetch(`/api/portfolio_crypto/transactions/${entryId}/${cryptoId}`);
+                    const transactions = await response.json();
+                    renderTransactions(transactions);
+                } catch (error) {
+                    console.error('Erreur lors de la récupération des transactions:', error);
+                    renderTransactions([]);
+                }
+            }
+
+            function renderTransactions(transactions) {
+                const container = document.getElementById('transactionsContainer');
+                if (!transactions || transactions.length === 0) {
+                    container.innerHTML = '<div>Aucune transaction trouvée.</div>';
+                    return;
+                }
+
+                container.innerHTML = `
+                    <table>
+                        <tr>
+                            <th>ID</th>
+                            <th>Nom</th>
+                            <th>Quantité</th>
+                            <th>Prix</th>
+                            <th>Type</th>
+                            <th>Date</th>
+                            <th>Actions</th>
+                        </tr>
+                        ${transactions.map(transaction => `
+                            <tr>
+                                <td>${transaction.transaction_id}</td>
+                                <td>${transaction.crypto_name}</td>
+                                <td>${transaction.quantity}</td>
+                                <td>${transaction.price_usd}</td>
+                                <td>${transaction.transaction_type}</td>
+                                <td>${transaction.date}</td>
+                                <td>
+                                    <button class="edit" data-id="${transaction.transaction_id}" data-crypto-id="${transaction.crypto_id}" data-crypto-name="${transaction.crypto_name}" data-quantity="${transaction.quantity}" data-price="${transaction.price_usd}" data-type="${transaction.transaction_type}" data-location="${transaction.location}" data-date="${transaction.date}">Modifier</button>
+                                    <button class="delete" data-id="${transaction.transaction_id}">Supprimer</button>
+                                </td>
+                            </tr>
+                        `).join('')}
+                    </table>
+                `;
+
+                container.querySelectorAll('.delete').forEach(button => {
+                    button.addEventListener('click', e => {
+                        const transactionId = e.target.dataset.id;
+                        deleteTransaction(transactionId);
+                    });
+                });
+
+                container.querySelectorAll('.edit').forEach(button => {
+                    button.addEventListener('click', e => {
+                        const transactionId = e.target.dataset.id;
+                        const cryptoId = e.target.dataset.cryptoId;
+                        const cryptoName = e.target.dataset.cryptoName;
+                        const quantity = e.target.dataset.quantity;
+                        const price = e.target.dataset.price;
+                        const type = e.target.dataset.type;
+                        const location = e.target.dataset.location;
+                        const date = e.target.dataset.date;
+                        openEditTransactionModal(transactionId, cryptoId, cryptoName, quantity, price, type, location, date);
+                    });
+                });
+            }
+
+            function updateFormFields(cryptoId, cryptoName) {
+                const cryptoIdField = document.getElementById('crypto_id');
+                const cryptoNameField = document.getElementById('crypto_name');
+                if (cryptoIdField && cryptoNameField) {
+                    cryptoIdField.value = cryptoId;
+                    cryptoNameField.value = cryptoName;
+                }
+            }
+
+            async function deleteTransaction(transactionId) {
+                const entryId = walletSelect.value;
+
+                if (confirm("Êtes-vous sûr de vouloir supprimer cette transaction?")) {
+                    try {
+                        const url = `/api/portfolio_crypto/transaction/${entryId}/${transactionId}`;
+                        await fetch(url, { method: 'DELETE' });
+                        alert('Transaction supprimée avec succès');
+                        const selectedCryptoId = cryptoSelect.value;
+                        fetchAndRenderTransactions(entryId, selectedCryptoId);
+                    } catch (error) {
+                        console.error('Erreur lors de la suppression de la transaction:', error);
+                        alert('Erreur lors de la suppression de la transaction');
+                    }
+                }
+            }
+
+            async function saveTransaction() {
+                const form = document.getElementById('transactionForm');
+                const formData = new FormData(form);
+                const transaction = {};
+                formData.forEach((value, key) => {
+                    transaction[key] = value;
+                });
+                transaction.entry_id = walletSelect.value;
+
+                try {
+                    const url = `/api/portfolio_crypto/transaction/${transaction.entry_id}`;
+                    await fetch(url, { method: 'POST', body: JSON.stringify(transaction), headers: { 'Content-Type': 'application/json' } });
+                    alert('Transaction ajoutée avec succès');
+                    const selectedCryptoId = cryptoSelect.value;
+                    fetchAndRenderTransactions(transaction.entry_id, selectedCryptoId);
+                    document.getElementById('myModal').style.display = 'none';
+                } catch (error) {
+                    console.error('Erreur lors de l\'ajout de la transaction:', error);
+                    alert('Erreur lors de l\'ajout de la transaction');
+                }
+            }
+
+            async function updateTransaction() {
+                const form = document.getElementById('editTransactionForm');
+                const formData = new FormData(form);
+                const transaction = {};
+                formData.forEach((value, key) => {
+                    transaction[key] = value;
+                });
+                transaction.entry_id = walletSelect.value;
+
+                try {
+                    const url = `/api/portfolio_crypto/transaction/${transaction.entry_id}/${transaction.transaction_id}`;
+                    await fetch(url, { method: 'PUT', body: JSON.stringify(transaction), headers: { 'Content-Type': 'application/json' } });
+                    alert('Transaction mise à jour avec succès');
+                    const selectedCryptoId = cryptoSelect.value;
+                    fetchAndRenderTransactions(transaction.entry_id, selectedCryptoId);
+                    document.getElementById('editModal').style.display = 'none';
+                } catch (error) {
+                    console.error('Erreur lors de la mise à jour de la transaction:', error);
+                    alert('Erreur lors de la mise à jour de la transaction');
+                }
+            }
+
+            async function exportDatabase() {
+                try {
+                    const entryId = walletSelect.value;
+                    const url = `/api/portfolio_crypto/export_db/${entryId}`;
+                    const response = await fetch(url, { method: 'GET' });
+                    const blob = await response.blob();
+                    const urlBlob = window.URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = urlBlob;
+                    a.download = 'database.db';
+                    document.body.appendChild(a);
+                    a.click();
+                    document.body.removeChild(a);
+                } catch (error) {
+                    console.error('Erreur lors de l\'exportation de la base de données:', error);
+                    alert('Erreur lors de l\'exportation de la base de données');
+                }
+            }
+
+            async function importDatabase(file) {
+                try {
+                    const entryId = walletSelect.value;
+                    const url = `/api/portfolio_crypto/import_db`;
+                    const formData = new FormData();
+                    formData.append('file', file);
+                    formData.append('entry_id', entryId);
+                    await fetch(url, { method: 'POST', body: formData });
+                    alert('Base de données importée avec succès');
+                    loadCryptos(entryId);
+                } catch (error) {
+                    console.error('Erreur lors de l\'importation de la base de données:', error);
+                    alert('Erreur lors de l\'importation de la base de données');
+                }
+            }
+
+            walletSelect.addEventListener('change', async () => {
+                const entryId = walletSelect.value;
+                entryIdSpan.textContent = entryId;
+                if (entryId) {
+                    portfolioContainer.style.display = 'block';
+                    const cryptos = await fetchCryptos(entryId);
+                    renderCryptoSelect(cryptos);
+                    const selectedCryptoId = cryptoSelect.value;
+                    if (selectedCryptoId) {
+                        fetchAndRenderTransactions(entryId, selectedCryptoId);
+                    }
+                } else {
+                    portfolioContainer.style.display = 'none';
+                }
+            });
+
+            cryptoSelect.addEventListener('change', () => {
+                const selectedCryptoId = cryptoSelect.value;
+                const selectedCryptoName = cryptoSelect.options[cryptoSelect.selectedIndex].text.split(' - ')[0];
+                updateFormFields(selectedCryptoId, selectedCryptoName);
+                const entryId = walletSelect.value;
+                fetchAndRenderTransactions(entryId, selectedCryptoId);
+            });
+
+            document.getElementById('exportDb').addEventListener('click', exportDatabase);
+            document.getElementById('importDbButton').addEventListener('click', () => document.getElementById('importDb').click());
+            document.getElementById('importDb').addEventListener('change', (event) => importDatabase(event.target.files[0]));
+            document.getElementById('add').addEventListener('click', () => document.getElementById('myModal').style.display = 'block');
+            document.getElementById('save').addEventListener('click', saveTransaction);
+            document.getElementById('update').addEventListener('click', updateTransaction);
+            document.querySelectorAll('.close').forEach(btn => {
+                btn.onclick = () => {
+                    document.getElementById('myModal').style.display = 'none';
+                    document.getElementById('editModal').style.display = 'none';
+                };
+            });
+            window.onclick = (event) => {
+                if (event.target == document.getElementById('myModal') || event.target == document.getElementById('editModal')) {
+                    document.getElementById('myModal').style.display = 'none';
+                    document.getElementById('editModal').style.display = 'none';
+                }
+            };
+
+            fetchWallets();
+        });
     </script>
 </body>
 </html>
