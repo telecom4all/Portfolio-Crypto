@@ -30,6 +30,24 @@ cp /app/icon_portfolio_crypto.png /config/www/
 #    echo "La configuration du panneau personnalisé existe déjà dans configuration.yaml"
 #fi
 
+# Vérifiez et ajoutez la section homeassistant: et external_url: dans configuration.yaml
+CONFIG_FILE="/config/configuration.yaml"
+HOMEASSISTANT_SECTION="homeassistant:"
+EXTERNAL_URL="external_url: \"https://domain\""
+
+if ! grep -q "^$HOMEASSISTANT_SECTION" "$CONFIG_FILE"; then
+    echo -e "\n$HOMEASSISTANT_SECTION\n  $EXTERNAL_URL" >> "$CONFIG_FILE"
+    echo "Section homeassistant: ajoutée avec external_url: dans configuration.yaml"
+else
+    if ! grep -q "^  $EXTERNAL_URL" "$CONFIG_FILE"; then
+        sed -i "/^$HOMEASSISTANT_SECTION/a\  $EXTERNAL_URL" "$CONFIG_FILE"
+        echo "external_url: ajoutée dans la section homeassistant: existante de configuration.yaml"
+    else
+        echo "La section homeassistant: et external_url: existent déjà dans configuration.yaml"
+    fi
+fi
+
+
 # Démarrer l'application Flask avec Gunicorn
 gunicorn --bind 0.0.0.0:5000 portfolio_crypto.portfolio_crypto:app &
 gunicorn --bind 0.0.0.0:8099 portfolio_crypto.portfolio_crypto:app &
