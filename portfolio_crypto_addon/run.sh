@@ -12,30 +12,30 @@ cp /app/crypto-transactions-panel.js /config/www/
 cp /app/icon_portfolio_crypto.png /config/www/
 
 # Ajouter la configuration du panneau personnalisé dans configuration.yaml
-CONFIG_FILE="/config/configuration.yaml"
-PANEL_CONFIG="
-panel_custom:
-  - name: crypto-transactions-panel
-    sidebar_title: 'Transactions Crypto' #Nom affiché sur la sidebar
-    sidebar_icon: 'mdi:currency-usd' #icone de la sidebar
-    js_url: '/local/crypto-transactions-panel.js'
-    config:
-      entry_id: your_entry_id # entry_id de votre db
-      entry_name: your_entry_name # nom du portefeuille 
-"
+#CONFIG_FILE="/config/configuration.yaml"
+#PANEL_CONFIG="
+#panel_custom:
+#  - name: crypto-transactions-panel
+#    sidebar_title: 'Transactions Crypto' #Nom affiché sur la sidebar
+#    sidebar_icon: 'mdi:currency-usd' #icone de la sidebar
+#    js_url: '/local/crypto-transactions-panel.js'
+#    config:
+#      entry_id: your_entry_id # entry_id de votre db
+#      entry_name: your_entry_name # nom du portefeuille 
+#"
 
-if ! grep -q "panel_custom:" "$CONFIG_FILE"; then
-    echo "$PANEL_CONFIG" >> "$CONFIG_FILE"
-else
-    echo "La configuration du panneau personnalisé existe déjà dans configuration.yaml"
-fi
+#if ! grep -q "panel_custom:" "$CONFIG_FILE"; then
+#    echo "$PANEL_CONFIG" >> "$CONFIG_FILE"
+#else
+#    echo "La configuration du panneau personnalisé existe déjà dans configuration.yaml"
+#fi
 
 # Démarrer l'application Flask avec Gunicorn
-#gunicorn --bind 0.0.0.0:5000 portfolio_crypto.portfolio_crypto:app &
-#gunicorn --bind 0.0.0.0:8099 portfolio_crypto.portfolio_crypto:app &
+gunicorn --bind 0.0.0.0:5000 portfolio_crypto.portfolio_crypto:app &
+gunicorn --bind 0.0.0.0:8099 portfolio_crypto.portfolio_crypto:app &
 # Démarrer l'application Flask avec Gunicorn
-gunicorn --bind 0.0.0.0:5000 portfolio_crypto.portfolio_crypto:app --access-logfile /config/gunicorn_access.log --error-logfile /config/gunicorn_error.log &
-gunicorn --bind 0.0.0.0:8099 portfolio_crypto.portfolio_crypto:app --access-logfile /config/gunicorn_access_ingress.log --error-logfile /config/gunicorn_access_ingress.log &
+#gunicorn --bind 0.0.0.0:5000 portfolio_crypto.portfolio_crypto:app --access-logfile /config/gunicorn_access.log --error-logfile /config/gunicorn_error.log &
+#gunicorn --bind 0.0.0.0:8099 portfolio_crypto.portfolio_crypto:app --access-logfile /config/gunicorn_access_ingress.log --error-logfile /config/gunicorn_access_ingress.log &
 
 # Attendre que l'application Flask démarre correctement
 sleep 5

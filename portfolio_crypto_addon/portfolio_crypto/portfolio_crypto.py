@@ -107,10 +107,10 @@ def load_cryptos(entry_id):
         return jsonify({"error": "Erreur Interne"}), 500
 
 @app.route('/crypto_profit_loss/<entry_id>/<crypto_name>', methods=['GET'])
-def crypto_profit_loss(entry_id, crypto_name):
+def crypto_profit_loss(entry_id, crypto_id):
     """Calculer et retourner le profit/perte pour une crypto-monnaie spécifique et un ID d'entrée donné"""
     try:
-        result = calculate_crypto_profit_loss(entry_id, crypto_name)
+        result = calculate_crypto_profit_loss(entry_id, crypto_id)
         logging.info(f"Profit/perte calculé pour {crypto_name} dans l'entrée {entry_id}: {result}")
         return jsonify(result)
     except Exception as e:
@@ -144,7 +144,9 @@ def get_crypto_id(name):
 
 def get_crypto_price(crypto_id):
     """Récupérer le prix actuel d'une crypto-monnaie"""
+    logging.error(f"crypto_id {crypto_id}")
     url = f"https://api.coingecko.com/api/v3/simple/price?ids={crypto_id}&vs_currencies=usd"
+    logging.error(f"url {url}")
     data = get_data_with_retry(url)
     if crypto_id in data:
         return data[crypto_id]['usd']

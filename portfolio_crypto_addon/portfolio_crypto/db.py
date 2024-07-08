@@ -195,11 +195,12 @@ def get_crypto_id(name):
             return coin['id']
     return None
 
-def calculate_crypto_profit_loss(entry_id, crypto_name):
+def calculate_crypto_profit_loss(entry_id, crypto_id):
     """Calculer le profit/perte pour une crypto-monnaie spécifique et un ID d'entrée donné"""
-    transactions = get_crypto_transactions(entry_id, crypto_name)
-    crypto_id = get_crypto_id(crypto_name)
+    transactions = get_crypto_transactions(entry_id, crypto_id)
+    #crypto_id = get_crypto_id(crypto_id)
     current_price = get_crypto_price(crypto_id)
+    logging.info(f"Crypto avec ID: {crypto_id} current_price {current_price}")
     investment = 0
     quantity_held = 0
     for transaction in transactions:
