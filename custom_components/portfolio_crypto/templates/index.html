@@ -25,6 +25,38 @@
         .wallet {
             margin: 10px 0;
         }
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgb(0,0,0);
+            background-color: rgba(0,0,0,0.4);
+            padding-top: 60px;
+        }
+        .modal-content {
+            background-color: #fefefe;
+            margin: 5% auto;
+            padding: 20px;
+            border: 1px solid #888;
+            width: 80%;
+        }
+        .close {
+            color: #aaa;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+        }
+        .close:hover,
+        .close:focus {
+            color: black;
+            text-decoration: none;
+            cursor: pointer;
+        }
     </style>
 </head>
 <body>
@@ -52,7 +84,7 @@
 
     <!-- Modals for adding and editing transactions -->
     <div id="myModal" class="modal">
-        <div id="modal-content">
+        <div class="modal-content">
             <span class="close">&times;</span>
             <h2>Ajouter une nouvelle transaction</h2>
             <form id="transactionForm">
@@ -78,7 +110,7 @@
         </div>
     </div>
     <div id="editModal" class="modal">
-        <div id="edit-modal-content">
+        <div class="modal-content">
             <span class="close">&times;</span>
             <h2>Modifier une transaction</h2>
             <form id="editTransactionForm">
@@ -112,15 +144,16 @@
             const cryptoSelect = document.getElementById('cryptoSelect');
             const entryIdSpan = document.getElementById('entryId');
             const deleteCryptoButton = document.getElementById('deleteCrypto');
+            const myModal = document.getElementById('myModal');
+            const editModal = document.getElementById('editModal');
 
-            
             async function fetchWallets() {
                 try {
                     const baseUrl = window.location.origin + window.location.pathname.replace(/\/$/, '');
                     const apiUrl = `${baseUrl}/api/wallets`;
                     const response = await fetch(apiUrl);
-                    const wallets = await response.json(); // read JSON directly
-                    console.log('Wallets:', wallets); // log
+                    const wallets = await response.json();
+                    console.log('Wallets:', wallets);
 
                     wallets.forEach(wallet => {
                         const option = document.createElement('option');
@@ -138,9 +171,8 @@
                     const baseUrl = window.location.origin + window.location.pathname.replace(/\/$/, '');
                     const apiUrl = `${baseUrl}/load_cryptos/${entryId}`;
                     const response = await fetch(apiUrl);
-                    const cryptos = await response.json(); // read JSON directly
-                    console.log('Cryptos:', cryptos); // log
-
+                    const cryptos = await response.json();
+                    console.log('Cryptos:', cryptos);
                     return cryptos;
                 } catch (error) {
                     console.error('Erreur lors de la récupération des cryptos:', error);
@@ -148,7 +180,7 @@
             }
 
             function renderCryptoSelect(cryptos) {
-                cryptoSelect.innerHTML = cryptos.map(crypto => `<option value="${crypto.crypto_id}">${crypto.crypto_name} - ${crypto.crypto_id}</option>`).join('');
+                cryptoSelect.innerHTML = cryptos.map(crypto => `<option value="${crypto[1]}">${crypto[0]} - ${crypto[1]}</option>`).join('');
             }
 
             async function fetchAndRenderTransactions(entryId, cryptoId) {
@@ -156,9 +188,8 @@
                     const baseUrl = window.location.origin + window.location.pathname.replace(/\/$/, '');
                     const apiUrl = `${baseUrl}/transactions/${entryId}/${cryptoId}`;
                     const response = await fetch(apiUrl);
-                    const transactions = await response.json(); // read JSON directly
-                    console.log('Transactions:', transactions); // log
-
+                    const transactions = await response.json();
+                    console.log('Transactions:', transactions);
                     renderTransactions(transactions);
                 } catch (error) {
                     console.error('Erreur lors de la récupération des transactions:', error);
@@ -266,7 +297,7 @@
                     alert('Transaction ajoutée avec succès');
                     const selectedCryptoId = cryptoSelect.value;
                     fetchAndRenderTransactions(transaction.entry_id, selectedCryptoId);
-                    document.getElementById('myModal').style.display = 'none';
+                    myModal.style.display = 'none';
                 } catch (error) {
                     console.error('Erreur lors de l\'ajout de la transaction:', error);
                     alert('Erreur lors de l\'ajout de la transaction');
@@ -285,12 +316,11 @@
                 try {
                     const baseUrl = window.location.origin + window.location.pathname.replace(/\/$/, '');
                     const apiUrl = `${baseUrl}/transaction/${transaction.entry_id}/${transaction.transaction_id}`;
-                    
                     await fetch(apiUrl, { method: 'PUT', body: JSON.stringify(transaction), headers: { 'Content-Type': 'application/json' } });
                     alert('Transaction mise à jour avec succès');
                     const selectedCryptoId = cryptoSelect.value;
                     fetchAndRenderTransactions(transaction.entry_id, selectedCryptoId);
-                    document.getElementById('editModal').style.display = 'none';
+                    editModal.style.display = 'none';
                 } catch (error) {
                     console.error('Erreur lors de la mise à jour de la transaction:', error);
                     alert('Erreur lors de la mise à jour de la transaction');
@@ -302,7 +332,6 @@
                     const entryId = walletSelect.value;
                     const baseUrl = window.location.origin + window.location.pathname.replace(/\/$/, '');
                     const apiUrl = `${baseUrl}/export_db/${entryId}`;
-                    
                     const response = await fetch(apiUrl, { method: 'GET' });
                     const blob = await response.blob();
                     const urlBlob = window.URL.createObjectURL(blob);
@@ -328,7 +357,8 @@
                     formData.append('entry_id', entryId);
                     await fetch(apiUrl, { method: 'POST', body: formData });
                     alert('Base de données importée avec succès');
-                    loadCryptos(entryId);
+                    const cryptos = await fetchCryptos(entryId);
+                    renderCryptoSelect(cryptos);
                 } catch (error) {
                     console.error('Erreur lors de l\'importation de la base de données:', error);
                     alert('Erreur lors de l\'importation de la base de données');
@@ -362,19 +392,19 @@
             document.getElementById('exportDb').addEventListener('click', exportDatabase);
             document.getElementById('importDbButton').addEventListener('click', () => document.getElementById('importDb').click());
             document.getElementById('importDb').addEventListener('change', (event) => importDatabase(event.target.files[0]));
-            document.getElementById('add').addEventListener('click', () => document.getElementById('myModal').style.display = 'block');
+            document.getElementById('add').addEventListener('click', () => myModal.style.display = 'block');
             document.getElementById('save').addEventListener('click', saveTransaction);
             document.getElementById('update').addEventListener('click', updateTransaction);
             document.querySelectorAll('.close').forEach(btn => {
                 btn.onclick = () => {
-                    document.getElementById('myModal').style.display = 'none';
-                    document.getElementById('editModal').style.display = 'none';
+                    myModal.style.display = 'none';
+                    editModal.style.display = 'none';
                 };
             });
             window.onclick = (event) => {
-                if (event.target == document.getElementById('myModal') || event.target == document.getElementById('editModal')) {
-                    document.getElementById('myModal').style.display = 'none';
-                    document.getElementById('editModal').style.display = 'none';
+                if (event.target == myModal || event.target == editModal) {
+                    myModal.style.display = 'none';
+                    editModal.style.display = 'none';
                 }
             };
 
