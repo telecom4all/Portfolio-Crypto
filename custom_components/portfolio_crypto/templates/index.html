@@ -113,9 +113,15 @@
             const entryIdSpan = document.getElementById('entryId');
             const deleteCryptoButton = document.getElementById('deleteCrypto');
 
+            
             async function fetchWallets() {
                 try {
-                    const response = await fetch('/api/wallets');
+                    const baseUrl = window.location.origin + window.location.pathname.replace(/\/$/, '');
+                    const apiUrl = `${baseUrl}/api/wallets`;
+                    const response = await fetch(apiUrl);
+                    const textResponse = await response.text(); // log
+                    console.log('Raw response:', textResponse); // log
+
                     const wallets = await response.json();
                     wallets.forEach(wallet => {
                         const option = document.createElement('option');
@@ -130,7 +136,12 @@
 
             async function fetchCryptos(entryId) {
                 try {
-                    const response = await fetch(`/api/portfolio_crypto/load_cryptos/${entryId}`);
+                    const baseUrl = window.location.origin + window.location.pathname.replace(/\/$/, '');
+                    const apiUrl = `${baseUrl}/load_cryptos/${entryId}`;
+                    const response = await fetch(apiUrl);
+                    const textResponse = await response.text(); // log
+                    console.log('Raw response:', textResponse); // log
+
                     return await response.json();
                 } catch (error) {
                     console.error('Erreur lors de la récupération des cryptos:', error);
@@ -143,7 +154,11 @@
 
             async function fetchAndRenderTransactions(entryId, cryptoId) {
                 try {
-                    const response = await fetch(`/api/portfolio_crypto/transactions/${entryId}/${cryptoId}`);
+                    const baseUrl = window.location.origin + window.location.pathname.replace(/\/$/, '');
+                    const apiUrl = `${baseUrl}/transactions/${entryId}/${cryptoId}`;
+                    const response = await fetch(apiUrl);
+                    const textResponse = await response.text(); // log
+                    console.log('Raw response:', textResponse); // log
                     const transactions = await response.json();
                     renderTransactions(transactions);
                 } catch (error) {
@@ -218,13 +233,29 @@
                 }
             }
 
+
+            /*
+            const baseUrl = window.location.origin + window.location.pathname.replace(/\/$/, '');
+                const apiUrl = `${baseUrl}/api/wallets`;
+
+                console.log(apiUrl);
+
+                const response = await fetch(apiUrl);
+                const textResponse = await response.text();
+
+                console.log('Raw response:', textResponse);
+            
+            */
+
             async function deleteTransaction(transactionId) {
                 const entryId = walletSelect.value;
 
                 if (confirm("Êtes-vous sûr de vouloir supprimer cette transaction?")) {
                     try {
-                        const url = `/api/portfolio_crypto/transaction/${entryId}/${transactionId}`;
-                        await fetch(url, { method: 'DELETE' });
+                        
+                        const baseUrl = window.location.origin + window.location.pathname.replace(/\/$/, '');
+                        const apiUrl = `${baseUrl}/transaction/${entryId}/${transactionId}`;
+                        await fetch(apiUrl, { method: 'DELETE' });
                         alert('Transaction supprimée avec succès');
                         const selectedCryptoId = cryptoSelect.value;
                         fetchAndRenderTransactions(entryId, selectedCryptoId);
@@ -245,8 +276,9 @@
                 transaction.entry_id = walletSelect.value;
 
                 try {
-                    const url = `/api/portfolio_crypto/transaction/${transaction.entry_id}`;
-                    await fetch(url, { method: 'POST', body: JSON.stringify(transaction), headers: { 'Content-Type': 'application/json' } });
+                    const baseUrl = window.location.origin + window.location.pathname.replace(/\/$/, '');
+                    const apiUrl = `${baseUrl}/transaction/${transaction.entry_id}`;
+                    await fetch(apiUrl, { method: 'POST', body: JSON.stringify(transaction), headers: { 'Content-Type': 'application/json' } });
                     alert('Transaction ajoutée avec succès');
                     const selectedCryptoId = cryptoSelect.value;
                     fetchAndRenderTransactions(transaction.entry_id, selectedCryptoId);
@@ -267,8 +299,10 @@
                 transaction.entry_id = walletSelect.value;
 
                 try {
-                    const url = `/api/portfolio_crypto/transaction/${transaction.entry_id}/${transaction.transaction_id}`;
-                    await fetch(url, { method: 'PUT', body: JSON.stringify(transaction), headers: { 'Content-Type': 'application/json' } });
+                    const baseUrl = window.location.origin + window.location.pathname.replace(/\/$/, '');
+                    const apiUrl = `${baseUrl}/transaction/${transaction.entry_id}/${transaction.transaction_id}`;
+                    
+                    await fetch(apiUrl, { method: 'PUT', body: JSON.stringify(transaction), headers: { 'Content-Type': 'application/json' } });
                     alert('Transaction mise à jour avec succès');
                     const selectedCryptoId = cryptoSelect.value;
                     fetchAndRenderTransactions(transaction.entry_id, selectedCryptoId);
@@ -282,8 +316,10 @@
             async function exportDatabase() {
                 try {
                     const entryId = walletSelect.value;
-                    const url = `/api/portfolio_crypto/export_db/${entryId}`;
-                    const response = await fetch(url, { method: 'GET' });
+                    const baseUrl = window.location.origin + window.location.pathname.replace(/\/$/, '');
+                    const apiUrl = `${baseUrl}/export_db/${entryId}`;
+                    
+                    const response = await fetch(apiUrl, { method: 'GET' });
                     const blob = await response.blob();
                     const urlBlob = window.URL.createObjectURL(blob);
                     const a = document.createElement('a');
@@ -302,6 +338,8 @@
                 try {
                     const entryId = walletSelect.value;
                     const url = `/api/portfolio_crypto/import_db`;
+                    const baseUrl = window.location.origin + window.location.pathname.replace(/\/$/, '');
+                    const apiUrl = `${baseUrl}/import_db`;
                     const formData = new FormData();
                     formData.append('file', file);
                     formData.append('entry_id', entryId);
