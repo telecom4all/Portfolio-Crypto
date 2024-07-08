@@ -25,7 +25,7 @@ requests_cache.install_cache('coingecko_cache', expire_after=expire_after)
 #app = Flask(__name__)
 app = Flask(__name__, template_folder='/config/custom_components/portfolio_crypto/templates')
 
-CORS(app)  # Cette ligne permet d'ajouter les en-têtes CORS à toutes les routes
+CORS(app, resources={r"/*": {"origins": "*"}})  # Permettre toutes les origines pour toutes les routes
 
 @app.route('/')
 def index():

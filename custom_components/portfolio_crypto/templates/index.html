@@ -38,15 +38,25 @@
     <script>
         async function fetchWallets() {
             try {
-                const response = await fetch('http://localhost:8099/api/wallets');
-                const wallets = await response.json();
-                console.log(wallets)
-                const walletSelect = document.getElementById('walletSelect');
+                console.log("start ingress");
 
+                const baseUrl = window.location.origin + window.location.pathname.replace(/\/$/, '');
+                const apiUrl = `${baseUrl}/api/wallets`;
+
+                console.log(apiUrl);
+
+                const response = await fetch(apiUrl);
+                const textResponse = await response.text();
+
+                console.log('Raw response:', textResponse);
+
+                const wallets = JSON.parse(textResponse);
+
+                const walletSelect = document.getElementById('walletSelect');
                 wallets.forEach(wallet => {
                     const option = document.createElement('option');
                     option.value = wallet.entry_id;
-                    option.textContent = wallet.name;
+                    option.text = wallet.name;
                     walletSelect.appendChild(option);
                 });
             } catch (error) {
@@ -54,7 +64,7 @@
             }
         }
 
-        document.addEventListener('DOMContentLoaded', fetchWallets);
+        fetchWallets();
     </script>
 </body>
 </html>
