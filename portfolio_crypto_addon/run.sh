@@ -34,12 +34,13 @@ cp /app/icon_portfolio_crypto.png /config/www/
 CONFIG_FILE="/config/configuration.yaml"
 HOMEASSISTANT_SECTION="homeassistant:"
 EXTERNAL_URL="external_url: \"https://domain\""
+EXTERNAL_URL_test="external_url:"
 
 if ! grep -q "^$HOMEASSISTANT_SECTION" "$CONFIG_FILE"; then
     echo -e "\n$HOMEASSISTANT_SECTION\n  $EXTERNAL_URL" >> "$CONFIG_FILE"
     echo "Section homeassistant: ajoutée avec external_url: dans configuration.yaml"
 else
-    if ! grep -q "^  $EXTERNAL_URL" "$CONFIG_FILE"; then
+    if ! grep -q "^  $EXTERNAL_URL_test" "$CONFIG_FILE"; then
         sed -i "/^$HOMEASSISTANT_SECTION/a\  $EXTERNAL_URL" "$CONFIG_FILE"
         echo "external_url: ajoutée dans la section homeassistant: existante de configuration.yaml"
     else
