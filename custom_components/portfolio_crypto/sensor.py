@@ -387,7 +387,8 @@ class PortfolioCryptoSensor(CoordinatorEntity, SensorEntity):
 
     @property
     def state(self):
-        return self.coordinator.data.get(self._sensor_type)
+        value = self.coordinator.data.get(self._sensor_type)
+        return self._format_value(value)
 
     @property
     def unique_id(self):
@@ -414,6 +415,11 @@ class PortfolioCryptoSensor(CoordinatorEntity, SensorEntity):
         }
         await self.coordinator.async_request_refresh()
 
+    def _format_value(self, value):
+        if isinstance(value, (float, int)):
+            return f"{value:.4f}"
+        return value
+    
 class CryptoSensor(CoordinatorEntity, SensorEntity):
     def __init__(self, coordinator, config_entry, crypto, sensor_type, crypto_data):
         super().__init__(coordinator)
@@ -441,8 +447,8 @@ class CryptoSensor(CoordinatorEntity, SensorEntity):
     def state(self):
         coordinator_data = self.coordinator.data
         data_crypto = coordinator_data.get(self._crypto['id'], {})
-        retour = data_crypto.get(self._sensor_type, "unknown")
-        return retour
+        value = data_crypto.get(self._sensor_type, "unknown")
+        return self._format_value(value)
 
     @property
     def unique_id(self):
@@ -470,4 +476,9 @@ class CryptoSensor(CoordinatorEntity, SensorEntity):
             "crypto_id": crypto["id"] if crypto else None,
             "crypto_name": crypto["name"] if crypto else None,
         })
+
+    def _format_value(self, value):
+        if isinstance(value, (float, int)):
+            return f"{value:.4f}"
+        return value
 
