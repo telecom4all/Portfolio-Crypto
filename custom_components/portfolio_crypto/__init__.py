@@ -10,7 +10,7 @@ import asyncio
 import os
 import voluptuous as vol
 import homeassistant.helpers.config_validation as cv
-from .const import DOMAIN, COINGECKO_API_URL
+from .const import DOMAIN, COINGECKO_API_URL, UPDATE_INTERVAL, RATE_LIMIT
 from .db import save_crypto, load_crypto_attributes, delete_crypto_db
 
 _LOGGER = logging.getLogger(__name__)
@@ -31,7 +31,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     if entry.entry_id in hass.data[DOMAIN]:
         return False  # Entry déjà configurée
 
-    coordinator = PortfolioCryptoCoordinator(hass, entry, update_interval=1)
+    coordinator = PortfolioCryptoCoordinator(hass, entry, update_interval=RATE_LIMIT)
     hass.data[DOMAIN][entry.entry_id] = coordinator
 
     # Charger les cryptos depuis la base de données
