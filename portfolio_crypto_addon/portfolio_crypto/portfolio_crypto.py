@@ -58,7 +58,8 @@ def get_wallets():
     wallets = []
 
     for sensor in sensors:
-        if sensor['entity_id'].startswith('sensor.') and 'total_investment' in sensor['attributes']['friendly_name']:
+        # Vérifier que 'attributes' et 'friendly_name' existent avant d'y accéder
+        if sensor['entity_id'].startswith('sensor.') and 'attributes' in sensor and 'friendly_name' in sensor['attributes'] and 'total_investment' in sensor['attributes']['friendly_name']:
             wallet_name = sensor['attributes']['friendly_name'].replace(' total_investment', '')
             wallets.append({
                 'entry_id': sensor['attributes']['entry_id'],
