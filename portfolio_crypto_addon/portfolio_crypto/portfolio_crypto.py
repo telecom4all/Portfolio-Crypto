@@ -16,7 +16,13 @@ import os
 from .const import COINGECKO_API_URL, UPDATE_INTERVAL, RATE_LIMIT
 
 # Configurer les logs
-logging.basicConfig(level=logging.INFO)
+# Configurer les logs avec un format d'horodatage
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s %(levelname)s:%(name)s:%(message)s',
+    datefmt='%Y-%m-%d %H:%M:%S'
+)
+
 
 # Configurer le cache
 expire_after = timedelta(minutes=RATE_LIMIT)
