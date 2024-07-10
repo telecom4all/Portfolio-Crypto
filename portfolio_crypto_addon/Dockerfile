@@ -18,7 +18,7 @@ COPY custom_components/portfolio_crypto/icon_portfolio_crypto.png /app/icon_port
 
 
 COPY custom_components/portfolio_crypto/const.py /app/const.py
-
+COPY custom_components/portfolio_crypto/const.py /app/portfolio_crypto/const.py
 
 # Installer les dépendances Python
 RUN pip install --no-cache-dir -r requirements.txt
