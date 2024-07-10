@@ -115,7 +115,7 @@ class PortfolioCryptoOptionsFlowHandler(config_entries.OptionsFlow):
 
                                     # Reconfigure les entités pour ajouter les nouvelles cryptomonnaies
                                     await self.hass.config_entries.async_forward_entry_unload(self.config_entry, "sensor")
-                                    await self.hass.config_entries.async_forward_entry_setup(self.config_entry, "sensor")
+                                    await self.hass.config_entries.async_forward_entry_setups(self.config_entry, "sensor")
 
                                     return self.async_create_entry(title=crypto_name, data={})
                     else:
