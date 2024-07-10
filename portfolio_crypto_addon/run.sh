@@ -48,13 +48,45 @@ else
     fi
 fi
 
+# Créer le fichier de configuration de Gunicorn
+GUNICORN_CONF="/app/gunicorn.conf.py"
+
+cat <<EOL > $GUNICORN_CONF
+import logging
+import logging.config
+
+# Configuration de la journalisation avec horodatage
+logging_config = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'formatters': {
+        'default': {
+            'format': '%(asctime)s %(levelname)s:%(name)s:%(message)s',
+            'datefmt': '%Y-%m-%d %H:%M:%S',
+        },
+    },
+    'handlers': {
+        'console': {
+            'class': 'logging.StreamHandler',
+            'formatter': 'default',
+        },
+    },
+    'root': {
+        'handlers': ['console'],
+        'level': 'INFO',
+    },
+}
+
+def on_starting(server):
+    logging.config.dictConfig(logging_config)
+
+def post_fork(server, worker):
+    logging.config.dictConfig(logging_config)
+EOL
 
 # Démarrer l'application Flask avec Gunicorn
-gunicorn --bind 0.0.0.0:5000 portfolio_crypto.portfolio_crypto:app &
-gunicorn --bind 0.0.0.0:8099 portfolio_crypto.portfolio_crypto:app &
-# Démarrer l'application Flask avec Gunicorn
-#gunicorn --bind 0.0.0.0:5000 portfolio_crypto.portfolio_crypto:app --access-logfile /config/gunicorn_access.log --error-logfile /config/gunicorn_error.log &
-#gunicorn --bind 0.0.0.0:8099 portfolio_crypto.portfolio_crypto:app --access-logfile /config/gunicorn_access_ingress.log --error-logfile /config/gunicorn_access_ingress.log &
+gunicorn --config $GUNICORN_CONF --bind 0.0.0.0:5000 portfolio_crypto.portfolio_crypto:app &
+gunicorn --config $GUNICORN_CONF --bind 0.0.0.0:8099 portfolio_crypto.portfolio_crypto:app &
 
 # Attendre que l'application Flask démarre correctement
 sleep 5
