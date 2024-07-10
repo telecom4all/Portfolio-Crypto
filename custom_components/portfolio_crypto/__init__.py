@@ -44,7 +44,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     if not entry.options.get("initialized", False):
         await initialize_database(entry, hass)
 
-    await hass.config_entries.async_forward_entry_setup(entry, "sensor")
+    await hass.config_entries.async_forward_entry_setups(entry, ["sensor"])
 
     async def async_fetch_cryptos_service(call: ServiceCall) -> ServiceResponse:
         entry_id = call.data.get("entry_id")
@@ -84,7 +84,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
             success = await coordinator.delete_crypto(crypto_id)
             if success:
                 await hass.config_entries.async_forward_entry_unload(entry, "sensor")
-                await hass.config_entries.async_forward_entry_setup(entry, "sensor")
+                await hass.config_entries.async_forward_entry_setups(entry, ["sensor"])
                 _LOGGER.debug(f"Crypto {crypto_id} supprimée avec succès et les entités ont été rechargées.")
             else:
                 _LOGGER.error(f"Crypto {crypto_id} introuvable ou déjà supprimée.")
@@ -103,7 +103,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
             success = await coordinator.add_crypto(name)
             if success:
                 await hass.config_entries.async_forward_entry_unload(entry, "sensor")
-                await hass.config_entries.async_forward_entry_setup(entry, "sensor")
+                await hass.config_entries.async_forward_entry_setups(entry, ["sensor"])
                 _LOGGER.debug(f"Crypto {name} ajoutée avec succès et les entités ont été rechargées.")
             else:
                 _LOGGER.error(f"Crypto {name} introuvable ou déjà existante.")
@@ -208,8 +208,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
 
     hass.services.async_register(DOMAIN, "import_db", async_import_db_service)
 
-    
-
     async def async_fetch_transactions_service(call):
         entry_id = call.data.get("entry_id")
         crypto_id = call.data.get("crypto_id")
@@ -228,7 +226,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     hass.services.async_register(DOMAIN, "fetch_transactions", async_fetch_transactions_service)
 
     return True
-
 
 async def initialize_database(entry: ConfigEntry, hass: HomeAssistant):
     """Initialize the database for the new portfolio by calling the addon service."""
@@ -275,7 +272,6 @@ class PortfolioCryptoCoordinator(DataUpdateCoordinator):
         self._last_update = None
         _LOGGER.info(f"Coordinator initialized with update interval: {update_interval} minute(s)")
 
-        
     async def _async_update_data(self):
         now = datetime.now()
         if self._last_update is not None:
@@ -582,4 +578,3 @@ class PortfolioCryptoCoordinator(DataUpdateCoordinator):
         except Exception as e:
             _LOGGER.error(f"Exception lors de l'importation de la base de données: {e}")
             return False
-

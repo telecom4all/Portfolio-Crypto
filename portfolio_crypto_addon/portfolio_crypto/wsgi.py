@@ -4,6 +4,7 @@ Ce fichier est le point d'entrée pour Gunicorn afin de lancer l'application Fla
 """
 
 from portfolio_crypto.portfolio_crypto import app
+from .const import COINGECKO_API_URL, UPDATE_INTERVAL, RATE_LIMIT, PORT_APP
 
 if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=5000)
+    app.run(host="0.0.0.0", port=PORT_APP)

@@ -13,7 +13,7 @@ from flask import Flask, jsonify, request, render_template
 from flask_cors import CORS
 from .db import add_transaction, get_transactions, delete_transaction, update_transaction, get_crypto_transactions, create_table, create_crypto_table, save_crypto, get_cryptos, calculate_crypto_profit_loss, load_crypto_attributes, delete_crypto_db, export_db, import_db
 import os
-from .const import COINGECKO_API_URL, UPDATE_INTERVAL, RATE_LIMIT
+from .const import COINGECKO_API_URL, UPDATE_INTERVAL, RATE_LIMIT, PORT_APP
 
 # Configurer les logs
 # Configurer les logs avec un format d'horodatage
@@ -356,4 +356,4 @@ def import_database():
     
 
 if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=5000)
+    app.run(host="0.0.0.0", port=PORT_APP)

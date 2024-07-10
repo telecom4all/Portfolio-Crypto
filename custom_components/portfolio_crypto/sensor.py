@@ -8,14 +8,15 @@ import aiohttp
 import async_timeout
 import asyncio
 import os
-from .const import DOMAIN, COINGECKO_API_URL
+from .const import DOMAIN, COINGECKO_API_URL, UPDATE_INTERVAL, RATE_LIMIT, UPDATE_INTERVAL_SENSOR, PORT_APP
 from .db import save_crypto, load_crypto_attributes, delete_crypto_db
 import ast
+
 
 _LOGGER = logging.getLogger(__name__)
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
-    coordinator = PortfolioCryptoCoordinator(hass, config_entry, update_interval=5)  # Fixing update interval to 1 minute
+    coordinator = PortfolioCryptoCoordinator(hass, config_entry, update_interval=UPDATE_INTERVAL_SENSOR)  # Fixing update interval to 1 minute
     await coordinator.async_config_entry_first_refresh()
 
     entities = []
@@ -133,7 +134,7 @@ class PortfolioCryptoCoordinator(DataUpdateCoordinator):
         entry_id = self.config_entry.entry_id
         try:
             async with aiohttp.ClientSession() as session:
-                async with session.get(f"http://localhost:5000/crypto_profit_loss/{entry_id}/{crypto_id}") as response:
+                async with session.get(f"http://localhost:{PORT_APP}/crypto_profit_loss/{entry_id}/{crypto_id}") as response:
                     if response.status == 200:
                         data = await response.json()
                         return data
@@ -158,7 +159,7 @@ class PortfolioCryptoCoordinator(DataUpdateCoordinator):
         entry_id = self.config_entry.entry_id
         try:
             async with aiohttp.ClientSession() as session:
-                async with session.get(f"http://localhost:5000/transactions/{entry_id}/{crypto_id}") as response:
+                async with session.get(f"http://localhost:{PORT_APP}/transactions/{entry_id}/{crypto_id}") as response:
                     if response.status == 200:
                         transactions = await response.json()
                         return transactions
@@ -173,7 +174,7 @@ class PortfolioCryptoCoordinator(DataUpdateCoordinator):
         entry_id = self.config_entry.entry_id
         try:
             async with aiohttp.ClientSession() as session:
-                async with session.get(f"http://localhost:5000/transactions/{entry_id}") as response:
+                async with session.get(f"http://localhost:{PORT_APP}/transactions/{entry_id}") as response:
                     if response.status == 200:
                         transactions = await response.json()
                         return transactions
@@ -188,7 +189,7 @@ class PortfolioCryptoCoordinator(DataUpdateCoordinator):
         entry_id = self.config_entry.entry_id
         try:
             async with aiohttp.ClientSession() as session:
-                async with session.get(f"http://localhost:5000/profit_loss/{entry_id}") as response:
+                async with session.get(f"http://localhost:{PORT_APP}/profit_loss/{entry_id}") as response:
                     if response.status == 200:
                         data = await response.json()
                         return data['summary']['total_investment']
@@ -203,7 +204,7 @@ class PortfolioCryptoCoordinator(DataUpdateCoordinator):
         entry_id = self.config_entry.entry_id
         try:
             async with aiohttp.ClientSession() as session:
-                async with session.get(f"http://localhost:5000/profit_loss/{entry_id}") as response:
+                async with session.get(f"http://localhost:{PORT_APP}/profit_loss/{entry_id}") as response:
                     if response.status == 200:
                         data = await response.json()
                         return data['summary']['total_profit_loss']
@@ -218,7 +219,7 @@ class PortfolioCryptoCoordinator(DataUpdateCoordinator):
         entry_id = self.config_entry.entry_id
         try:
             async with aiohttp.ClientSession() as session:
-                async with session.get(f"http://localhost:5000/profit_loss/{entry_id}") as response:
+                async with session.get(f"http://localhost:{PORT_APP}/profit_loss/{entry_id}") as response:
                     if response.status == 200:
                         data = await response.json()
                         return data['summary']['total_profit_loss_percent']
@@ -233,7 +234,7 @@ class PortfolioCryptoCoordinator(DataUpdateCoordinator):
         entry_id = self.config_entry.entry_id
         try:
             async with aiohttp.ClientSession() as session:
-                async with session.get(f"http://localhost:5000/profit_loss/{entry_id}") as response:
+                async with session.get(f"http://localhost:{PORT_APP}/profit_loss/{entry_id}") as response:
                     if response.status == 200:
                         data = await response.json()
                         return data['summary']['total_value']
@@ -308,7 +309,7 @@ class PortfolioCryptoCoordinator(DataUpdateCoordinator):
                     "Authorization": f"Bearer {supervisor_token}",
                     "Content-Type": "application/json",
                 }
-                url = f"http://localhost:5000/save_crypto"
+                url = f"http://localhost:{PORT_APP}/save_crypto"
                 payload = {
                     "entry_id": entry_id,
                     "crypto_name": crypto_name,

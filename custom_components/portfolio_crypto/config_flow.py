@@ -3,7 +3,7 @@ import voluptuous as vol
 from homeassistant import config_entries
 from homeassistant.core import callback
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-from .const import DOMAIN, COINGECKO_API_URL
+from .const import DOMAIN, COINGECKO_API_URL, PORT_APP
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -98,7 +98,7 @@ class PortfolioCryptoOptionsFlowHandler(config_entries.OptionsFlow):
             else:
                 # Vérifier si la crypto existe déjà dans la base de données
                 session = async_get_clientsession(self.hass)
-                async with session.get(f"http://localhost:5000/load_cryptos/{self.config_entry.entry_id}") as response:
+                async with session.get(f"http://localhost:{PORT_APP}/load_cryptos/{self.config_entry.entry_id}") as response:
                     if response.status == 200:
                         db_cryptos = await response.json()
                         if any(crypto[1] == crypto_id for crypto in db_cryptos):  # Assurez-vous que la structure des données correspond à votre base de données
