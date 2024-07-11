@@ -31,9 +31,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     if entry.entry_id in hass.data[DOMAIN]:
         return False  # Entry déjà configurée
 
-    update_interval_sensor = entry.options.get("update_interval_sensor", 15)
-
-    coordinator = PortfolioCryptoCoordinator(hass, entry, update_interval=update_interval_sensor)
+    coordinator = PortfolioCryptoCoordinator(hass, entry, update_interval=RATE_LIMIT)
     hass.data[DOMAIN][entry.entry_id] = coordinator
 
     # Charger les cryptos depuis la base de données
