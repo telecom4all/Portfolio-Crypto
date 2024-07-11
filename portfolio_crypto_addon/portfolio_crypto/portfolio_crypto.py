@@ -9,10 +9,11 @@ import requests_cache
 from datetime import datetime, timedelta
 import logging
 import time
-from flask import Flask, jsonify, request, render_template
+from flask import Flask, jsonify, request, render_template, send_file
 from flask_cors import CORS
-from .db import add_transaction, get_transactions, delete_transaction, update_transaction, get_crypto_transactions, create_table, create_crypto_table, save_crypto, get_cryptos, calculate_crypto_profit_loss, load_crypto_attributes, delete_crypto_db, export_db, import_db
+from .db import add_transaction, get_transactions, delete_transaction, update_transaction, get_crypto_transactions, create_table, create_crypto_table, save_crypto, get_cryptos, calculate_crypto_profit_loss, load_crypto_attributes, delete_crypto_db, export_db, import_db, import_transactions, verify_cryptos, get_database_path
 import os
+import sqlite3
 from .const import COINGECKO_API_URL, UPDATE_INTERVAL, RATE_LIMIT, PORT_APP
 
 # Configurer les logs
@@ -349,11 +350,30 @@ def import_database():
     try:
         entry_id = request.form['entry_id']
         file = request.files['file']
-        import_db(entry_id, file)
-        return jsonify({"message": "Base de données importée avec succès"}), 200
+        db_path = get_database_path(entry_id)
+        with open(db_path, 'wb') as db_file:
+            db_file.write(file.read())
+        
+        conn = sqlite3.connect(db_path)
+        cursor = conn.cursor()
+        
+        cursor.execute('SELECT * FROM transactions')
+        transactions = cursor.fetchall()
+        
+        cursor.execute('SELECT crypto_name, crypto_id FROM cryptos')
+        cryptos = cursor.fetchall()
+        
+        conn.close()
+        
+        import_transactions(entry_id, transactions)
+        missing_cryptos = verify_cryptos(entry_id, cryptos)
+        
+        if missing_cryptos:
+            return jsonify({"message": "Importation partielle", "missing_cryptos": missing_cryptos}), 200
+        else:
+            return jsonify({"message": "Importation réussie"}), 200
     except Exception as e:
         return jsonify({"error": "Erreur Interne"}), 500
-    
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=PORT_APP)

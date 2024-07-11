@@ -274,3 +274,44 @@ def import_db(entry_id, file):
         logging.error(f"Erreur lors de l'importation de la base de données: {e}")
         raise
 
+def import_transactions(entry_id, transactions):
+    try:
+        db_path = get_database_path(entry_id)
+        conn = sqlite3.connect(db_path)
+        cursor = conn.cursor()
+        
+        cursor.execute('DELETE FROM transactions')
+        
+        for transaction in transactions:
+            cursor.execute('''
+                INSERT INTO transactions (crypto_name, crypto_id, quantity, price_usd, transaction_type, location, date, historical_price)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+            ''', transaction)
+        
+        conn.commit()
+        conn.close()
+        logging.info(f"Transactions importées avec succès pour l'ID d'entrée: {entry_id}")
+    except Exception as e:
+        logging.error(f"Erreur lors de l'importation des transactions: {e}")
+        raise
+
+def verify_cryptos(entry_id, cryptos):
+    try:
+        db_path = get_database_path(entry_id)
+        conn = sqlite3.connect(db_path)
+        cursor = conn.cursor()
+        
+        cursor.execute('SELECT crypto_name, crypto_id FROM cryptos')
+        existing_cryptos = cursor.fetchall()
+        existing_cryptos_dict = {crypto_id: crypto_name for crypto_name, crypto_id in existing_cryptos}
+        
+        missing_cryptos = []
+        for crypto_name, crypto_id in cryptos:
+            if crypto_id not in existing_cryptos_dict:
+                missing_cryptos.append((crypto_name, crypto_id))
+        
+        conn.close()
+        return missing_cryptos
+    except Exception as e:
+        logging.error(f"Erreur lors de la vérification des cryptos: {e}")
+        raise
