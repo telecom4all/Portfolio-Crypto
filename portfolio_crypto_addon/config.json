@@ -7,12 +7,13 @@
   "startup": "services",
   "boot": "auto",
   "host_network": true,
-  "options": {},
-  "schema": {},
-  "image": "telecom4all/portfolio_crypto",
-  "ports": {
-    "5000/tcp": 5000
+  "options": {
+    "update_interval_sensor": 15
   },
+  "schema": {
+    "update_interval_sensor": "int"
+  },
+  "image": "telecom4all/portfolio_crypto",
   "map": ["config:rw", "ssl"],
   "privileged": ["SYS_ADMIN"],
   "host_dbus": true,

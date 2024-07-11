@@ -14,17 +14,22 @@ class PortfolioCryptoConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_user(self, user_input=None):
         if user_input is not None:
-            return self.async_create_entry(title=user_input["name"], data={"name": user_input["name"], "cryptos": [], "initialized": False})
+            return self.async_create_entry(title=user_input["name"], data=user_input)
 
         return self.async_show_form(
-            step_id="user", data_schema=vol.Schema({"name": str})
+            step_id="user",
+            data_schema=vol.Schema({
+                "name": str,
+                "update_interval_sensor": vol.All(vol.Coerce(int), vol.Range(min=1, max=1440))
+            })
         )
 
     @staticmethod
     @callback
     def async_get_options_flow(config_entry):
         return PortfolioCryptoOptionsFlowHandler(config_entry)
-
+    
+    
 class PortfolioCryptoOptionsFlowHandler(config_entries.OptionsFlow):
     def __init__(self, config_entry):
         self.config_entry = config_entry
@@ -36,6 +41,7 @@ class PortfolioCryptoOptionsFlowHandler(config_entries.OptionsFlow):
             step_id="init",
             data_schema=vol.Schema({
                 vol.Required("crypto_name_or_id", description="Nom ou ID de la cryptomonnaie"): str,
+                vol.Required("update_interval_sensor", default=self.config_entry.options.get("update_interval_sensor", 15), description="Intervalle de mise à jour des entités (en minutes)"): vol.All(vol.Coerce(int), vol.Range(min=1, max=1440))
             }),
             errors={},
         )

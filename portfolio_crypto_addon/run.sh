@@ -9,7 +9,7 @@ cp -r /app/custom_components/portfolio_crypto/* /config/custom_components/portfo
 
 # Copiez le fichier JavaScript du panneau personnalisé dans le répertoire www de Home Assistant
 #cp /app/crypto-transactions-panel.js /config/www/
-cp /app/icon_portfolio_crypto.png /config/www/
+#cp /app/icon_portfolio_crypto.png /config/www/
 
 # Ajouter la configuration du panneau personnalisé dans configuration.yaml
 #CONFIG_FILE="/config/configuration.yaml"
@@ -47,6 +47,24 @@ else
         echo "La section homeassistant: et external_url: existent déjà dans configuration.yaml"
     fi
 fi
+
+
+# Vérifiez et ajoutez la configuration portfolio_crypto: dans configuration.yaml
+#PORTFOLIO_CRYPTO_CONFIG="
+#portfolio_crypto:
+#  update_interval: 10
+#  rate_limit: 30
+#  update_interval_sensor: 15
+#  port_app: 5000
+#"
+
+#if ! grep -q "^portfolio_crypto:" "$CONFIG_FILE"; then
+#    echo "$PORTFOLIO_CRYPTO_CONFIG" >> "$CONFIG_FILE"
+#    echo "Configuration portfolio_crypto ajoutée dans configuration.yaml"
+#else
+#    echo "La configuration portfolio_crypto existe déjà dans configuration.yaml"
+#fi
+
 
 # Créer le fichier de configuration de Gunicorn
 GUNICORN_CONF="/app/gunicorn.conf.py"
