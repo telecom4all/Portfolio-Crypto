@@ -279,15 +279,20 @@ def import_transactions(entry_id, transactions):
         db_path = get_database_path(entry_id)
         conn = sqlite3.connect(db_path)
         cursor = conn.cursor()
-        
+
         cursor.execute('DELETE FROM transactions')
-        
+
         for transaction in transactions:
-            cursor.execute('''
-                INSERT INTO transactions (crypto_name, crypto_id, quantity, price_usd, transaction_type, location, date, historical_price)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-            ''', transaction)
-        
+            logging.info(f"Transaction reçue: {transaction}")
+            # Assurez-vous de ne prendre que les 8 dernières colonnes
+            if len(transaction) >= 8:
+                cursor.execute('''
+                    INSERT INTO transactions (crypto_name, crypto_id, quantity, price_usd, transaction_type, location, date, historical_price)
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+                ''', transaction[-8:])
+            else:
+                logging.error(f"Nombre de paramètres incorrect pour la transaction: {transaction}")
+
         conn.commit()
         conn.close()
         logging.info(f"Transactions importées avec succès pour l'ID d'entrée: {entry_id}")
@@ -295,6 +300,7 @@ def import_transactions(entry_id, transactions):
         logging.error(f"Erreur lors de l'importation des transactions: {e}")
         raise
 
+    
 def verify_cryptos(entry_id, cryptos):
     try:
         db_path = get_database_path(entry_id)

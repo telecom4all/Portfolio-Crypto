@@ -367,10 +367,10 @@ def import_database():
 
         conn.close()
 
-        # Assurez-vous que chaque transaction a exactement 8 colonnes
+        # Assurez-vous que chaque transaction a au moins 9 colonnes
         formatted_transactions = []
         for transaction in transactions:
-            if len(transaction) == 8:
+            if len(transaction) >= 9:
                 formatted_transactions.append(transaction)
             else:
                 logging.error(f"Transaction avec nombre de colonnes incorrect: {transaction}")
@@ -385,6 +385,7 @@ def import_database():
     except Exception as e:
         logging.error(f"Erreur lors de l'importation de la base de données: {e}")
         return jsonify({"error": "Erreur Interne"}), 500
+
 
 
 if __name__ == "__main__":

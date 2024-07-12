@@ -255,9 +255,11 @@ class PortfolioCryptoCoordinator(DataUpdateCoordinator):
             return 0
 
     async def fetch_current_price(self, crypto_id):
+        url_req = f"{COINGECKO_API_URL}/simple/price?ids={crypto_id}&vs_currencies=usd"
+        _LOGGER.error(f"url_req =  {url_req}")
         try:
             async with aiohttp.ClientSession() as session:
-                async with session.get(f"{COINGECKO_API_URL}/simple/price?ids={crypto_id}&vs_currencies=usd") as response:
+                async with session.get(url_req) as response:
                     if response.status == 200:
                         data = await response.json()
                         current_price = data[crypto_id]["usd"]
