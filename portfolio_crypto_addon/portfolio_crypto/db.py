@@ -357,3 +357,19 @@ def get_crypto_price_from_cache(crypto_id):
     except sqlite3.Error as e:
         logging.error(f"Erreur lors de la récupération du prix depuis le cache : {e}")
         return 0
+
+
+def ensure_table_exists(db_path, table_name, create_table_sql):
+    try:
+        conn = sqlite3.connect(db_path)
+        cursor = conn.cursor()
+        cursor.execute(f"SELECT name FROM sqlite_master WHERE type='table' AND name='{table_name}'")
+        if cursor.fetchone() is None:
+            cursor.execute(create_table_sql)
+            conn.commit()
+            logging.info(f"Table '{table_name}' créée avec succès.")
+        else:
+            logging.info(f"Table '{table_name}' existe déjà.")
+        conn.close()
+    except Exception as e:
+        logging.error(f"Erreur lors de la création de la table '{table_name}': {e}")
