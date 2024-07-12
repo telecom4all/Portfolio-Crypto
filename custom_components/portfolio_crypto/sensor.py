@@ -44,7 +44,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
             _LOGGER.error(f"Le format de 'crypto' est incorrect: {crypto}")
             continue
 
-        for sensor_type in ['investment', 'current_value', 'profit_loss', 'profit_loss_percent', 'transactions_count', 'average_price']:
+        for sensor_type in ['investment', 'current_value', 'profit_loss', 'profit_loss_percent', 'transactions_count', 'average_price', 'current_price', 'total_tokens']:
             entities.append(CryptoSensor(coordinator, config_entry, {"name": crypto_name, "id": crypto_id}, sensor_type, crypto_data))
 
     async_add_entities(entities)
@@ -99,20 +99,27 @@ class PortfolioCryptoCoordinator(DataUpdateCoordinator):
             total_quantity = 0
             total_cost = 0
             for transaction in crypto_transactions:
-                if transaction[5] == 'buy':  # transaction_type == 'buy'
-                    quantity = transaction[3]  # assuming this is the quantity
-                    price = transaction[4]  # assuming this is the price in USD
+                if transaction[5] == 'buy':
+                    quantity = transaction[3]
+                    price = transaction[4]
                     total_quantity += quantity
                     total_cost += price
+                elif transaction[5] == 'sell':
+                    quantity = transaction[3]
+                    total_quantity -= quantity
 
             if total_quantity > 0:
                 average_price = total_cost / total_quantity
             else:
                 average_price = 0
 
+            current_price = await self.fetch_current_price(crypto_id)
 
             crypto_data["transactions_count"] = len(crypto_transactions)
             crypto_data["average_price"] = average_price
+            crypto_data["current_price"] = current_price
+            crypto_data["total_tokens"] = total_quantity
+
 
             data[crypto_id] = {
                 "crypto_id": crypto_id,
@@ -122,7 +129,9 @@ class PortfolioCryptoCoordinator(DataUpdateCoordinator):
                 "profit_loss": crypto_data.get("profit_loss"),
                 "profit_loss_percent": crypto_data.get("profit_loss_percent"),
                 "transactions_count": crypto_data.get("transactions_count"),
-                "average_price": crypto_data.get("average_price")
+                "average_price": crypto_data.get("average_price"),
+                "current_price": crypto_data.get("current_price"),
+                "total_tokens": crypto_data.get("total_tokens")
             }
         _LOGGER.info(f"Fetched data: {data}")
         _LOGGER.info("New data fetched successfully")
@@ -244,6 +253,22 @@ class PortfolioCryptoCoordinator(DataUpdateCoordinator):
         except Exception as e:
             _LOGGER.error(f"Exception lors de la récupération de la valeur totale: {e}")
             return 0
+
+    async def fetch_current_price(self, crypto_id):
+        try:
+            async with aiohttp.ClientSession() as session:
+                async with session.get(f"{COINGECKO_API_URL}/simple/price?ids={crypto_id}&vs_currencies=usd") as response:
+                    if response.status == 200:
+                        data = await response.json()
+                        current_price = data[crypto_id]["usd"]
+                        return current_price
+                    else:
+                        _LOGGER.error(f"Erreur lors de la récupération du prix actuel pour {crypto_id}: {response.status}")
+                        return 0
+        except Exception as e:
+            _LOGGER.error(f"Exception lors de la récupération du prix actuel pour {crypto_id}: {e}")
+            return 0
+
 
     async def fetch_crypto_data(self, crypto_id):
         
@@ -377,7 +402,14 @@ class PortfolioCryptoSensor(CoordinatorEntity, SensorEntity):
         self.coordinator = coordinator
         self.config_entry = config_entry
         self._sensor_type = sensor_type
-        self._name = f"{config_entry.title} {sensor_type}"
+        self._attr_name = f"{config_entry.title} {sensor_type.replace('_', ' ').title()}"
+        self._attr_unique_id = f"{config_entry.entry_id}_{sensor_type}"
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, config_entry.entry_id)},
+            name=config_entry.title,
+            manufacturer="Custom",
+            model="Portfolio Crypto",
+        )
         self._attributes = {
             "entry_id": config_entry.entry_id,
         }
@@ -428,7 +460,14 @@ class CryptoSensor(CoordinatorEntity, SensorEntity):
         self.config_entry = config_entry
         self._crypto = crypto
         self._sensor_type = sensor_type
-        self._name = f"{crypto['name']} {sensor_type}"
+        self._attr_name = f"{config_entry.title} {crypto['name']} {sensor_type.replace('_', ' ').title()}"
+        self._attr_unique_id = f"{config_entry.entry_id}_{crypto['id']}_{sensor_type}"
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, f"{config_entry.entry_id}_{crypto['id']}")},
+            name=f"{config_entry.title} {crypto['name']}",
+            manufacturer="Custom",
+            model="Portfolio Crypto",
+        )
         self._attributes = {
             "crypto_id": crypto['id'],
             "crypto_name": crypto['name'],

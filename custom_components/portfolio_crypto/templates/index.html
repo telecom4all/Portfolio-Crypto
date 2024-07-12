@@ -81,7 +81,9 @@
                 <strong>Entry ID:</strong> <span id="entryId"></span>
             </div>
             <div class="select-container">
-                <select id="cryptoSelect"></select>
+                <select id="cryptoSelect">
+                    <option value="">Select Cryptos</option>
+                </select>
                 <button id="deleteCrypto" style="display:none">Supprimer la Crypto</button>
             </div>
             <div id="transactionsContainer"></div>
@@ -187,7 +189,7 @@
             }
 
             function renderCryptoSelect(cryptos) {
-                cryptoSelect.innerHTML = cryptos.map(crypto => `<option value="${crypto[1]}">${crypto[0]} - ${crypto[1]}</option>`).join('');
+                cryptoSelect.innerHTML = '<option value="">Select Cryptos</option>' + cryptos.map(crypto => `<option value="${crypto[1]}">${crypto[0]} - ${crypto[1]}</option>`).join('');
             }
 
             async function fetchAndRenderTransactions(entryId, cryptoId) {
@@ -219,6 +221,7 @@
                             <th>Quantité</th>
                             <th>Prix</th>
                             <th>Type</th>
+                            <th>Lieu</th>
                             <th>Date</th>
                             <th>Actions</th>
                         </tr>
@@ -229,6 +232,7 @@
                                 <td>${transaction[3]}</td>
                                 <td>${transaction[4]}</td>
                                 <td>${transaction[5]}</td>
+                                <td>${transaction[6]}</td>
                                 <td>${transaction[7]}</td>
                                 <td>
                                     <button class="edit" data-id="${transaction[0]}" data-crypto-id="${transaction[2]}" data-crypto-name="${transaction[1]}" data-quantity="${transaction[3]}" data-price="${transaction[4]}" data-type="${transaction[5]}" data-location="${transaction[6]}" data-date="${transaction[7]}">Modifier</button>
