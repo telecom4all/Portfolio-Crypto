@@ -405,7 +405,7 @@ def update_crypto_prices():
 # Fonction pour récupérer toutes les cryptos suivies
 def get_all_tracked_cryptos():
     try:
-        conn = sqlite3.connect('list_crypto.db')
+        conn = sqlite3.connect('/config/custom_components/portfolio_crypto/list_crypto.db')
         cursor = conn.cursor()
         cursor.execute('SELECT crypto_id FROM list_crypto')
         cryptos = cursor.fetchall()
@@ -418,7 +418,7 @@ def get_all_tracked_cryptos():
 # Fonction pour sauvegarder les prix dans le cache
 def save_price_to_cache(crypto_id, current_price):
     try:
-        conn = sqlite3.connect('price_cache.db')
+        conn = sqlite3.connect('/config/custom_components/portfolio_crypto/price_cache.db')
         cursor = conn.cursor()
         cursor.execute('''
             INSERT INTO price_cache (crypto_id, current_price, last_updated)
@@ -435,7 +435,7 @@ def save_price_to_cache(crypto_id, current_price):
 # Créer la table list_crypto
 def create_list_crypto_table():
     try:
-        conn = sqlite3.connect('list_crypto.db')
+        conn = sqlite3.connect('/config/custom_components/portfolio_crypto/list_crypto.db')
         cursor = conn.cursor()
         cursor.execute('''
             CREATE TABLE IF NOT EXISTS list_crypto (
@@ -451,7 +451,7 @@ def create_list_crypto_table():
 # Créer la table price_cache
 def create_price_cache_table():
     try:
-        conn = sqlite3.connect('price_cache.db')
+        conn = sqlite3.connect('/config/custom_components/portfolio_crypto/price_cache.db')
         cursor = conn.cursor()
         cursor.execute('''
             CREATE TABLE IF NOT EXISTS price_cache (
@@ -467,7 +467,7 @@ def create_price_cache_table():
 
 def save_crypto_to_list(crypto_name, crypto_id):
     try:
-        conn = sqlite3.connect('list_crypto.db')
+        conn = sqlite3.connect('/config/custom_components/portfolio_crypto/list_crypto.db')
         cursor = conn.cursor()
         cursor.execute('SELECT 1 FROM list_crypto WHERE crypto_id = ?', (crypto_id,))
         exists = cursor.fetchone()
@@ -483,7 +483,7 @@ def save_crypto_to_list(crypto_name, crypto_id):
 
 def get_crypto_price_from_cache(crypto_id):
     try:
-        conn = sqlite3.connect('price_cache.db')
+        conn = sqlite3.connect('/config/custom_components/portfolio_crypto/price_cache.db')
         cursor = conn.cursor()
         cursor.execute('SELECT current_price FROM price_cache WHERE crypto_id = ?', (crypto_id,))
         result = cursor.fetchone()
@@ -495,7 +495,6 @@ def get_crypto_price_from_cache(crypto_id):
 
 # Fonction pour récupérer le prix des cryptos depuis une API
 def get_crypto_price(crypto_id):
-    import requests
     url = f'https://api.coingecko.com/api/v3/simple/price?ids={crypto_id}&vs_currencies=usd'
     try:
         response = requests.get(url)
@@ -504,13 +503,13 @@ def get_crypto_price(crypto_id):
             return data.get(crypto_id, {}).get('usd', None)
         elif response.status_code == 429:
             logging.error(f"Trop de requêtes vers l'API pour {crypto_id}: {response.status_code}")
+        elif response.status_code == 404:
+            logging.error(f"Crypto {crypto_id} non trouvée : {response.status_code}")
         else:
             logging.error(f"Erreur HTTP {response.status_code} lors de la récupération du prix pour {crypto_id}")
     except requests.RequestException as e:
         logging.error(f"Erreur lors de la récupération du prix pour {crypto_id}: {e}")
     return None
-
-
 
 if __name__ == "__main__":
     create_list_crypto_table()
