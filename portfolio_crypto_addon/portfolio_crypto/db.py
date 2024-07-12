@@ -321,3 +321,31 @@ def verify_cryptos(entry_id, cryptos):
     except Exception as e:
         logging.error(f"Erreur lors de la vérification des cryptos: {e}")
         raise
+
+def save_crypto_to_list(crypto_name, crypto_id):
+    try:
+        conn = sqlite3.connect('list_crypto.db')
+        cursor = conn.cursor()
+        cursor.execute('SELECT 1 FROM list_crypto WHERE crypto_id = ?', (crypto_id,))
+        exists = cursor.fetchone()
+        if not exists:
+            cursor.execute('''
+                INSERT INTO list_crypto (crypto_id, crypto_name)
+                VALUES (?, ?)
+            ''', (crypto_id, crypto_name))
+            conn.commit()
+        conn.close()
+    except sqlite3.Error as e:
+        logging.error(f"Erreur lors de la sauvegarde de la crypto dans list_crypto : {e}")
+
+def get_crypto_price_from_cache(crypto_id):
+    try:
+        conn = sqlite3.connect('price_cache.db')
+        cursor = conn.cursor()
+        cursor.execute('SELECT current_price FROM price_cache WHERE crypto_id = ?', (crypto_id,))
+        result = cursor.fetchone()
+        conn.close()
+        return result[0] if result else 0
+    except sqlite3.Error as e:
+        logging.error(f"Erreur lors de la récupération du prix depuis le cache : {e}")
+        return 0

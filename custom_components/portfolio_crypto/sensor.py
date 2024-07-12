@@ -9,7 +9,7 @@ import async_timeout
 import asyncio
 import os
 from .const import DOMAIN, COINGECKO_API_URL, UPDATE_INTERVAL, RATE_LIMIT, UPDATE_INTERVAL_SENSOR, PORT_APP
-from .db import save_crypto, load_crypto_attributes, delete_crypto_db
+from .db import save_crypto, load_crypto_attributes, delete_crypto_db, get_crypto_price_from_cache
 import ast
 
 
@@ -489,6 +489,9 @@ class CryptoSensor(CoordinatorEntity, SensorEntity):
 
     @property
     def state(self):
+        if self._sensor_type == "current_price":
+            price = get_crypto_price_from_cache(self._crypto['id'])
+            return price if price else 0
         coordinator_data = self.coordinator.data
         data_crypto = coordinator_data.get(self._crypto['id'], {})
         value = data_crypto.get(self._sensor_type, "unknown")

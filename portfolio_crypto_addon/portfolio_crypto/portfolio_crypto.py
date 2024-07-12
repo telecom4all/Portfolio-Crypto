@@ -14,6 +14,7 @@ from flask_cors import CORS
 from .db import add_transaction, get_transactions, delete_transaction, update_transaction, get_crypto_transactions, create_table, create_crypto_table, save_crypto, get_cryptos, calculate_crypto_profit_loss, load_crypto_attributes, delete_crypto_db, export_db, import_db, import_transactions, verify_cryptos, get_database_path
 import os
 import sqlite3
+import threading
 from .const import COINGECKO_API_URL, UPDATE_INTERVAL, RATE_LIMIT, PORT_APP
 
 # Configurer les logs
@@ -387,6 +388,90 @@ def import_database():
         return jsonify({"error": "Erreur Interne"}), 500
 
 
+# Nouvelle fonction pour mettre à jour les prix des cryptos toutes les 5 minutes
+def update_crypto_prices():
+    while True:
+        try:
+            cryptos = get_all_tracked_cryptos()
+            for crypto in cryptos:
+                crypto_id = crypto['crypto_id']
+                current_price = get_crypto_price(crypto_id)
+                if current_price is not None:
+                    save_price_to_cache(crypto_id, current_price)
+        except Exception as e:
+            logging.error(f"Erreur lors de la mise à jour des prix des cryptos : {e}")
+        time.sleep(300)  # 5 minutes
+
+# Fonction pour récupérer toutes les cryptos suivies
+def get_all_tracked_cryptos():
+    try:
+        conn = sqlite3.connect('list_crypto.db')
+        cursor = conn.cursor()
+        cursor.execute('SELECT crypto_id FROM list_crypto')
+        cryptos = cursor.fetchall()
+        conn.close()
+        return [{"crypto_id": crypto[0]} for crypto in cryptos]
+    except sqlite3.Error as e:
+        logging.error(f"Erreur lors de la récupération des cryptos suivies : {e}")
+        return []
+
+# Fonction pour sauvegarder les prix dans le cache
+def save_price_to_cache(crypto_id, current_price):
+    try:
+        conn = sqlite3.connect('price_cache.db')
+        cursor = conn.cursor()
+        cursor.execute('''
+            INSERT INTO price_cache (crypto_id, current_price, last_updated)
+            VALUES (?, ?, ?)
+            ON CONFLICT(crypto_id) DO UPDATE SET
+                current_price=excluded.current_price,
+                last_updated=excluded.last_updated
+        ''', (crypto_id, current_price, datetime.now()))
+        conn.commit()
+        conn.close()
+    except sqlite3.Error as e:
+        logging.error(f"Erreur lors de la sauvegarde du prix dans le cache : {e}")
+
+# Créer la table list_crypto
+def create_list_crypto_table():
+    try:
+        conn = sqlite3.connect('list_crypto.db')
+        cursor = conn.cursor()
+        cursor.execute('''
+            CREATE TABLE IF NOT EXISTS list_crypto (
+                crypto_id TEXT PRIMARY KEY,
+                crypto_name TEXT
+            )
+        ''')
+        conn.commit()
+        conn.close()
+    except sqlite3.Error as e:
+        logging.error(f"Erreur lors de la création de la table list_crypto : {e}")
+
+# Créer la table price_cache
+def create_price_cache_table():
+    try:
+        conn = sqlite3.connect('price_cache.db')
+        cursor = conn.cursor()
+        cursor.execute('''
+            CREATE TABLE IF NOT EXISTS price_cache (
+                crypto_id TEXT PRIMARY KEY,
+                current_price REAL,
+                last_updated TEXT
+            )
+        ''')
+        conn.commit()
+        conn.close()
+    except sqlite3.Error as e:
+        logging.error(f"Erreur lors de la création de la table price_cache : {e}")
+
+
+
 
 if __name__ == "__main__":
+    create_list_crypto_table()
+    create_price_cache_table()
+    price_update_thread = threading.Thread(target=update_crypto_prices)
+    price_update_thread.daemon = True
+    price_update_thread.start()
     app.run(host="0.0.0.0", port=PORT_APP)

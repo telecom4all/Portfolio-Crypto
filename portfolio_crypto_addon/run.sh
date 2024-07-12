@@ -65,6 +65,9 @@ fi
 #    echo "La configuration portfolio_crypto existe déjà dans configuration.yaml"
 #fi
 
+sqlite3 /config/custom_components/portfolio_crypto/list_crypto.db "CREATE TABLE IF NOT EXISTS list_crypto (crypto_id TEXT PRIMARY KEY, crypto_name TEXT);"
+sqlite3 /config/custom_components/portfolio_crypto/price_cache.db "CREATE TABLE IF NOT EXISTS price_cache (crypto_id TEXT PRIMARY KEY, current_price REAL, last_updated TEXT);"
+
 
 # Créer le fichier de configuration de Gunicorn
 GUNICORN_CONF="/app/gunicorn.conf.py"
