@@ -3,6 +3,7 @@ import os
 import logging
 import requests
 from flask import Flask, jsonify, request, send_file
+from datetime import timedelta, datetime
 
 # Configurer les logs
 logging.basicConfig(level=logging.INFO)
@@ -373,3 +374,28 @@ def ensure_table_exists(db_path, table_name, create_table_sql):
         conn.close()
     except Exception as e:
         logging.error(f"Erreur lors de la création de la table '{table_name}': {e}")
+
+# Fonction pour sauvegarder les prix dans le cache
+def save_price_to_cache(crypto_id, current_price):
+    try:
+        db_path = '/config/custom_components/portfolio_crypto/price_cache.db'
+        ensure_table_exists(db_path, 'price_cache', '''
+            CREATE TABLE IF NOT EXISTS price_cache (
+                crypto_id TEXT PRIMARY KEY,
+                current_price REAL,
+                last_updated TEXT
+            )
+        ''')
+        conn = sqlite3.connect(db_path)
+        cursor = conn.cursor()
+        cursor.execute('''
+            INSERT INTO price_cache (crypto_id, current_price, last_updated)
+            VALUES (?, ?, ?)
+            ON CONFLICT(crypto_id) DO UPDATE SET
+                current_price=excluded.current_price,
+                last_updated=excluded.last_updated
+        ''', (crypto_id, current_price, datetime.now()))
+        conn.commit()
+        conn.close()
+    except sqlite3.Error as e:
+        logging.error(f"Erreur lors de la sauvegarde du prix dans le cache : {e}")

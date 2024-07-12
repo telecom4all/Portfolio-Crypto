@@ -9,11 +9,12 @@ import async_timeout
 import asyncio
 import os
 from .const import DOMAIN, COINGECKO_API_URL, UPDATE_INTERVAL, RATE_LIMIT, UPDATE_INTERVAL_SENSOR, PORT_APP
-from .db import save_crypto, load_crypto_attributes, delete_crypto_db, get_crypto_price_from_cache
+from .db import save_crypto, load_crypto_attributes, delete_crypto_db, get_crypto_price_from_cache, save_price_to_cache
 import ast
 
 
 _LOGGER = logging.getLogger(__name__)
+
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
     coordinator = PortfolioCryptoCoordinator(hass, config_entry, update_interval=UPDATE_INTERVAL_SENSOR)  # Fixing update interval to 1 minute
