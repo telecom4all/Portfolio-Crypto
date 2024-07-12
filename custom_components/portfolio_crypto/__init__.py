@@ -11,7 +11,7 @@ import os
 import voluptuous as vol
 import homeassistant.helpers.config_validation as cv
 from .const import DOMAIN, COINGECKO_API_URL, UPDATE_INTERVAL, RATE_LIMIT
-from .db import save_crypto, load_crypto_attributes, delete_crypto_db
+from .db import save_crypto, load_crypto_attributes, delete_crypto_db, save_crypto_to_list
 
 _LOGGER = logging.getLogger(__name__)
 
