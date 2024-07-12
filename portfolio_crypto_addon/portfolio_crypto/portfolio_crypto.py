@@ -11,7 +11,7 @@ import logging
 import time
 from flask import Flask, jsonify, request, render_template, send_file
 from flask_cors import CORS
-from .db import add_transaction, get_transactions, delete_transaction, update_transaction, get_crypto_transactions, create_table, create_crypto_table, save_crypto, get_cryptos, calculate_crypto_profit_loss, load_crypto_attributes, delete_crypto_db, export_db, import_db, import_transactions, verify_cryptos, get_database_path
+from .db import add_transaction, get_transactions, delete_transaction, update_transaction, get_crypto_transactions, create_table, create_crypto_table, save_crypto, get_cryptos, calculate_crypto_profit_loss, load_crypto_attributes, delete_crypto_db, export_db, import_db, import_transactions, verify_cryptos, get_database_path, ensure_table_exists
 import os
 import sqlite3
 import threading
@@ -191,7 +191,9 @@ def calculate_profit_loss(entry_id):
 
     results = []
     for crypto_id, transactions in crypto_groups.items():
-        current_price = get_crypto_price(crypto_id)
+        current_price = get_crypto_price_from_cache(crypto_id)
+        if current_price == 0:
+            logging.warning(f"Prix non trouvé dans le cache pour {crypto_id}, utilisant 0 comme prix.")
         investment = 0
         quantity_held = 0
         for transaction in transactions:
@@ -510,20 +512,6 @@ def get_crypto_price(crypto_id):
         logging.error(f"Erreur lors de la récupération du prix pour {crypto_id}: {e}")
     return None
 
-def ensure_table_exists(db_path, table_name, create_table_sql):
-    try:
-        conn = sqlite3.connect(db_path)
-        cursor = conn.cursor()
-        cursor.execute(f"SELECT name FROM sqlite_master WHERE type='table' AND name='{table_name}'")
-        if cursor.fetchone() is None:
-            cursor.execute(create_table_sql)
-            conn.commit()
-            logging.info(f"Table '{table_name}' créée avec succès.")
-        else:
-            logging.info(f"Table '{table_name}' existe déjà.")
-        conn.close()
-    except Exception as e:
-        logging.error(f"Erreur lors de la création de la table '{table_name}': {e}")
 
 
 if __name__ == "__main__":
