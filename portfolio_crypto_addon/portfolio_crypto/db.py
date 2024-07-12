@@ -340,7 +340,15 @@ def save_crypto_to_list(crypto_name, crypto_id):
 
 def get_crypto_price_from_cache(crypto_id):
     try:
-        conn = sqlite3.connect('price_cache.db')
+        db_path = '/config/custom_components/portfolio_crypto/price_cache.db'
+        ensure_table_exists(db_path, 'price_cache', '''
+            CREATE TABLE IF NOT EXISTS price_cache (
+                crypto_id TEXT PRIMARY KEY,
+                current_price REAL,
+                last_updated TEXT
+            )
+        ''')
+        conn = sqlite3.connect(db_path)
         cursor = conn.cursor()
         cursor.execute('SELECT current_price FROM price_cache WHERE crypto_id = ?', (crypto_id,))
         result = cursor.fetchone()

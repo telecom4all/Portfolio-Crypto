@@ -154,17 +154,17 @@ def get_crypto_id(name):
             return coin['id']
     return None
 
-def get_crypto_price(crypto_id):
-    """Récupérer le prix actuel d'une crypto-monnaie"""
-    #logging.error(f"crypto_id {crypto_id}")
-    url = f"https://api.coingecko.com/api/v3/simple/price?ids={crypto_id}&vs_currencies=usd"
-    logging.error(f"url coingecko : {url}")
-    data = get_data_with_retry(url)
-    if crypto_id in data:
-        return data[crypto_id]['usd']
-    else:
-        logging.error(f"Données de prix pour {crypto_id} introuvables.")
-        return 0
+#def get_crypto_price(crypto_id):
+#    """Récupérer le prix actuel d'une crypto-monnaie"""
+#    #logging.error(f"crypto_id {crypto_id}")
+#    url = f"https://api.coingecko.com/api/v3/simple/price?ids={crypto_id}&vs_currencies=usd"
+#    logging.error(f"url coingecko : {url}")
+#    data = get_data_with_retry(url)
+#    if crypto_id in data:
+#        return data[crypto_id]['usd']
+#    else:
+#        logging.error(f"Données de prix pour {crypto_id} introuvables.")
+#        return 0
 
 def get_historical_price(crypto_id, date):
     """Récupérer le prix historique d'une crypto-monnaie pour une date donnée"""
@@ -418,7 +418,15 @@ def get_all_tracked_cryptos():
 # Fonction pour sauvegarder les prix dans le cache
 def save_price_to_cache(crypto_id, current_price):
     try:
-        conn = sqlite3.connect('/config/custom_components/portfolio_crypto/price_cache.db')
+        db_path = '/config/custom_components/portfolio_crypto/price_cache.db'
+        ensure_table_exists(db_path, 'price_cache', '''
+            CREATE TABLE IF NOT EXISTS price_cache (
+                crypto_id TEXT PRIMARY KEY,
+                current_price REAL,
+                last_updated TEXT
+            )
+        ''')
+        conn = sqlite3.connect(db_path)
         cursor = conn.cursor()
         cursor.execute('''
             INSERT INTO price_cache (crypto_id, current_price, last_updated)
@@ -432,38 +440,29 @@ def save_price_to_cache(crypto_id, current_price):
     except sqlite3.Error as e:
         logging.error(f"Erreur lors de la sauvegarde du prix dans le cache : {e}")
 
+
 # Créer la table list_crypto
 def create_list_crypto_table():
-    try:
-        conn = sqlite3.connect('/config/custom_components/portfolio_crypto/list_crypto.db')
-        cursor = conn.cursor()
-        cursor.execute('''
-            CREATE TABLE IF NOT EXISTS list_crypto (
-                crypto_id TEXT PRIMARY KEY,
-                crypto_name TEXT
-            )
-        ''')
-        conn.commit()
-        conn.close()
-    except sqlite3.Error as e:
-        logging.error(f"Erreur lors de la création de la table list_crypto : {e}")
+    db_path = '/config/custom_components/portfolio_crypto/list_crypto.db'
+    create_table_sql = '''
+        CREATE TABLE IF NOT EXISTS list_crypto (
+            crypto_id TEXT PRIMARY KEY,
+            crypto_name TEXT
+        )
+    '''
+    ensure_table_exists(db_path, 'list_crypto', create_table_sql)
 
 # Créer la table price_cache
 def create_price_cache_table():
-    try:
-        conn = sqlite3.connect('/config/custom_components/portfolio_crypto/price_cache.db')
-        cursor = conn.cursor()
-        cursor.execute('''
-            CREATE TABLE IF NOT EXISTS price_cache (
-                crypto_id TEXT PRIMARY KEY,
-                current_price REAL,
-                last_updated TEXT
-            )
-        ''')
-        conn.commit()
-        conn.close()
-    except sqlite3.Error as e:
-        logging.error(f"Erreur lors de la création de la table price_cache : {e}")
+    db_path = '/config/custom_components/portfolio_crypto/price_cache.db'
+    create_table_sql = '''
+        CREATE TABLE IF NOT EXISTS price_cache (
+            crypto_id TEXT PRIMARY KEY,
+            current_price REAL,
+            last_updated TEXT
+        )
+    '''
+    ensure_table_exists(db_path, 'price_cache', create_table_sql)
 
 def save_crypto_to_list(crypto_name, crypto_id):
     try:
@@ -510,6 +509,22 @@ def get_crypto_price(crypto_id):
     except requests.RequestException as e:
         logging.error(f"Erreur lors de la récupération du prix pour {crypto_id}: {e}")
     return None
+
+def ensure_table_exists(db_path, table_name, create_table_sql):
+    try:
+        conn = sqlite3.connect(db_path)
+        cursor = conn.cursor()
+        cursor.execute(f"SELECT name FROM sqlite_master WHERE type='table' AND name='{table_name}'")
+        if cursor.fetchone() is None:
+            cursor.execute(create_table_sql)
+            conn.commit()
+            logging.info(f"Table '{table_name}' créée avec succès.")
+        else:
+            logging.info(f"Table '{table_name}' existe déjà.")
+        conn.close()
+    except Exception as e:
+        logging.error(f"Erreur lors de la création de la table '{table_name}': {e}")
+
 
 if __name__ == "__main__":
     create_list_crypto_table()

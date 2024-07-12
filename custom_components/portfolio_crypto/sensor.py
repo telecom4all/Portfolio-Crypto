@@ -497,6 +497,7 @@ class CryptoSensor(CoordinatorEntity, SensorEntity):
         value = data_crypto.get(self._sensor_type, "unknown")
         return self._format_value(value)
 
+
     @property
     def unique_id(self):
         return f"{self.config_entry.entry_id}_{self._crypto['id']}_{self._sensor_type}"
