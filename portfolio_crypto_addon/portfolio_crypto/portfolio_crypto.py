@@ -465,6 +465,50 @@ def create_price_cache_table():
     except sqlite3.Error as e:
         logging.error(f"Erreur lors de la création de la table price_cache : {e}")
 
+def save_crypto_to_list(crypto_name, crypto_id):
+    try:
+        conn = sqlite3.connect('list_crypto.db')
+        cursor = conn.cursor()
+        cursor.execute('SELECT 1 FROM list_crypto WHERE crypto_id = ?', (crypto_id,))
+        exists = cursor.fetchone()
+        if not exists:
+            cursor.execute('''
+                INSERT INTO list_crypto (crypto_id, crypto_name)
+                VALUES (?, ?)
+            ''', (crypto_id, crypto_name))
+            conn.commit()
+        conn.close()
+    except sqlite3.Error as e:
+        logging.error(f"Erreur lors de la sauvegarde de la crypto dans list_crypto : {e}")
+
+def get_crypto_price_from_cache(crypto_id):
+    try:
+        conn = sqlite3.connect('price_cache.db')
+        cursor = conn.cursor()
+        cursor.execute('SELECT current_price FROM price_cache WHERE crypto_id = ?', (crypto_id,))
+        result = cursor.fetchone()
+        conn.close()
+        return result[0] if result else 0
+    except sqlite3.Error as e:
+        logging.error(f"Erreur lors de la récupération du prix depuis le cache : {e}")
+        return 0
+
+# Fonction pour récupérer le prix des cryptos depuis une API
+def get_crypto_price(crypto_id):
+    import requests
+    url = f'https://api.coingecko.com/api/v3/simple/price?ids={crypto_id}&vs_currencies=usd'
+    try:
+        response = requests.get(url)
+        if response.status_code == 200:
+            data = response.json()
+            return data.get(crypto_id, {}).get('usd', None)
+        elif response.status_code == 429:
+            logging.error(f"Trop de requêtes vers l'API pour {crypto_id}: {response.status_code}")
+        else:
+            logging.error(f"Erreur HTTP {response.status_code} lors de la récupération du prix pour {crypto_id}")
+    except requests.RequestException as e:
+        logging.error(f"Erreur lors de la récupération du prix pour {crypto_id}: {e}")
+    return None
 
 
 
