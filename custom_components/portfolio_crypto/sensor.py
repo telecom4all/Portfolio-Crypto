@@ -402,6 +402,7 @@ class PortfolioCryptoSensor(CoordinatorEntity, SensorEntity):
         self.coordinator = coordinator
         self.config_entry = config_entry
         self._sensor_type = sensor_type
+        self._name = f"{config_entry.title} {sensor_type}"
         self._attr_name = f"{config_entry.title} {sensor_type.replace('_', ' ').title()}"
         self._attr_unique_id = f"{config_entry.entry_id}_{sensor_type}"
         self._attr_device_info = DeviceInfo(
@@ -460,6 +461,7 @@ class CryptoSensor(CoordinatorEntity, SensorEntity):
         self.config_entry = config_entry
         self._crypto = crypto
         self._sensor_type = sensor_type
+        self._name = f"{crypto['name']} {sensor_type}"
         self._attr_name = f"{config_entry.title} {crypto['name']} {sensor_type.replace('_', ' ').title()}"
         self._attr_unique_id = f"{config_entry.entry_id}_{crypto['id']}_{sensor_type}"
         self._attr_device_info = DeviceInfo(
