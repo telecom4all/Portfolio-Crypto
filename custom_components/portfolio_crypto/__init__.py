@@ -11,7 +11,7 @@ import os
 import voluptuous as vol
 import homeassistant.helpers.config_validation as cv
 from .const import DOMAIN, COINGECKO_API_URL, UPDATE_INTERVAL, RATE_LIMIT
-from .db import save_crypto, load_crypto_attributes, delete_crypto_db
+from .db import save_crypto, load_crypto_attributes, delete_crypto_db, add_crypto_to_general_db
 from .outils import send_req_backend
 from .coingecko import send_req_coingecko, fetch_crypto_id_from_coingecko
 
@@ -366,6 +366,9 @@ class PortfolioCryptoCoordinator(DataUpdateCoordinator):
 
         # Sauvegarder les informations de crypto dans la base de données
         await self.save_crypto_to_db(self.config_entry.entry_id, crypto_name, crypto_id)
+
+        # ajout de la crypto dans la liste des crypto a surveiller 
+        await self.add_crypto_to_general_db(crypto_name, crypto_id)
 
         # Recharger l'intégration pour ajouter les nouvelles cryptomonnaies
         await self.hass.config_entries.async_reload(self.config_entry.entry_id)

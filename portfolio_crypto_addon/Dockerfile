@@ -21,6 +21,9 @@ COPY portfolio_crypto_addon/portfolio_crypto/coingecko.py /app/custom_components
 COPY custom_components/portfolio_crypto/const.py /app/const.py
 COPY custom_components/portfolio_crypto/const.py /app/portfolio_crypto/const.py
 
+COPY portfolio_crypto_addon/portfolio_crypto/price_updater.py /app/custom_components/portfolio_crypto/price_updater.py
+COPY portfolio_crypto_addon/portfolio_crypto/price_updater.py /app/custom_components/price_updater.py
+
 # Installer les dépendances Python
 RUN pip install --no-cache-dir -r requirements.txt
 RUN pip list

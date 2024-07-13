@@ -7,6 +7,22 @@ mkdir -p /config/www
 # Copiez le composant personnalisé dans le répertoire custom_components de Home Assistant
 cp -r /app/custom_components/portfolio_crypto/* /config/custom_components/portfolio_crypto/
 
+
+# Vérifiez et créez les fichiers DB s'ils n'existent pas
+DB_LIST_CRYPTO="/config/list_crypto.db"
+DB_CACHE_PRIX_CRYPTO="/config/cache_prix_crypto.db"
+
+if [ ! -f "$DB_LIST_CRYPTO" ]; then
+    echo "Création de list_crypto.db"
+    sqlite3 $DB_LIST_CRYPTO "CREATE TABLE IF NOT EXISTS cryptos (id INTEGER PRIMARY KEY AUTOINCREMENT, crypto_name TEXT, crypto_id TEXT);"
+fi
+
+if [ ! -f "$DB_CACHE_PRIX_CRYPTO" ]; then
+    echo "Création de cache_prix_crypto.db"
+    sqlite3 $DB_CACHE_PRIX_CRYPTO "CREATE TABLE IF NOT EXISTS prices (id INTEGER PRIMARY KEY AUTOINCREMENT, crypto_id TEXT, price REAL, timestamp TEXT);"
+fi
+
+
 # Copiez le fichier JavaScript du panneau personnalisé dans le répertoire www de Home Assistant
 #cp /app/crypto-transactions-panel.js /config/www/
 #cp /app/icon_portfolio_crypto.png /config/www/
