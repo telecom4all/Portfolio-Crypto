@@ -368,7 +368,7 @@ class PortfolioCryptoCoordinator(DataUpdateCoordinator):
         await self.save_crypto_to_db(self.config_entry.entry_id, crypto_name, crypto_id)
 
         # ajout de la crypto dans la liste des crypto a surveiller 
-        await self.add_crypto_to_general_db(crypto_name, crypto_id)
+        await add_crypto_to_general_db(crypto_name, crypto_id)
 
         # Recharger l'intégration pour ajouter les nouvelles cryptomonnaies
         await self.hass.config_entries.async_reload(self.config_entry.entry_id)
