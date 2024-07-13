@@ -11,7 +11,7 @@ import os
 import voluptuous as vol
 import homeassistant.helpers.config_validation as cv
 from .const import DOMAIN, COINGECKO_API_URL, UPDATE_INTERVAL, RATE_LIMIT
-from .db import save_crypto, load_crypto_attributes, delete_crypto_db, save_crypto_to_list
+from .db import save_crypto, load_crypto_attributes, delete_crypto_db
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -100,20 +100,16 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
         _LOGGER.debug(f"Service add_crypto appelé avec entry_id: {entry_id} et crypto_name: {name}")
         coordinator = hass.data[DOMAIN].get(entry_id)
         if coordinator:
-            crypto_id = await coordinator.fetch_crypto_id(name)
-            if crypto_id:
-                save_crypto_to_list(name, crypto_id)
-                success = await coordinator.add_crypto(name)
-                if success:
-                    await hass.config_entries.async_forward_entry_unload(entry, "sensor")
-                    await hass.config_entries.async_forward_entry_setups(entry, ["sensor"])
-                    _LOGGER.debug(f"Crypto {name} ajoutée avec succès et les entités ont été rechargées.")
-                else:
-                    _LOGGER.error(f"Crypto {name} introuvable ou déjà existante.")
+            success = await coordinator.add_crypto(name)
+            if success:
+                await hass.config_entries.async_forward_entry_unload(entry, "sensor")
+                await hass.config_entries.async_forward_entry_setups(entry, ["sensor"])
+                _LOGGER.debug(f"Crypto {name} ajoutée avec succès et les entités ont été rechargées.")
             else:
-                _LOGGER.error(f"Erreur lors de la récupération de l'ID pour {name}.")
+                _LOGGER.error(f"Crypto {name} introuvable ou déjà existante.")
         else:
             _LOGGER.error(f"Aucun coordinator trouvé pour l'entry_id: {entry_id}")
+
     hass.services.async_register(DOMAIN, "add_crypto", async_add_crypto_service)
 
     async def async_save_transaction_service(call):
@@ -582,3 +578,4 @@ class PortfolioCryptoCoordinator(DataUpdateCoordinator):
         except Exception as e:
             _LOGGER.error(f"Exception lors de l'importation de la base de données: {e}")
             return False
+

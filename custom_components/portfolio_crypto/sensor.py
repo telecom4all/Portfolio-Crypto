@@ -9,12 +9,11 @@ import async_timeout
 import asyncio
 import os
 from .const import DOMAIN, COINGECKO_API_URL, UPDATE_INTERVAL, RATE_LIMIT, UPDATE_INTERVAL_SENSOR, PORT_APP
-from .db import save_crypto, load_crypto_attributes, delete_crypto_db, get_crypto_price_from_cache, save_price_to_cache
+from .db import save_crypto, load_crypto_attributes, delete_crypto_db
 import ast
 
 
 _LOGGER = logging.getLogger(__name__)
-
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
     coordinator = PortfolioCryptoCoordinator(hass, config_entry, update_interval=UPDATE_INTERVAL_SENSOR)  # Fixing update interval to 1 minute
@@ -256,25 +255,14 @@ class PortfolioCryptoCoordinator(DataUpdateCoordinator):
             return 0
 
     async def fetch_current_price(self, crypto_id):
-        # Vérifiez d'abord dans le cache
-        cached_price = get_crypto_price_from_cache(crypto_id)
-        if cached_price != 0:
-            _LOGGER.info(f"Prix trouvé dans le cache pour {crypto_id}: {cached_price}")
-            return cached_price
-
-        # Si le prix n'est pas trouvé dans le cache, faites une requête à l'API CoinGecko
         url_req = f"{COINGECKO_API_URL}/simple/price?ids={crypto_id}&vs_currencies=usd"
-        _LOGGER.info(f"url_req =  {url_req}")
+        _LOGGER.error(f"url_req =  {url_req}")
         try:
             async with aiohttp.ClientSession() as session:
                 async with session.get(url_req) as response:
                     if response.status == 200:
                         data = await response.json()
                         current_price = data[crypto_id]["usd"]
-
-                        # Sauvegardez le prix dans le cache
-                        save_price_to_cache(crypto_id, current_price)
-                        
                         return current_price
                     else:
                         _LOGGER.error(f"Erreur lors de la récupération du prix actuel pour {crypto_id}: {response.status}")
@@ -501,14 +489,10 @@ class CryptoSensor(CoordinatorEntity, SensorEntity):
 
     @property
     def state(self):
-        if self._sensor_type == "current_price":
-            price = get_crypto_price_from_cache(self._crypto['id'])
-            return price if price else 0
         coordinator_data = self.coordinator.data
         data_crypto = coordinator_data.get(self._crypto['id'], {})
         value = data_crypto.get(self._sensor_type, "unknown")
         return self._format_value(value)
-
 
     @property
     def unique_id(self):
@@ -541,4 +525,3 @@ class CryptoSensor(CoordinatorEntity, SensorEntity):
         if isinstance(value, (float, int)):
             return f"{value:.4f}"
         return value
-

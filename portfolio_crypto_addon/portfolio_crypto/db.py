@@ -3,7 +3,6 @@ import os
 import logging
 import requests
 from flask import Flask, jsonify, request, send_file
-from datetime import timedelta, datetime
 
 # Configurer les logs
 logging.basicConfig(level=logging.INFO)
@@ -323,79 +322,3 @@ def verify_cryptos(entry_id, cryptos):
         logging.error(f"Erreur lors de la vérification des cryptos: {e}")
         raise
 
-def save_crypto_to_list(crypto_name, crypto_id):
-    try:
-        conn = sqlite3.connect('list_crypto.db')
-        cursor = conn.cursor()
-        cursor.execute('SELECT 1 FROM list_crypto WHERE crypto_id = ?', (crypto_id,))
-        exists = cursor.fetchone()
-        if not exists:
-            cursor.execute('''
-                INSERT INTO list_crypto (crypto_id, crypto_name)
-                VALUES (?, ?)
-            ''', (crypto_id, crypto_name))
-            conn.commit()
-        conn.close()
-    except sqlite3.Error as e:
-        logging.error(f"Erreur lors de la sauvegarde de la crypto dans list_crypto : {e}")
-
-def get_crypto_price_from_cache(crypto_id):
-    try:
-        db_path = '/config/custom_components/portfolio_crypto/price_cache.db'
-        ensure_table_exists(db_path, 'price_cache', '''
-            CREATE TABLE IF NOT EXISTS price_cache (
-                crypto_id TEXT PRIMARY KEY,
-                current_price REAL,
-                last_updated TEXT
-            )
-        ''')
-        conn = sqlite3.connect(db_path)
-        cursor = conn.cursor()
-        cursor.execute('SELECT current_price FROM price_cache WHERE crypto_id = ?', (crypto_id,))
-        result = cursor.fetchone()
-        conn.close()
-        return result[0] if result else 0
-    except sqlite3.Error as e:
-        logging.error(f"Erreur lors de la récupération du prix depuis le cache : {e}")
-        return 0
-
-
-def ensure_table_exists(db_path, table_name, create_table_sql):
-    try:
-        conn = sqlite3.connect(db_path)
-        cursor = conn.cursor()
-        cursor.execute(f"SELECT name FROM sqlite_master WHERE type='table' AND name='{table_name}'")
-        if cursor.fetchone() is None:
-            cursor.execute(create_table_sql)
-            conn.commit()
-            logging.info(f"Table '{table_name}' créée avec succès.")
-        else:
-            logging.info(f"Table '{table_name}' existe déjà.")
-        conn.close()
-    except Exception as e:
-        logging.error(f"Erreur lors de la création de la table '{table_name}': {e}")
-
-# Fonction pour sauvegarder les prix dans le cache
-def save_price_to_cache(crypto_id, current_price):
-    try:
-        db_path = '/config/custom_components/portfolio_crypto/price_cache.db'
-        ensure_table_exists(db_path, 'price_cache', '''
-            CREATE TABLE IF NOT EXISTS price_cache (
-                crypto_id TEXT PRIMARY KEY,
-                current_price REAL,
-                last_updated TEXT
-            )
-        ''')
-        conn = sqlite3.connect(db_path)
-        cursor = conn.cursor()
-        cursor.execute('''
-            INSERT INTO price_cache (crypto_id, current_price, last_updated)
-            VALUES (?, ?, ?)
-            ON CONFLICT(crypto_id) DO UPDATE SET
-                current_price=excluded.current_price,
-                last_updated=excluded.last_updated
-        ''', (crypto_id, current_price, datetime.now()))
-        conn.commit()
-        conn.close()
-    except sqlite3.Error as e:
-        logging.error(f"Erreur lors de la sauvegarde du prix dans le cache : {e}")

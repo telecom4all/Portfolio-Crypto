@@ -11,10 +11,9 @@ import logging
 import time
 from flask import Flask, jsonify, request, render_template, send_file
 from flask_cors import CORS
-from .db import add_transaction, get_transactions, delete_transaction, update_transaction, get_crypto_transactions, create_table, create_crypto_table, save_crypto, get_cryptos, calculate_crypto_profit_loss, load_crypto_attributes, delete_crypto_db, export_db, import_db, import_transactions, verify_cryptos, get_database_path, ensure_table_exists
+from .db import add_transaction, get_transactions, delete_transaction, update_transaction, get_crypto_transactions, create_table, create_crypto_table, save_crypto, get_cryptos, calculate_crypto_profit_loss, load_crypto_attributes, delete_crypto_db, export_db, import_db, import_transactions, verify_cryptos, get_database_path
 import os
 import sqlite3
-import threading
 from .const import COINGECKO_API_URL, UPDATE_INTERVAL, RATE_LIMIT, PORT_APP
 
 # Configurer les logs
@@ -154,17 +153,17 @@ def get_crypto_id(name):
             return coin['id']
     return None
 
-#def get_crypto_price(crypto_id):
-#    """Récupérer le prix actuel d'une crypto-monnaie"""
-#    #logging.error(f"crypto_id {crypto_id}")
-#    url = f"https://api.coingecko.com/api/v3/simple/price?ids={crypto_id}&vs_currencies=usd"
-#    logging.error(f"url coingecko : {url}")
-#    data = get_data_with_retry(url)
-#    if crypto_id in data:
-#        return data[crypto_id]['usd']
-#    else:
-#        logging.error(f"Données de prix pour {crypto_id} introuvables.")
-#        return 0
+def get_crypto_price(crypto_id):
+    """Récupérer le prix actuel d'une crypto-monnaie"""
+    #logging.error(f"crypto_id {crypto_id}")
+    url = f"https://api.coingecko.com/api/v3/simple/price?ids={crypto_id}&vs_currencies=usd"
+    logging.error(f"url coingecko : {url}")
+    data = get_data_with_retry(url)
+    if crypto_id in data:
+        return data[crypto_id]['usd']
+    else:
+        logging.error(f"Données de prix pour {crypto_id} introuvables.")
+        return 0
 
 def get_historical_price(crypto_id, date):
     """Récupérer le prix historique d'une crypto-monnaie pour une date donnée"""
@@ -191,9 +190,7 @@ def calculate_profit_loss(entry_id):
 
     results = []
     for crypto_id, transactions in crypto_groups.items():
-        current_price = get_crypto_price_from_cache(crypto_id)
-        if current_price == 0:
-            logging.warning(f"Prix non trouvé dans le cache pour {crypto_id}, utilisant 0 comme prix.")
+        current_price = get_crypto_price(crypto_id)
         investment = 0
         quantity_held = 0
         for transaction in transactions:
@@ -390,134 +387,6 @@ def import_database():
         return jsonify({"error": "Erreur Interne"}), 500
 
 
-# Nouvelle fonction pour mettre à jour les prix des cryptos toutes les 5 minutes
-def update_crypto_prices():
-    while True:
-        try:
-            cryptos = get_all_tracked_cryptos()
-            for crypto in cryptos:
-                crypto_id = crypto['crypto_id']
-                current_price = get_crypto_price(crypto_id)
-                if current_price is not None:
-                    save_price_to_cache(crypto_id, current_price)
-        except Exception as e:
-            logging.error(f"Erreur lors de la mise à jour des prix des cryptos : {e}")
-        time.sleep(300)  # 5 minutes
-
-# Fonction pour récupérer toutes les cryptos suivies
-def get_all_tracked_cryptos():
-    try:
-        conn = sqlite3.connect('/config/custom_components/portfolio_crypto/list_crypto.db')
-        cursor = conn.cursor()
-        cursor.execute('SELECT crypto_id FROM list_crypto')
-        cryptos = cursor.fetchall()
-        conn.close()
-        return [{"crypto_id": crypto[0]} for crypto in cryptos]
-    except sqlite3.Error as e:
-        logging.error(f"Erreur lors de la récupération des cryptos suivies : {e}")
-        return []
-
-# Fonction pour sauvegarder les prix dans le cache
-def save_price_to_cache(crypto_id, current_price):
-    try:
-        db_path = '/config/custom_components/portfolio_crypto/price_cache.db'
-        ensure_table_exists(db_path, 'price_cache', '''
-            CREATE TABLE IF NOT EXISTS price_cache (
-                crypto_id TEXT PRIMARY KEY,
-                current_price REAL,
-                last_updated TEXT
-            )
-        ''')
-        conn = sqlite3.connect(db_path)
-        cursor = conn.cursor()
-        cursor.execute('''
-            INSERT INTO price_cache (crypto_id, current_price, last_updated)
-            VALUES (?, ?, ?)
-            ON CONFLICT(crypto_id) DO UPDATE SET
-                current_price=excluded.current_price,
-                last_updated=excluded.last_updated
-        ''', (crypto_id, current_price, datetime.now()))
-        conn.commit()
-        conn.close()
-    except sqlite3.Error as e:
-        logging.error(f"Erreur lors de la sauvegarde du prix dans le cache : {e}")
-
-
-# Créer la table list_crypto
-def create_list_crypto_table():
-    db_path = '/config/custom_components/portfolio_crypto/list_crypto.db'
-    create_table_sql = '''
-        CREATE TABLE IF NOT EXISTS list_crypto (
-            crypto_id TEXT PRIMARY KEY,
-            crypto_name TEXT
-        )
-    '''
-    ensure_table_exists(db_path, 'list_crypto', create_table_sql)
-
-# Créer la table price_cache
-def create_price_cache_table():
-    db_path = '/config/custom_components/portfolio_crypto/price_cache.db'
-    create_table_sql = '''
-        CREATE TABLE IF NOT EXISTS price_cache (
-            crypto_id TEXT PRIMARY KEY,
-            current_price REAL,
-            last_updated TEXT
-        )
-    '''
-    ensure_table_exists(db_path, 'price_cache', create_table_sql)
-
-def save_crypto_to_list(crypto_name, crypto_id):
-    try:
-        conn = sqlite3.connect('/config/custom_components/portfolio_crypto/list_crypto.db')
-        cursor = conn.cursor()
-        cursor.execute('SELECT 1 FROM list_crypto WHERE crypto_id = ?', (crypto_id,))
-        exists = cursor.fetchone()
-        if not exists:
-            cursor.execute('''
-                INSERT INTO list_crypto (crypto_id, crypto_name)
-                VALUES (?, ?)
-            ''', (crypto_id, crypto_name))
-            conn.commit()
-        conn.close()
-    except sqlite3.Error as e:
-        logging.error(f"Erreur lors de la sauvegarde de la crypto dans list_crypto : {e}")
-
-def get_crypto_price_from_cache(crypto_id):
-    try:
-        conn = sqlite3.connect('/config/custom_components/portfolio_crypto/price_cache.db')
-        cursor = conn.cursor()
-        cursor.execute('SELECT current_price FROM price_cache WHERE crypto_id = ?', (crypto_id,))
-        result = cursor.fetchone()
-        conn.close()
-        return result[0] if result else 0
-    except sqlite3.Error as e:
-        logging.error(f"Erreur lors de la récupération du prix depuis le cache : {e}")
-        return 0
-
-# Fonction pour récupérer le prix des cryptos depuis une API
-def get_crypto_price(crypto_id):
-    url = f'https://api.coingecko.com/api/v3/simple/price?ids={crypto_id}&vs_currencies=usd'
-    try:
-        response = requests.get(url)
-        if response.status_code == 200:
-            data = response.json()
-            return data.get(crypto_id, {}).get('usd', None)
-        elif response.status_code == 429:
-            logging.error(f"Trop de requêtes vers l'API pour {crypto_id}: {response.status_code}")
-        elif response.status_code == 404:
-            logging.error(f"Crypto {crypto_id} non trouvée : {response.status_code}")
-        else:
-            logging.error(f"Erreur HTTP {response.status_code} lors de la récupération du prix pour {crypto_id}")
-    except requests.RequestException as e:
-        logging.error(f"Erreur lors de la récupération du prix pour {crypto_id}: {e}")
-    return None
-
-
 
 if __name__ == "__main__":
-    create_list_crypto_table()
-    create_price_cache_table()
-    price_update_thread = threading.Thread(target=update_crypto_prices)
-    price_update_thread.daemon = True
-    price_update_thread.start()
     app.run(host="0.0.0.0", port=PORT_APP)
