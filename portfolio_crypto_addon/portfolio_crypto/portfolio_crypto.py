@@ -233,7 +233,7 @@ def profit_loss(entry_id):
     return jsonify(result)
 
 @app.route('/transaction/<entry_id>', methods=['POST'])
-async def create_transaction(entry_id):
+def create_transaction(entry_id):
     """Créer une nouvelle transaction pour un ID d'entrée donné"""
     try:
         data = request.json
@@ -276,7 +276,7 @@ def delete_transaction_endpoint(entry_id, transaction_id):
         return jsonify({"error": "Erreur Interne"}), 500
 
 @app.route('/transaction/<entry_id>/<int:transaction_id>', methods=['PUT'])
-async def update_transaction_endpoint(entry_id, transaction_id):
+def update_transaction_endpoint(entry_id, transaction_id):
     """Mettre à jour une transaction pour un ID d'entrée donné"""
     try:
         data = request.json
