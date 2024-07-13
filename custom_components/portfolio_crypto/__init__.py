@@ -12,6 +12,8 @@ import voluptuous as vol
 import homeassistant.helpers.config_validation as cv
 from .const import DOMAIN, COINGECKO_API_URL, UPDATE_INTERVAL, RATE_LIMIT
 from .db import save_crypto, load_crypto_attributes, delete_crypto_db
+from .outils import send_req_backend
+
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -230,22 +232,20 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
 async def initialize_database(entry: ConfigEntry, hass: HomeAssistant):
     """Initialize the database for the new portfolio by calling the addon service."""
     try:
-        async with aiohttp.ClientSession() as session:
-            supervisor_token = os.getenv("SUPERVISOR_TOKEN")
-            headers = {
-                "Authorization": f"Bearer {supervisor_token}",
-                "Content-Type": "application/json",
-            }
-            url = "http://localhost:5000/initialize"
-            _LOGGER.info(f"Appel de l'URL {url} avec l'ID d'entrée: {entry.entry_id}")
-            async with session.post(url, json={"entry_id": entry.entry_id}, headers=headers) as response:
-                response_text = await response.text()
-                _LOGGER.info(f"Statut de la réponse: {response.status}, Texte de la réponse: {response_text}")
-                if response.status == 200:
-                    _LOGGER.info(f"Base de données initialisée avec succès pour l'ID d'entrée: {entry.entry_id}")
-                    hass.config_entries.async_update_entry(entry, options={**entry.options, "initialized": True})
-                else:
-                    _LOGGER.error(f"Échec de l'initialisation de la base de données pour l'ID d'entrée: {entry.entry_id}, code de statut: {response.status}, texte de la réponse: {response_text}")
+        url = "http://localhost:5000/initialize"
+        payload={"entry_id": entry.entry_id}
+        _LOGGER.info(f"Appel de l'URL {url} avec l'ID d'entrée: {entry.entry_id} avec le payload : {payload}")
+        
+        initialize_reponse = send_req_backend(url, payload, "initialize Database")
+        if initialize_reponse != False:
+            response_text = await initialize_reponse.text()
+            _LOGGER.info(f"Base de données initialisée avec succès pour l'ID d'entrée: {entry.entry_id}")
+            hass.config_entries.async_update_entry(entry, options={**entry.options, "initialized": True})
+
+        else:
+            _LOGGER.error(f"Échec de l'initialisation de la base de données pour l'ID d'entrée: {entry.entry_id}")
+
+       
     except Exception as e:
         _LOGGER.error(f"Exception survenue lors de l'initialisation de la base de données pour l'ID d'entrée: {entry.entry_id}: {e}")
 

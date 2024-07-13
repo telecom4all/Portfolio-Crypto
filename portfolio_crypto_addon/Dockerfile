@@ -15,7 +15,7 @@ COPY portfolio_crypto_addon/portfolio_crypto/wsgi.py /app/wsgi.py
 #COPY portfolio_crypto_addon/crypto-transactions-panel.js /app/crypto-transactions-panel.js
 COPY portfolio_crypto_addon/portfolio_crypto/db.py /app/custom_components/portfolio_crypto/db.py
 COPY custom_components/portfolio_crypto/icon_portfolio_crypto.png /app/icon_portfolio_crypto.png
-
+COPY portfolio_crypto_addon/portfolio_crypto/outils.py /app/custom_components/portfolio_crypto/outils.py
 
 COPY custom_components/portfolio_crypto/const.py /app/const.py
 COPY custom_components/portfolio_crypto/const.py /app/portfolio_crypto/const.py
