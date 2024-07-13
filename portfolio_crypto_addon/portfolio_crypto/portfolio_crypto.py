@@ -351,6 +351,12 @@ def import_database():
 
 
 
-if __name__ == "__main__":
+def start_app():
+    # Démarrer l'application Flask
     app.run(host="0.0.0.0", port=PORT_APP)
+
+    # Démarrer le thread de mise à jour des prix après le démarrage de Flask
     start_price_updater_thread()
+
+if __name__ == "__main__":
+    start_app()
