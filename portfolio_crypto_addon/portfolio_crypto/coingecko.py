@@ -1,7 +1,7 @@
 import aiohttp
 import os
 import logging
-from .const import DOMAIN, COINGECKO_API_URL, UPDATE_INTERVAL, RATE_LIMIT, UPDATE_INTERVAL_SENSOR, PORT_APP
+from .const import DOMAIN, COINGECKO_API_URL, COINGECKO_API_URL_PRICE, UPDATE_INTERVAL, RATE_LIMIT, UPDATE_INTERVAL_SENSOR, PORT_APP
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -25,6 +25,7 @@ async def send_req_coingecko(url, title, params=None):
     
 async def fetch_crypto_id_from_coingecko(crypto_name_or_id):
     url = f"{COINGECKO_API_URL}?query={crypto_name_or_id}"
+    _LOGGER.error(f"url  {url }")
     response = await send_req_coingecko(url, "Fetch Crypto ID")
     if response and response.status == 200:
         try:
@@ -52,7 +53,7 @@ async def fetch_crypto_id_from_coingecko(crypto_name_or_id):
     
 async def get_crypto_price(crypto_id):
     """Récupérer le prix actuel d'une crypto-monnaie"""
-    url = f"{COINGECKO_API_URL}/simple/price?ids={crypto_id}&vs_currencies=usd"
+    url = f"{COINGECKO_API_URL_PRICE}/simple/price?ids={crypto_id}&vs_currencies=usd"
     _LOGGER.error(f"url  {url }")
     response = await send_req_coingecko(url, "Get Crypto Price")
     if response and response.status == 200:
@@ -73,6 +74,7 @@ async def get_crypto_price(crypto_id):
 async def get_historical_price(crypto_id, date):
     """Récupérer le prix historique d'une crypto-monnaie pour une date donnée"""
     url = f"{COINGECKO_API_URL}/coins/{crypto_id}/history?date={date}"
+    _LOGGER.error(f"url  {url }")
     response = await send_req_coingecko(url, "Get Historical Price")
     if response and response.status == 200:
         try:
