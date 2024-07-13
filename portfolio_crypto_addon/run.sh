@@ -9,8 +9,8 @@ cp -r /app/custom_components/portfolio_crypto/* /config/custom_components/portfo
 
 
 # Vérifiez et créez les fichiers DB s'ils n'existent pas
-DB_LIST_CRYPTO="/config/list_crypto.db"
-DB_CACHE_PRIX_CRYPTO="/config/cache_prix_crypto.db"
+DB_LIST_CRYPTO="/app/list_crypto.db"
+DB_CACHE_PRIX_CRYPTO="/app/cache_prix_crypto.db"
 
 if [ ! -f "$DB_LIST_CRYPTO" ]; then
     echo "Création de list_crypto.db"
