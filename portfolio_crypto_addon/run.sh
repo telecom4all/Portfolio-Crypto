@@ -2,6 +2,7 @@
 
 # Créez le répertoire si nécessaire
 mkdir -p /config/custom_components/portfolio_crypto
+mkdir -p /config/portfolio_crypto
 mkdir -p /config/www
 
 # Copiez le composant personnalisé dans le répertoire custom_components de Home Assistant
@@ -9,8 +10,8 @@ cp -r /app/custom_components/portfolio_crypto/* /config/custom_components/portfo
 
 
 # Vérifiez et créez les fichiers DB s'ils n'existent pas
-DB_LIST_CRYPTO="/app/list_crypto.db"
-DB_CACHE_PRIX_CRYPTO="/app/cache_prix_crypto.db"
+DB_LIST_CRYPTO="/config/portfolio_crypto/list_crypto.db"
+DB_CACHE_PRIX_CRYPTO="/config/portfolio_crypto/cache_prix_crypto.db"
 
 if [ ! -f "$DB_LIST_CRYPTO" ]; then
     echo "Création de list_crypto.db"

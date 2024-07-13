@@ -5,13 +5,14 @@ import threading
 import requests
 import logging
 from datetime import datetime
+from .const import COINGECKO_API_URL, UPDATE_INTERVAL, RATE_LIMIT, PORT_APP, PATH_DB_BASE
 
 logging.basicConfig(level=logging.INFO)
 
 COINGECKO_API_URL = "https://api.coingecko.com/api/v3/simple/price"
 
 def get_crypto_list():
-    conn = sqlite3.connect('/config/list_crypto.db')
+    conn = sqlite3.connect('{PATH_DB_BASE}/list_crypto.db')
     cursor = conn.cursor()
     cursor.execute('SELECT crypto_id FROM cryptos')
     cryptos = cursor.fetchall()
@@ -28,7 +29,7 @@ def update_crypto_price(crypto_id):
         logging.error(f"Failed to fetch price for {crypto_id}: {response.status_code}")
 
 def save_crypto_price(crypto_id, price):
-    conn = sqlite3.connect('/config/cache_prix_crypto.db')
+    conn = sqlite3.connect('{PATH_DB_BASE}/cache_prix_crypto.db')
     cursor = conn.cursor()
     cursor.execute('''
         CREATE TABLE IF NOT EXISTS prices (
@@ -49,6 +50,7 @@ def price_updater():
     while True:
         cryptos = get_crypto_list()
         for crypto_id in cryptos:
+            logging.info(f"*************Update Price**************")
             update_crypto_price(crypto_id)
             time.sleep(300)  # 5 minutes
 

@@ -3,13 +3,15 @@ import os
 import logging
 import requests
 from flask import Flask, jsonify, request, send_file
+from .const import COINGECKO_API_URL, UPDATE_INTERVAL, RATE_LIMIT, PORT_APP, PATH_DB_BASE
 
 # Configurer les logs
 logging.basicConfig(level=logging.INFO)
 
 def get_database_path(entry_id):
     """Récupérer le chemin de la base de données pour un ID d'entrée donné"""
-    db_path = os.path.join(os.getenv('HASS_CONFIG', '.'), f'portfolio_crypto_{entry_id}.db')
+    #db_path = os.path.join(os.getenv('HASS_CONFIG', '.'), f'portfolio_crypto_{entry_id}.db')
+    db_path = f'{PATH_DB_BASE}/portfolio_crypto_{entry_id}.db'
     #logging.info(f"Chemin de la base de données pour l'entrée {entry_id}: {db_path}")
     return db_path
 
