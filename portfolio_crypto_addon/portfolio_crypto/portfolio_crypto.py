@@ -14,6 +14,9 @@ from flask_cors import CORS
 from .db import add_transaction, get_transactions, delete_transaction, update_transaction, get_crypto_transactions, create_table, create_crypto_table, save_crypto, get_cryptos, calculate_crypto_profit_loss, load_crypto_attributes, delete_crypto_db, export_db, import_db, import_transactions, verify_cryptos, get_database_path
 import os
 from .const import COINGECKO_API_URL, UPDATE_INTERVAL, RATE_LIMIT, PORT_APP
+from .coingecko import send_req_coingecko, fetch_crypto_id_from_coingecko, get_crypto_price, get_historical_price
+from .outils import send_req_backend
+
 
 # Configurer les logs
 # Configurer les logs avec un format d'horodatage
@@ -152,27 +155,7 @@ def get_crypto_id(name):
             return coin['id']
     return None
 
-def get_crypto_price(crypto_id):
-    """Récupérer le prix actuel d'une crypto-monnaie"""
-    #logging.error(f"crypto_id {crypto_id}")
-    url = f"https://api.coingecko.com/api/v3/simple/price?ids={crypto_id}&vs_currencies=usd"
-    logging.error(f"url coingecko : {url}")
-    data = get_data_with_retry(url)
-    if crypto_id in data:
-        return data[crypto_id]['usd']
-    else:
-        logging.error(f"Données de prix pour {crypto_id} introuvables.")
-        return 0
 
-def get_historical_price(crypto_id, date):
-    """Récupérer le prix historique d'une crypto-monnaie pour une date donnée"""
-    url = f"https://api.coingecko.com/api/v3/coins/{crypto_id}/history?date={date}"
-    try:
-        data = get_data_with_retry(url)
-        return data['market_data']['current_price']['usd']
-    except (KeyError, requests.exceptions.RequestException) as e:
-        logging.error(f"Erreur lors de la récupération du prix historique pour {crypto_id} à la date {date}: {e}")
-        return None
 
 def calculate_profit_loss(entry_id):
     """Calculer le profit/perte pour un ID d'entrée donné"""
@@ -250,13 +233,13 @@ def profit_loss(entry_id):
     return jsonify(result)
 
 @app.route('/transaction/<entry_id>', methods=['POST'])
-def create_transaction(entry_id):
+async def create_transaction(entry_id):
     """Créer une nouvelle transaction pour un ID d'entrée donné"""
     try:
         data = request.json
         #logging.info(f"Données reçues pour une nouvelle transaction dans l'entrée {entry_id}: {data}")
         crypto_name = data['crypto_name']
-        crypto_id = get_crypto_id(crypto_name)
+        crypto_id = await fetch_crypto_id_from_coingecko(crypto_name)  # Mise à jour pour utiliser fetch_crypto_id_from_coingecko
         if not crypto_id:
             logging.error("Cryptomonnaie introuvable")
             return jsonify({"error": "Cryptomonnaie introuvable"}), 404
@@ -293,13 +276,13 @@ def delete_transaction_endpoint(entry_id, transaction_id):
         return jsonify({"error": "Erreur Interne"}), 500
 
 @app.route('/transaction/<entry_id>/<int:transaction_id>', methods=['PUT'])
-def update_transaction_endpoint(entry_id, transaction_id):
+async def update_transaction_endpoint(entry_id, transaction_id):
     """Mettre à jour une transaction pour un ID d'entrée donné"""
     try:
         data = request.json
         #logging.info(f"Données reçues pour la mise à jour de la transaction dans l'entrée {entry_id}: {data}")
         crypto_name = data['crypto_name']
-        crypto_id = get_crypto_id(crypto_name)
+        crypto_id = await fetch_crypto_id_from_coingecko(crypto_name)  # Mise à jour pour utiliser fetch_crypto_id_from_coingecko
         if not crypto_id:
             logging.error("Cryptomonnaie introuvable")
             return jsonify({"error": "Cryptomonnaie introuvable"}), 404

@@ -59,3 +59,5 @@ async def send_req_backend(url, payload=None, title='', method='post', form_data
     except Exception as e:
         _LOGGER.error(f"Erreur lors de l'appel de l'API: {e}")
         return False
+
+

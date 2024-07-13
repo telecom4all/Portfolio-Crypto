@@ -4,6 +4,8 @@ from homeassistant import config_entries
 from homeassistant.core import callback
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from .const import DOMAIN, COINGECKO_API_URL, PORT_APP
+from .outils import send_req_backend
+from .coingecko import send_req_coingecko, fetch_crypto_id_from_coingecko  
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -43,51 +45,34 @@ class PortfolioCryptoOptionsFlowHandler(config_entries.OptionsFlow):
     async def async_step_add_crypto(self, user_input=None):
         if user_input is not None:
             crypto_name_or_id = user_input.get("crypto_name_or_id")
-            session = async_get_clientsession(self.hass)
-            async with session.get(f"{COINGECKO_API_URL}?query={crypto_name_or_id}") as response:
-                if response.status == 200:
-                    data = await response.json()
-                    crypto_id = None
-                    crypto_name = None
-                    for coin in data:
-                        if coin['name'].lower() == crypto_name_or_id.lower() or coin['id'].lower() == crypto_name_or_id.lower():
-                            crypto_id = coin['id']
-                            crypto_name = coin['name']
-                            break
-                    if crypto_id:
-                        return self.async_show_form(
-                            step_id="confirm_add_crypto",
-                            data_schema=vol.Schema({
-                                vol.Required("crypto_name", default=crypto_name, description="Nom de la cryptomonnaie"): str,
-                                vol.Required("crypto_id", default=crypto_id, description="ID de la cryptomonnaie"): str,
-                            }),
-                            errors={},
-                        )
-                    else:
-                        return self.async_show_form(
-                            step_id="init",
-                            data_schema=vol.Schema({
-                                vol.Required("crypto_name_or_id", description="Nom ou ID de la cryptomonnaie"): str,
-                            }),
-                            errors={"base": "crypto_not_found"},
-                        )
-                else:
-                    return self.async_show_form(
-                        step_id="init",
-                        data_schema=vol.Schema({
-                            vol.Required("crypto_name_or_id", description="Nom ou ID de la cryptomonnaie"): str,
-                        }),
-                        errors={"base": "api_error"},
-                    )
-
+            
+            # Utiliser la fonction importée depuis coingecko.py
+            crypto_id = await fetch_crypto_id_from_coingecko(crypto_name_or_id)
+            
+            if crypto_id:
+                return self.async_show_form(
+                    step_id="confirm_add_crypto",
+                    data_schema=vol.Schema({
+                        vol.Required("crypto_name", default=crypto_name_or_id, description="Nom de la cryptomonnaie"): str,
+                        vol.Required("crypto_id", default=crypto_id, description="ID de la cryptomonnaie"): str,
+                    }),
+                    errors={},
+                )
+            else:
+                return self.async_show_form(
+                    step_id="init",
+                    data_schema=vol.Schema({
+                        vol.Required("crypto_name_or_id", description="Nom ou ID de la cryptomonnaie"): str,
+                    }),
+                    errors={"base": "crypto_not_found"},
+                )
+            
+            
     async def async_step_confirm_add_crypto(self, user_input=None):
         errors = {}
         if user_input is not None:
             crypto_name = user_input.get("crypto_name")
             crypto_id = user_input.get("crypto_id")
-
-            #_LOGGER.error(f"crypto_name : {crypto_name}")
-            #_LOGGER.error(f"crypto_id : {crypto_id}")
 
             # Vérifier si la crypto est déjà enregistrée dans l'intégration
             cryptos = self.config_entry.options.get("cryptos", [])
@@ -97,30 +82,29 @@ class PortfolioCryptoOptionsFlowHandler(config_entries.OptionsFlow):
                 errors["base"] = "crypto_already_exists"
             else:
                 # Vérifier si la crypto existe déjà dans la base de données
-                session = async_get_clientsession(self.hass)
-                async with session.get(f"http://localhost:{PORT_APP}/load_cryptos/{self.config_entry.entry_id}") as response:
-                    if response.status == 200:
-                        db_cryptos = await response.json()
-                        if any(crypto[1] == crypto_id for crypto in db_cryptos):  # Assurez-vous que la structure des données correspond à votre base de données
-                            errors["base"] = "crypto_already_in_db"
-                        else:
-                            # Ajoute la nouvelle crypto
-                            coordinator = self.hass.data[DOMAIN].get(self.config_entry.entry_id)
-                            if coordinator:
-                                success = await coordinator.add_crypto(crypto_name, crypto_id)
-                                if success:
-                                    # Met à jour les options de l'entrée de configuration
-                                    valid_cryptos.append({"name": crypto_name, "id": crypto_id})
-                                    self.hass.config_entries.async_update_entry(self.config_entry, options={**self.config_entry.options, "cryptos": valid_cryptos})
-
-                                    # Reconfigure les entités pour ajouter les nouvelles cryptomonnaies
-                                    await self.hass.config_entries.async_forward_entry_unload(self.config_entry, "sensor")
-                                    await self.hass.config_entries.async_forward_entry_setups(self.config_entry, ["sensor"])
-
-
-                                    return self.async_create_entry(title=crypto_name, data={})
+                url = f"http://localhost:{PORT_APP}/load_cryptos/{self.config_entry.entry_id}"
+                response = await send_req_backend(url, {}, "Load Cryptos", method='get')
+                if response and response.status == 200:
+                    db_cryptos = await response.json()
+                    if any(crypto[1] == crypto_id for crypto in db_cryptos):  # Assurez-vous que la structure des données correspond à votre base de données
+                        errors["base"] = "crypto_already_in_db"
                     else:
-                        errors["base"] = "db_error"
+                        # Ajoute la nouvelle crypto
+                        coordinator = self.hass.data[DOMAIN].get(self.config_entry.entry_id)
+                        if coordinator:
+                            success = await coordinator.add_crypto(crypto_name, crypto_id)
+                            if success:
+                                # Met à jour les options de l'entrée de configuration
+                                valid_cryptos.append({"name": crypto_name, "id": crypto_id})
+                                self.hass.config_entries.async_update_entry(self.config_entry, options={**self.config_entry.options, "cryptos": valid_cryptos})
+
+                                # Reconfigure les entités pour ajouter les nouvelles cryptomonnaies
+                                await self.hass.config_entries.async_forward_entry_unload(self.config_entry, "sensor")
+                                await self.hass.config_entries.async_forward_entry_setups(self.config_entry, ["sensor"])
+
+                                return self.async_create_entry(title=crypto_name, data={})
+                else:
+                    errors["base"] = "db_error"
 
         return self.async_show_form(
             step_id="confirm_add_crypto",

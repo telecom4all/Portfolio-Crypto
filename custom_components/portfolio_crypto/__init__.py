@@ -13,6 +13,8 @@ import homeassistant.helpers.config_validation as cv
 from .const import DOMAIN, COINGECKO_API_URL, UPDATE_INTERVAL, RATE_LIMIT
 from .db import save_crypto, load_crypto_attributes, delete_crypto_db
 from .outils import send_req_backend
+from .coingecko import send_req_coingecko, fetch_crypto_id_from_coingecko
+
 _LOGGER = logging.getLogger(__name__)
 
 # Définir le schéma de validation pour le service
@@ -371,27 +373,7 @@ class PortfolioCryptoCoordinator(DataUpdateCoordinator):
         return True
     
     async def fetch_crypto_id(self, crypto_name):
-        async with aiohttp.ClientSession() as session:
-            try:
-                with async_timeout.timeout(10):
-                    async with session.get(COINGECKO_API_URL) as response:
-                        if response.status == 200:
-                            result = await response.json()
-                            if isinstance(result, list):
-                                for coin in result:
-                                    if isinstance(coin, dict):
-                                        if coin.get('name', '').lower() == crypto_name.lower() or coin.get('id', '').lower() == crypto_name.lower():
-                                            return coin['id']
-                            else:
-                                _LOGGER.error("Unexpected response format from CoinGecko API")
-                                return None
-                        else:
-                            _LOGGER.error(f"Error fetching data from CoinGecko API: {response.status}")
-                            return None
-            except (aiohttp.ClientError, asyncio.TimeoutError) as e:
-                _LOGGER.error(f"Error fetching CoinGecko data: {e}")
-                return None
-        return None
+        return await fetch_crypto_id_from_coingecko(crypto_name)
     
 
 

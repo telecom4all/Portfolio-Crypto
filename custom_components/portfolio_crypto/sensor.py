@@ -12,6 +12,7 @@ from .const import DOMAIN, COINGECKO_API_URL, UPDATE_INTERVAL, RATE_LIMIT, UPDAT
 from .db import save_crypto, load_crypto_attributes, delete_crypto_db
 import ast
 from .outils import send_req_backend
+from .coingecko import send_req_coingecko, fetch_crypto_id_from_coingecko, get_crypto_price
 
 
 _LOGGER = logging.getLogger(__name__)
@@ -114,7 +115,7 @@ class PortfolioCryptoCoordinator(DataUpdateCoordinator):
             else:
                 average_price = 0
 
-            current_price = await self.fetch_current_price(crypto_id)
+            current_price = await get_crypto_price(crypto_id)
 
             crypto_data["transactions_count"] = len(crypto_transactions)
             crypto_data["average_price"] = average_price
@@ -212,23 +213,7 @@ class PortfolioCryptoCoordinator(DataUpdateCoordinator):
         else:
             return 0
         
-    async def fetch_current_price(self, crypto_id):
-        url_req = f"{COINGECKO_API_URL}/simple/price?ids={crypto_id}&vs_currencies=usd"
-        _LOGGER.error(f"url_req =  {url_req}")
-        try:
-            async with aiohttp.ClientSession() as session:
-                async with session.get(url_req) as response:
-                    if response.status == 200:
-                        data = await response.json()
-                        current_price = data[crypto_id]["usd"]
-                        return current_price
-                    else:
-                        _LOGGER.error(f"Erreur lors de la récupération du prix actuel pour {crypto_id}: {response.status}")
-                        return 0
-        except Exception as e:
-            _LOGGER.error(f"Exception lors de la récupération du prix actuel pour {crypto_id}: {e}")
-            return 0
-
+    
 
     async def fetch_crypto_data(self, crypto_id):
         
@@ -274,17 +259,7 @@ class PortfolioCryptoCoordinator(DataUpdateCoordinator):
         return False
 
     async def fetch_crypto_id(self, crypto_name):
-        async with aiohttp.ClientSession() as session:
-            try:
-                with async_timeout.timeout(10):
-                    async with session.get(COINGECKO_API_URL) as response:
-                        result = await response.json()
-                        for coin in result:
-                            if coin['name'].lower() == crypto_name.lower() or coin['id'].lower() == crypto_name.lower():
-                                return coin['id']
-            except (aiohttp.ClientError, asyncio.TimeoutError):
-                _LOGGER.error("Error fetching CoinGecko data")
-        return None
+        return await fetch_crypto_id_from_coingecko(crypto_name)
 
     async def save_crypto_to_db(self, entry_id, crypto_name, crypto_id):
         url = f"http://localhost:{PORT_APP}/save_crypto"
