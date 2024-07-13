@@ -12,9 +12,9 @@ async def send_req_coingecko(url, title, params=None):
 
             async with session.get(url, params=params) as response:
                 response_text = await response.text()
-                _LOGGER.info(f"Statut de la réponse: {response.status}, Texte de la réponse: {response_text}")
+                #_LOGGER.info(f"Statut de la réponse: {response.status}, Texte de la réponse: {response_text}")
                 if response.status == 200:
-                    _LOGGER.info(f"Réponse 200 pour {title} : {response_text}")
+                    #_LOGGER.info(f"Réponse 200 pour {title} : {response_text}")
                     return response
                 else:
                     _LOGGER.error(f"Échec pour la requete CoinGecko : {title}, code de statut: {response.status}, texte de la réponse: {response_text}")
