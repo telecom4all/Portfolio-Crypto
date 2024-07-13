@@ -350,20 +350,3 @@ def verify_cryptos(entry_id, cryptos):
         raise
 
 
-async def add_crypto_to_general_db(crypto_name, crypto_id):
-        """Ajouter une crypto à la base de données générale."""
-        conn = sqlite3.connect('/config/list_crypto.db')
-        cursor = conn.cursor()
-        cursor.execute('''
-            CREATE TABLE IF NOT EXISTS cryptos (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                crypto_name TEXT,
-                crypto_id TEXT
-            )
-        ''')
-        cursor.execute('''
-            INSERT INTO cryptos (crypto_name, crypto_id)
-            VALUES (?, ?)
-        ''', (crypto_name, crypto_id))
-        conn.commit()
-        conn.close()

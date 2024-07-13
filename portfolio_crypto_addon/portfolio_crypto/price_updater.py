@@ -12,7 +12,8 @@ logging.basicConfig(level=logging.INFO)
 COINGECKO_API_URL = "https://api.coingecko.com/api/v3/simple/price"
 
 def get_crypto_list():
-    conn = sqlite3.connect('{PATH_DB_BASE}/list_crypto.db')
+    
+    conn = sqlite3.connect(f'{PATH_DB_BASE}/list_crypto.db')
     cursor = conn.cursor()
     cursor.execute('SELECT crypto_id FROM cryptos')
     cryptos = cursor.fetchall()
@@ -29,7 +30,7 @@ def update_crypto_price(crypto_id):
         logging.error(f"Failed to fetch price for {crypto_id}: {response.status_code}")
 
 def save_crypto_price(crypto_id, price):
-    conn = sqlite3.connect('{PATH_DB_BASE}/cache_prix_crypto.db')
+    conn = sqlite3.connect(f'{PATH_DB_BASE}/cache_prix_crypto.db')
     cursor = conn.cursor()
     cursor.execute('''
         CREATE TABLE IF NOT EXISTS prices (
@@ -53,6 +54,26 @@ def price_updater():
             logging.info(f"*************Update Price**************")
             update_crypto_price(crypto_id)
             time.sleep(300)  # 5 minutes
+
+
+async def add_crypto_to_general_db(crypto_name, crypto_id):
+        """Ajouter une crypto à la base de données générale."""
+        conn = sqlite3.connect(f'{PATH_DB_BASE}/list_crypto.db')
+        cursor = conn.cursor()
+        cursor.execute('''
+            CREATE TABLE IF NOT EXISTS cryptos (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                crypto_name TEXT,
+                crypto_id TEXT
+            )
+        ''')
+        cursor.execute('''
+            INSERT INTO cryptos (crypto_name, crypto_id)
+            VALUES (?, ?)
+        ''', (crypto_name, crypto_id))
+        conn.commit()
+        conn.close()
+
 
 def start_price_updater_thread():
     thread = threading.Thread(target=price_updater)
