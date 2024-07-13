@@ -53,6 +53,7 @@ async def fetch_crypto_id_from_coingecko(crypto_name_or_id):
 async def get_crypto_price(crypto_id):
     """Récupérer le prix actuel d'une crypto-monnaie"""
     url = f"{COINGECKO_API_URL}/simple/price?ids={crypto_id}&vs_currencies=usd"
+    _LOGGER.error(f"url  {url }")
     response = await send_req_coingecko(url, "Get Crypto Price")
     if response and response.status == 200:
         try:
