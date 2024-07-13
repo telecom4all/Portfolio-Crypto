@@ -16,7 +16,7 @@ import os
 from .const import COINGECKO_API_URL, UPDATE_INTERVAL, RATE_LIMIT, PORT_APP
 from .coingecko import send_req_coingecko, fetch_crypto_id_from_coingecko, get_crypto_price, get_historical_price
 from .outils import send_req_backend
-
+import asyncio
 
 # Configurer les logs
 # Configurer les logs avec un format d'horodatage
@@ -239,7 +239,7 @@ def create_transaction(entry_id):
         data = request.json
         #logging.info(f"Données reçues pour une nouvelle transaction dans l'entrée {entry_id}: {data}")
         crypto_name = data['crypto_name']
-        crypto_id = fetch_crypto_id_from_coingecko(crypto_name)  # Utiliser asyncio.run pour appeler la fonction asynchrone
+        crypto_id = asyncio.run(fetch_crypto_id_from_coingecko(crypto_name))  # Utiliser asyncio.run pour appeler la fonction asynchrone
         if not crypto_id:
             logging.error("Cryptomonnaie introuvable")
             return jsonify({"error": "Cryptomonnaie introuvable"}), 404
@@ -282,7 +282,7 @@ def update_transaction_endpoint(entry_id, transaction_id):
         data = request.json
         #logging.info(f"Données reçues pour la mise à jour de la transaction dans l'entrée {entry_id}: {data}")
         crypto_name = data['crypto_name']
-        crypto_id = fetch_crypto_id_from_coingecko(crypto_name)  # Utiliser asyncio.run pour appeler la fonction asynchrone
+        crypto_id = asyncio.run(fetch_crypto_id_from_coingecko(crypto_name))  # Utiliser asyncio.run pour appeler la fonction asynchrone
         if not crypto_id:
             logging.error("Cryptomonnaie introuvable")
             return jsonify({"error": "Cryptomonnaie introuvable"}), 404
