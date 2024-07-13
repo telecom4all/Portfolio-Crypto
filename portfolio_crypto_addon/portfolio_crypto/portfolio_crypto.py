@@ -172,7 +172,7 @@ def calculate_profit_loss(entry_id):
 
     results = []
     for crypto_id, transactions in crypto_groups.items():
-        current_price = get_crypto_price(crypto_id)
+        current_price = asyncio.run(get_crypto_price(crypto_id))
         investment = 0
         quantity_held = 0
         for transaction in transactions:
