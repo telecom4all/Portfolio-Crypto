@@ -11,6 +11,7 @@ import os
 from .const import DOMAIN, COINGECKO_API_URL, UPDATE_INTERVAL, RATE_LIMIT, UPDATE_INTERVAL_SENSOR, PORT_APP
 from .db import save_crypto, load_crypto_attributes, delete_crypto_db
 import ast
+from .outils import send_req_backend
 
 
 _LOGGER = logging.getLogger(__name__)
@@ -141,22 +142,11 @@ class PortfolioCryptoCoordinator(DataUpdateCoordinator):
 
     async def fetch_crypto_profit_loss(self, crypto_id):
         entry_id = self.config_entry.entry_id
-        try:
-            async with aiohttp.ClientSession() as session:
-                async with session.get(f"http://localhost:{PORT_APP}/crypto_profit_loss/{entry_id}/{crypto_id}") as response:
-                    if response.status == 200:
-                        data = await response.json()
-                        return data
-                    else:
-                        _LOGGER.error(f"Erreur lors de la récupération du profit/perte pour {crypto_id}: {response.status}")
-                        return {
-                            "investment": 0,
-                            "current_value": 0,
-                            "profit_loss": 0,
-                            "profit_loss_percent": 0
-                        }
-        except Exception as e:
-            _LOGGER.error(f"Exception lors de la récupération du profit/perte pour {crypto_id}: {e}")
+        url = f"http://localhost:{PORT_APP}/crypto_profit_loss/{entry_id}/{crypto_id}"
+        response = await send_req_backend(url, {}, "Fetch Crypto Profit/Loss", method='get')
+        if response and response.status == 200:
+            return await response.json()
+        else:
             return {
                 "investment": 0,
                 "current_value": 0,
@@ -166,94 +156,62 @@ class PortfolioCryptoCoordinator(DataUpdateCoordinator):
 
     async def fetch_crypto_transactions(self, crypto_id):
         entry_id = self.config_entry.entry_id
-        try:
-            async with aiohttp.ClientSession() as session:
-                async with session.get(f"http://localhost:{PORT_APP}/transactions/{entry_id}/{crypto_id}") as response:
-                    if response.status == 200:
-                        transactions = await response.json()
-                        return transactions
-                    else:
-                        _LOGGER.error(f"Erreur lors de la récupération des transactions pour {crypto_id}: {response.status}")
-                        return []
-        except Exception as e:
-            _LOGGER.error(f"Exception lors de la récupération des transactions pour {crypto_id}: {e}")
+        url = f"http://localhost:{PORT_APP}/transactions/{entry_id}/{crypto_id}"
+        response = await send_req_backend(url, {}, "Fetch Crypto Transactions", method='get')
+        if response and response.status == 200:
+            return await response.json()
+        else:
             return []
         
     async def fetch_transactions(self):
         entry_id = self.config_entry.entry_id
-        try:
-            async with aiohttp.ClientSession() as session:
-                async with session.get(f"http://localhost:{PORT_APP}/transactions/{entry_id}") as response:
-                    if response.status == 200:
-                        transactions = await response.json()
-                        return transactions
-                    else:
-                        _LOGGER.error(f"Erreur lors de la récupération des transactions: {response.status}")
-                        return []
-        except Exception as e:
-            _LOGGER.error(f"Exception lors de la récupération des transactions: {e}")
+        url = f"http://localhost:{PORT_APP}/transactions/{entry_id}"
+        response = await send_req_backend(url, {}, "Fetch Transactions", method='get')
+        if response and response.status == 200:
+            return await response.json()
+        else:
             return []
 
     async def fetch_total_investment(self):
         entry_id = self.config_entry.entry_id
-        try:
-            async with aiohttp.ClientSession() as session:
-                async with session.get(f"http://localhost:{PORT_APP}/profit_loss/{entry_id}") as response:
-                    if response.status == 200:
-                        data = await response.json()
-                        return data['summary']['total_investment']
-                    else:
-                        _LOGGER.error(f"Erreur lors de la récupération de l'investissement total: {response.status}")
-                        return 0
-        except Exception as e:
-            _LOGGER.error(f"Exception lors de la récupération de l'investissement total: {e}")
+        url = f"http://localhost:{PORT_APP}/profit_loss/{entry_id}"
+        response = await send_req_backend(url, {}, "Fetch Total Investment", method='get')
+        if response and response.status == 200:
+            data = await response.json()
+            return data['summary']['total_investment']
+        else:
             return 0
 
     async def fetch_total_profit_loss(self):
         entry_id = self.config_entry.entry_id
-        try:
-            async with aiohttp.ClientSession() as session:
-                async with session.get(f"http://localhost:{PORT_APP}/profit_loss/{entry_id}") as response:
-                    if response.status == 200:
-                        data = await response.json()
-                        return data['summary']['total_profit_loss']
-                    else:
-                        _LOGGER.error(f"Erreur lors de la récupération du profit/perte total: {response.status}")
-                        return 0
-        except Exception as e:
-            _LOGGER.error(f"Exception lors de la récupération du profit/perte total: {e}")
+        url = f"http://localhost:{PORT_APP}/profit_loss/{entry_id}"
+        response = await send_req_backend(url, {}, "Fetch Total Profit/Loss", method='get')
+        if response and response.status == 200:
+            data = await response.json()
+            return data['summary']['total_profit_loss']
+        else:
             return 0
 
     async def fetch_total_profit_loss_percent(self):
         entry_id = self.config_entry.entry_id
-        try:
-            async with aiohttp.ClientSession() as session:
-                async with session.get(f"http://localhost:{PORT_APP}/profit_loss/{entry_id}") as response:
-                    if response.status == 200:
-                        data = await response.json()
-                        return data['summary']['total_profit_loss_percent']
-                    else:
-                        _LOGGER.error(f"Erreur lors de la récupération du pourcentage de profit/perte total: {response.status}")
-                        return 0
-        except Exception as e:
-            _LOGGER.error(f"Exception lors de la récupération du pourcentage de profit/perte total: {e}")
+        url = f"http://localhost:{PORT_APP}/profit_loss/{entry_id}"
+        response = await send_req_backend(url, {}, "Fetch Total Profit/Loss Percent", method='get')
+        if response and response.status == 200:
+            data = await response.json()
+            return data['summary']['total_profit_loss_percent']
+        else:
             return 0
 
     async def fetch_total_value(self):
         entry_id = self.config_entry.entry_id
-        try:
-            async with aiohttp.ClientSession() as session:
-                async with session.get(f"http://localhost:{PORT_APP}/profit_loss/{entry_id}") as response:
-                    if response.status == 200:
-                        data = await response.json()
-                        return data['summary']['total_value']
-                    else:
-                        _LOGGER.error(f"Erreur lors de la récupération de la valeur totale: {response.status}")
-                        return 0
-        except Exception as e:
-            _LOGGER.error(f"Exception lors de la récupération de la valeur totale: {e}")
+        url = f"http://localhost:{PORT_APP}/profit_loss/{entry_id}"
+        response = await send_req_backend(url, {}, "Fetch Total Value", method='get')
+        if response and response.status == 200:
+            data = await response.json()
+            return data['summary']['total_value']
+        else:
             return 0
-
+        
     async def fetch_current_price(self, crypto_id):
         url_req = f"{COINGECKO_API_URL}/simple/price?ids={crypto_id}&vs_currencies=usd"
         _LOGGER.error(f"url_req =  {url_req}")
@@ -329,26 +287,14 @@ class PortfolioCryptoCoordinator(DataUpdateCoordinator):
         return None
 
     async def save_crypto_to_db(self, entry_id, crypto_name, crypto_id):
-        try:
-            async with aiohttp.ClientSession() as session:
-                supervisor_token = os.getenv("SUPERVISOR_TOKEN")
-                headers = {
-                    "Authorization": f"Bearer {supervisor_token}",
-                    "Content-Type": "application/json",
-                }
-                url = f"http://localhost:{PORT_APP}/save_crypto"
-                payload = {
-                    "entry_id": entry_id,
-                    "crypto_name": crypto_name,
-                    "crypto_id": crypto_id
-                }
-                async with session.post(url, json=payload, headers=headers) as response:
-                    if response.status == 200:
-                        _LOGGER.info(f"Crypto {crypto_name} avec ID {crypto_id} sauvegardée dans la base de données.")
-                    else:
-                        _LOGGER.error(f"Erreur lors de la sauvegarde de la crypto {crypto_name} avec ID {crypto_id} dans la base de données.")
-        except Exception as e:
-            _LOGGER.error(f"Exception lors de la sauvegarde de la crypto {crypto_name} avec ID {crypto_id} dans la base de données: {e}")
+        url = f"http://localhost:{PORT_APP}/save_crypto"
+        payload = {
+            "entry_id": entry_id,
+            "crypto_name": crypto_name,
+            "crypto_id": crypto_id
+        }
+        await send_req_backend(url, payload, f"Save Crypto {crypto_name} with ID {crypto_id}")
+
 
     async def delete_crypto(self, crypto_id):
         entry_id = self.config_entry.entry_id
