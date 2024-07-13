@@ -354,31 +354,10 @@ def import_database():
         with open(db_path, 'wb') as db_file:
             db_file.write(file.read())
 
-        conn = sqlite3.connect(db_path)
-        cursor = conn.cursor()
+        missing_cryptos = import_db(entry_id, db_path)
 
-        cursor.execute('SELECT * FROM transactions')
-        transactions = cursor.fetchall()
-        logging.info(f"Transactions lues depuis le fichier: {transactions}")
-
-        cursor.execute('SELECT crypto_name, crypto_id FROM cryptos')
-        cryptos = cursor.fetchall()
-        logging.info(f"Cryptos lues depuis le fichier: {cryptos}")
-
-        conn.close()
-
-        # Assurez-vous que chaque transaction a au moins 9 colonnes
-        formatted_transactions = []
-        for transaction in transactions:
-            if len(transaction) >= 9:
-                formatted_transactions.append(transaction)
-            else:
-                logging.error(f"Transaction avec nombre de colonnes incorrect: {transaction}")
-
-        import_transactions(entry_id, formatted_transactions)
-        missing_cryptos = verify_cryptos(entry_id, cryptos)
-
-        if missing_cryptos:
+        
+        if missing_cryptos == False:
             return jsonify({"message": "Importation partielle", "missing_cryptos": missing_cryptos}), 200
         else:
             return jsonify({"message": "Importation réussie"}), 200

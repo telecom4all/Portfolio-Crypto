@@ -264,12 +264,37 @@ def export_db(entry_id):
         logging.error(f"Erreur lors de l'exportation de la base de données pour l'ID d'entrée {entry_id}: {e}")
         raise
 
-def import_db(entry_id, file):
+def import_db(entry_id, db_path):
     try:
-        db_path = get_database_path(entry_id)
-        with open(db_path, 'wb') as db_file:
-            db_file.write(file.read())
-        logging.info(f"Base de données importée avec succès pour l'ID d'entrée: {entry_id}")
+        conn = sqlite3.connect(db_path)
+        cursor = conn.cursor()
+
+        cursor.execute('SELECT * FROM transactions')
+        transactions = cursor.fetchall()
+        logging.info(f"Transactions lues depuis le fichier: {transactions}")
+
+        cursor.execute('SELECT crypto_name, crypto_id FROM cryptos')
+        cryptos = cursor.fetchall()
+        logging.info(f"Cryptos lues depuis le fichier: {cryptos}")
+
+        conn.close()
+
+        # Assurez-vous que chaque transaction a au moins 9 colonnes
+        formatted_transactions = []
+        for transaction in transactions:
+            if len(transaction) >= 9:
+                formatted_transactions.append(transaction)
+            else:
+                logging.error(f"Transaction avec nombre de colonnes incorrect: {transaction}")
+
+        import_transactions(entry_id, formatted_transactions)
+        missing_cryptos = verify_cryptos(entry_id, cryptos)
+
+        if missing_cryptos:
+            return missing_cryptos
+        else:
+            return False
+        
     except Exception as e:
         logging.error(f"Erreur lors de l'importation de la base de données: {e}")
         raise
