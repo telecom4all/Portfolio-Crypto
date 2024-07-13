@@ -13,8 +13,6 @@ import homeassistant.helpers.config_validation as cv
 from .const import DOMAIN, COINGECKO_API_URL, UPDATE_INTERVAL, RATE_LIMIT
 from .db import save_crypto, load_crypto_attributes, delete_crypto_db
 from .outils import send_req_backend
-
-
 _LOGGER = logging.getLogger(__name__)
 
 # Définir le schéma de validation pour le service
@@ -231,23 +229,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
 
 async def initialize_database(entry: ConfigEntry, hass: HomeAssistant):
     """Initialize the database for the new portfolio by calling the addon service."""
-    try:
-        url = "http://localhost:5000/initialize"
-        payload={"entry_id": entry.entry_id}
-        _LOGGER.info(f"Appel de l'URL {url} avec l'ID d'entrée: {entry.entry_id} avec le payload : {payload}")
-        
-        initialize_reponse = send_req_backend(url, payload, "initialize Database")
-        if initialize_reponse != False:
-            response_text = await initialize_reponse.text()
-            _LOGGER.info(f"Base de données initialisée avec succès pour l'ID d'entrée: {entry.entry_id}")
-            hass.config_entries.async_update_entry(entry, options={**entry.options, "initialized": True})
-
-        else:
-            _LOGGER.error(f"Échec de l'initialisation de la base de données pour l'ID d'entrée: {entry.entry_id}")
-
-       
-    except Exception as e:
-        _LOGGER.error(f"Exception survenue lors de l'initialisation de la base de données pour l'ID d'entrée: {entry.entry_id}: {e}")
+    url = "http://localhost:5000/initialize"
+    payload = {"entry_id": entry.entry_id}
+    await send_req_backend(url, payload, "Initialize Database")
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
     """Décharger une entrée configurée"""
@@ -412,170 +396,49 @@ class PortfolioCryptoCoordinator(DataUpdateCoordinator):
 
 
     async def save_crypto_to_db(self, entry_id, crypto_name, crypto_id):
-        try:
-            async with aiohttp.ClientSession() as session:
-                supervisor_token = os.getenv("SUPERVISOR_TOKEN")
-                headers = {
-                    "Authorization": f"Bearer {supervisor_token}",
-                    "Content-Type": "application/json",
-                }
-                url = f"http://localhost:5000/save_crypto"
-                payload = {
-                    "entry_id": entry_id,
-                    "crypto_name": crypto_name,
-                    "crypto_id": crypto_id
-                }
-                _LOGGER.debug(f"Envoi de la requête à {url} avec payload: {payload}")
-                async with session.post(url, json=payload, headers=headers) as response:
-                    response_text = await response.text()
-                    _LOGGER.debug(f"Réponse reçue: {response.status}, {response_text}")
-                    if response.status == 200:
-                        _LOGGER.info(f"Crypto {crypto_name} avec ID {crypto_id} sauvegardée dans la base de données.")
-                    else:
-                        _LOGGER.error(f"Erreur lors de la sauvegarde de la crypto {crypto_name} avec ID {crypto_id} dans la base de données. Statut: {response.status}, Réponse: {response_text}")
-        except Exception as e:
-            _LOGGER.error(f"Exception lors de la sauvegarde de la crypto {crypto_name} avec ID {crypto_id} dans la base de données: {e}")
+        url = f"http://localhost:5000/save_crypto"
+        payload = {
+            "entry_id": entry_id,
+            "crypto_name": crypto_name,
+            "crypto_id": crypto_id
+        }
+        await send_req_backend(url, payload, f"Save Crypto {crypto_name} with ID {crypto_id}")
+
 
     async def load_cryptos_from_db(self, entry_id):
-        try:
-            async with aiohttp.ClientSession() as session:
-                supervisor_token = os.getenv("SUPERVISOR_TOKEN")
-                headers = {
-                    "Authorization": f"Bearer {supervisor_token}",
-                    "Content-Type": "application/json",
-                }
-                url = f"http://localhost:5000/load_cryptos/{entry_id}"
-                async with session.get(url, headers=headers) as response:
-                    response_text = await response.text()
-                    _LOGGER.info(f"Statut de la réponse: {response.status}, Texte de la réponse: {response_text}")
-                    if response.status == 200:
-                        cryptos = await response.json()
-                        _LOGGER.info(f"Cryptos chargées depuis la base de données: {cryptos}")
-                        return cryptos
-                    else:
-                        _LOGGER.error(f"Erreur lors du chargement des cryptos depuis la base de données pour l'ID d'entrée {entry_id}. Statut: {response.status}, Réponse: {response_text}")
-                        return []
-        except Exception as e:
-            _LOGGER.error(f"Exception lors du chargement des cryptos depuis la base de données pour l'ID d'entrée {entry_id}: {e}")
+        url = f"http://localhost:5000/load_cryptos/{entry_id}"
+        response = await send_req_backend(url, {}, "Load Cryptos", method='get')
+        if response and response.status == 200:
+            cryptos = await response.json()
+            _LOGGER.info(f"Cryptos chargées depuis la base de données: {cryptos}")
+            return cryptos
+        else:
             return []
 
     async def save_transaction(self, transaction):
         entry_id = transaction["entry_id"]
-        try:
-            async with aiohttp.ClientSession() as session:
-                supervisor_token = os.getenv("SUPERVISOR_TOKEN")
-                headers = {
-                    "Authorization": f"Bearer {supervisor_token}",
-                    "Content-Type": "application/json",
-                }
-                url = f"http://localhost:5000/transaction/{entry_id}"
-                _LOGGER.debug(f"Envoi de la requête à {url} avec transaction: {transaction}")
-                async with session.post(url, json=transaction, headers=headers) as response:
-                    response_text = await response.text()
-                    _LOGGER.debug(f"Réponse reçue: {response.status}, {response_text}")
-                    if response.status == 200:
-                        _LOGGER.info("Transaction sauvegardée avec succès.")
-                        return True
-                    else:
-                        _LOGGER.error(f"Erreur lors de la sauvegarde de la transaction. Statut: {response.status}, Réponse: {response_text}")
-                        return False
-        except Exception as e:
-            _LOGGER.error(f"Exception lors de la sauvegarde de la transaction: {e}")
-            return False
+        url = f"http://localhost:5000/transaction/{entry_id}"
+        return await send_req_backend(url, transaction, "Save Transaction")
+
 
     async def delete_transaction(self, transaction_id):
         entry_id = self.config_entry.entry_id
-        try:
-            async with aiohttp.ClientSession() as session:
-                supervisor_token = os.getenv("SUPERVISOR_TOKEN")
-                headers = {
-                    "Authorization": f"Bearer {supervisor_token}",
-                    "Content-Type": "application/json",
-                }
-                url = f"http://localhost:5000/transaction/{entry_id}/{transaction_id}"
-                async with session.delete(url, headers=headers) as response:
-                    response_text = await response.text()
-                    _LOGGER.debug(f"Réponse reçue: {response.status}, {response_text}")
-                    if response.status == 200:
-                        _LOGGER.info("Transaction supprimée avec succès.")
-                        return True
-                    else:
-                        _LOGGER.error(f"Erreur lors de la suppression de la transaction. Statut: {response.status}, Réponse: {response_text}")
-                        return False
-        except Exception as e:
-            _LOGGER.error(f"Exception lors de la suppression de la transaction: {e}")
-            return False
+        url = f"http://localhost:5000/transaction/{entry_id}/{transaction_id}"
+        return await send_req_backend(url, {}, "Delete Transaction", method='delete')
+
 
     async def update_transaction(self, transaction):
         entry_id = transaction["entry_id"]
         transaction_id = transaction["transaction_id"]
-        try:
-            async with aiohttp.ClientSession() as session:
-                supervisor_token = os.getenv("SUPERVISOR_TOKEN")
-                headers = {
-                    "Authorization": f"Bearer {supervisor_token}",
-                    "Content-Type": "application/json",
-                }
-                url = f"http://localhost:5000/transaction/{entry_id}/{transaction_id}"
-                _LOGGER.debug(f"Envoi de la requête à {url} avec transaction: {transaction}")
-                async with session.put(url, json=transaction, headers=headers) as response:
-                    response_text = await response.text()
-                    _LOGGER.debug(f"Réponse reçue: {response.status}, {response_text}")
-                    if response.status == 200:
-                        _LOGGER.info("Transaction mise à jour avec succès.")
-                        return True
-                    else:
-                        _LOGGER.error(f"Erreur lors de la mise à jour de la transaction. Statut: {response.status}, Réponse: {response_text}")
-                        return False
-        except Exception as e:
-            _LOGGER.error(f"Exception lors de la mise à jour de la transaction: {e}")
-            return False
+        url = f"http://localhost:5000/transaction/{entry_id}/{transaction_id}"
+        return await send_req_backend(url, transaction, "Update Transaction", method='put')
+
 
     async def export_db(self, entry_id):
-        try:
-            async with aiohttp.ClientSession() as session:
-                supervisor_token = os.getenv("SUPERVISOR_TOKEN")
-                headers = {
-                    "Authorization": f"Bearer {supervisor_token}",
-                    "Content-Type": "application/octet-stream"
-                }
-                url = f"http://localhost:5000/export_db/{entry_id}"
-                _LOGGER.debug(f"Envoi de la requête à {url}")
-                async with session.get(url, headers=headers) as response:
-                    response_text = await response.text()
-                    _LOGGER.debug(f"Réponse reçue: {response.status}, {response_text}")
-                    if response.status == 200:
-                        _LOGGER.info("Base de données exportée avec succès.")
-                        return True
-                    else:
-                        _LOGGER.error(f"Erreur lors de l'exportation de la base de données. Statut: {response.status}, Réponse: {response_text}")
-                        return False
-        except Exception as e:
-            _LOGGER.error(f"Exception lors de l'exportation de la base de données: {e}")
-            return False
+        url = f"http://localhost:5000/export_db/{entry_id}"
+        response = await send_req_backend(url, {}, "Export Database", method='get')
+        return response and response.status == 200
 
     async def import_db(self, entry_id, file):
-        try:
-            form_data = aiohttp.FormData()
-            form_data.add_field('file', file, filename=file.name)
-            form_data.add_field('entry_id', entry_id)
-            async with aiohttp.ClientSession() as session:
-                supervisor_token = os.getenv("SUPERVISOR_TOKEN")
-                headers = {
-                    "Authorization": f"Bearer {supervisor_token}",
-                }
-                url = f"http://localhost:5000/import_db"
-                _LOGGER.debug(f"Envoi de la requête à {url} avec le fichier {file.name}")
-                async with session.post(url, data=form_data, headers=headers) as response:
-                    response_text = await response.text()
-                    _LOGGER.debug(f"Réponse reçue: {response.status}, {response_text}")
-                    if response.status == 200:
-                        _LOGGER.info("Base de données importée avec succès.")
-                        return True
-                    else:
-                        _LOGGER.error(f"Erreur lors de l'importation de la base de données. Statut: {response.status}, Réponse: {response_text}")
-                        return False
-        except Exception as e:
-            _LOGGER.error(f"Exception lors de l'importation de la base de données: {e}")
-            return False
-
+        url = f"http://localhost:5000/import_db"
+        return await send_req_backend(url, title="Import DB", method='post', form_data={'file': file, 'entry_id': entry_id})
