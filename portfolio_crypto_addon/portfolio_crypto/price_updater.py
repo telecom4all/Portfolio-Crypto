@@ -48,6 +48,7 @@ def save_crypto_price(crypto_id, price):
     conn.close()
 
 def price_updater():
+    logging.info("Price updater thread has started running.")
     while True:
         cryptos = get_crypto_list()
         for crypto_id in cryptos:
@@ -76,6 +77,8 @@ async def add_crypto_to_general_db(crypto_name, crypto_id):
 
 
 def start_price_updater_thread():
+    logging.info("Initializing the price updater thread...")
     thread = threading.Thread(target=price_updater)
     thread.daemon = True
     thread.start()
+    logging.info("Price updater thread initialized successfully.")
