@@ -146,14 +146,14 @@ def get_data_with_retry(url, retries=5, backoff_factor=1.0):
                 raise e
     raise requests.exceptions.RequestException(f"Échec de la récupération des données depuis {url} après {retries} tentatives")
 
-def get_crypto_id(name):
-    """Récupérer l'ID d'une crypto-monnaie en fonction de son nom"""
-    url = f"https://api.coingecko.com/api/v3/search?query={name}"
-    data = get_data_with_retry(url)
-    for coin in data['coins']:
-        if coin['name'].lower() == name.lower():
-            return coin['id']
-    return None
+#def get_crypto_id(name):
+#    """Récupérer l'ID d'une crypto-monnaie en fonction de son nom"""
+#    url = f"https://api.coingecko.com/api/v3/search?query={name}"
+#    data = get_data_with_retry(url)
+#    for coin in data['coins']:
+#        if coin['name'].lower() == name.lower():
+#            return coin['id']
+#    return None
 
 
 
