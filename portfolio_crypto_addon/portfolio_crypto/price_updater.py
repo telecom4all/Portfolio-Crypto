@@ -6,6 +6,7 @@ import time
 import requests
 import logging
 from datetime import datetime
+import asyncio
 from .const import COINGECKO_API_URL, UPDATE_INTERVAL, RATE_LIMIT, PORT_APP, PATH_DB_BASE, UPDATE_INTERVAL_PRICE_UPDATER
 
 
@@ -99,4 +100,5 @@ async def update_crypto_prices():
     for crypto_id in cryptos:
         logging.info(f"Updating price for {crypto_id}")
         await update_crypto_price(crypto_id)
+        await asyncio.sleep(60)  # Sleep for 1 minute
     logging.info("Finished updating crypto prices")

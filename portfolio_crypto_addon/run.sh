@@ -119,6 +119,13 @@ def post_fork(server, worker):
     logging.config.dictConfig(logging_config)
 EOL
 
+
+# Set environment variables
+#export GUNICORN_CONF=/app/gunicorn_config.py
+
+# Start the cron job for updating prices
+python3 /app/portfolio_crypto/cron_job_price.py &
+
 # Démarrer l'application Flask avec Gunicorn
 gunicorn --config $GUNICORN_CONF --bind 0.0.0.0:5000 portfolio_crypto.portfolio_crypto:app &
 gunicorn --config $GUNICORN_CONF --bind 0.0.0.0:8099 portfolio_crypto.portfolio_crypto:app &
