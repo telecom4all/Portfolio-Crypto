@@ -12,3 +12,4 @@ RATE_LIMIT = 30  # Limite de taux en minutes pour les requêtes à CoinGecko
 UPDATE_INTERVAL_SENSOR = 15 # Intervalle de mise à jour en minutes
 PORT_APP = 5000
 PATH_DB_BASE = "/config/portfolio_crypto"
+UPDATE_INTERVAL_PRICE_UPDATER = 2
