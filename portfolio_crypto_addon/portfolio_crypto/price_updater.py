@@ -8,20 +8,24 @@ import logging
 from datetime import datetime
 from .const import COINGECKO_API_URL, UPDATE_INTERVAL, RATE_LIMIT, PORT_APP, PATH_DB_BASE, UPDATE_INTERVAL_PRICE_UPDATER
 
+
+# Configurer les logs
+logging.basicConfig(level=logging.INFO)
+
 # Configurer un logger spécifique pour price_updater
-logger = logging.getLogger('price_updater')
-logger.setLevel(logging.INFO)
+#logger = logging.getLogger('price_updater')
+#logger.setLevel(logging.INFO)
 
 # Créer un gestionnaire de fichiers pour enregistrer les logs
-file_handler = logging.FileHandler('/config/portfolio_crypto/price_updater.log')
-file_handler.setLevel(logging.INFO)
+#file_handler = logging.FileHandler('/config/portfolio_crypto/price_updater.log')
+#file_handler.setLevel(logging.INFO)
 
 # Créer un formatteur et l'ajouter au gestionnaire
-formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s')
-file_handler.setFormatter(formatter)
+#formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s')
+#file_handler.setFormatter(formatter)
 
 # Ajouter le gestionnaire au logger
-logger.addHandler(file_handler)
+#logger.addHandler(file_handler)
 
 def get_crypto_list():
     conn = sqlite3.connect(f'{PATH_DB_BASE}/list_crypto.db')
