@@ -385,11 +385,12 @@ async def update_crypto_prices():
 
 
 def start_app():
-    logging.info("Starting the price updater cron job...")
+    logging.info("*************Starting the price updater cron job...*********")
     logging.info("Price updater cron job started successfully.")
 
     # Démarrer l'application Flask
     app.run(host="0.0.0.0", port=PORT_APP)
 
 if __name__ == "__main__":
+    logging.info("*****************Starting APP***************")
     start_app()
