@@ -17,7 +17,7 @@ from .const import COINGECKO_API_URL, UPDATE_INTERVAL, RATE_LIMIT, PORT_APP
 from .coingecko import send_req_coingecko, fetch_crypto_id_from_coingecko, get_crypto_price, get_historical_price
 from .outils import send_req_backend
 import asyncio
-from apscheduler.schedulers.background import BackgroundScheduler
+from threading import Thread
 from .price_updater import start_scheduler
 
 
@@ -362,7 +362,8 @@ def start_flask_app():
 
 def start_app():
     logger.info("Starting the price updater scheduler...")
-    start_scheduler()
+    scheduler_thread = Thread(target=start_scheduler)
+    scheduler_thread.start()
     logger.info("Price updater scheduler started successfully.")
     start_flask_app()
 
