@@ -1,14 +1,12 @@
 import logging
 import asyncio
-import aiocron
 import sqlite3
 import requests
 from datetime import datetime
 
 PATH_DB_BASE = "/config/portfolio_crypto"
-UPDATE_INTERVAL_PRICE_UPDATER = 120
-COINGECKO_API_URL = "https://api.coingecko.com/api/v3/coins/list"
-COINGECKO_API_URL_PRICE = "https://api.coingecko.com/api/v3"
+UPDATE_INTERVAL_PRICE_UPDATER = 180  # 3 minutes en secondes
+COINGECKO_API_URL_PRICE = "https://api.coingecko.com/api/v3/simple/price"
 
 # Configurer les logs
 logging.basicConfig(level=logging.INFO, format='%(asctime)s %(levelname)s:%(name)s:%(message)s')
@@ -24,7 +22,7 @@ def get_crypto_list():
 
 def update_crypto_price(crypto_id):
     try:
-        url = f"{COINGECKO_API_URL_PRICE}/simple/price?ids={crypto_id}&vs_currencies=usd"
+        url = f"{COINGECKO_API_URL_PRICE}?ids={crypto_id}&vs_currencies=usd"
         logging.info(f"URL PRICE UPDATER {url}")
         response = requests.get(url)
         if response.status_code == 200:
@@ -61,28 +59,26 @@ def save_crypto_price(crypto_id, price):
 
 async def update_crypto_prices():
     logging.info("Starting to update crypto prices...")
-    cryptos = get_crypto_list()  # No need to await here
+    cryptos = get_crypto_list()
     for crypto_id in cryptos:
         logging.info(f"Updating price for {crypto_id}")
-        update_crypto_price(crypto_id)  # No need to await here
-        await asyncio.sleep(60)  # Sleep for 1 minute
+        update_crypto_price(crypto_id)
+        await asyncio.sleep(UPDATE_INTERVAL_PRICE_UPDATER)  # Sleep for the defined interval
     logging.info("Finished updating crypto prices")
 
 
-@aiocron.crontab('*/5 * * * *')
-async def scheduled_task():
-    logging.info("Tâche cron démarrée")
-    try:
-        await update_crypto_prices()
-        logging.info("Tâche cron terminée avec succès")
-    except Exception as e:
-        logging.error(f"Erreur lors de l'exécution de la tâche cron : {e}")
-
-
 async def main():
-    logging.info("Starting scheduled tasks...")
     while True:
-        await asyncio.sleep(UPDATE_INTERVAL_PRICE_UPDATER)  # Sleep for UPDATE_INTERVAL_PRICE_UPDATER seconds
+        try:
+            logging.info("Starting price updater loop...")
+            await update_crypto_prices()
+            # Sleep for a short interval before starting the next cycle to avoid tight looping
+            await asyncio.sleep(60)  # Sleep for 1 minute before checking for new cryptos and starting the loop again
+        except Exception as e:
+            logging.error(f"Unhandled error occurred: {e}")
+            # Optionally, wait a bit before restarting the loop
+            await asyncio.sleep(10)
+
 
 if __name__ == "__main__":
     asyncio.run(main())
