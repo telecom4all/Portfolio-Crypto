@@ -43,14 +43,13 @@ def save_crypto_price(crypto_id, price):
     cursor = conn.cursor()
     cursor.execute('''
         CREATE TABLE IF NOT EXISTS prices (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            crypto_id TEXT,
+            crypto_id TEXT PRIMARY KEY,
             price REAL,
             timestamp TEXT
         )
     ''')
     cursor.execute('''
-        INSERT INTO prices (crypto_id, price, timestamp)
+        INSERT OR REPLACE INTO prices (crypto_id, price, timestamp)
         VALUES (?, ?, ?)
     ''', (crypto_id, price, datetime.now().isoformat()))
     conn.commit()
@@ -59,13 +58,22 @@ def save_crypto_price(crypto_id, price):
 
 async def update_crypto_prices():
     logging.info("Starting to update crypto prices...")
-    cryptos = get_crypto_list()
-    for crypto_id in cryptos:
-        logging.info(f"Updating price for {crypto_id}")
-        update_crypto_price(crypto_id)
-        await asyncio.sleep(UPDATE_INTERVAL_PRICE_UPDATER)  # Sleep for the defined interval
-    logging.info("Finished updating crypto prices")
-
+    crypto_to_check = get_crypto_list()  # Initial load of crypto list
+    
+    while True:
+        for crypto_id in crypto_to_check:
+            logging.info(f"Updating price for {crypto_id}")
+            update_crypto_price(crypto_id)
+            await asyncio.sleep(UPDATE_INTERVAL_PRICE_UPDATER)  # Sleep for the defined interval
+            
+            # Check for new cryptos in the database and update the list if necessary
+            current_crypto_list = get_crypto_list()
+            for crypto in current_crypto_list:
+                if crypto not in crypto_to_check:
+                    logging.info(f"New crypto found and added to list: {crypto}")
+                    crypto_to_check.append(crypto)
+        
+        logging.info("Finished updating crypto prices. Restarting the process to check for new cryptos.")
 
 async def main():
     while True:
