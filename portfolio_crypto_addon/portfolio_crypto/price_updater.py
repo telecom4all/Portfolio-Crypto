@@ -67,18 +67,6 @@ def save_crypto_price(crypto_id, price):
     conn.commit()
     conn.close()
 
-#def price_updater():
-#    logger.info("Starting price updater...")
-#    while True:
-#        try:
-#            cryptos = get_crypto_list()
-#            logger.info(f"Cryptos to update: {cryptos}")
-#            for crypto_id in cryptos:
-#                update_crypto_price(crypto_id)
-#            time.sleep(UPDATE_INTERVAL_PRICE_UPDATER)
-#        except Exception as e:
-#            logger.error(f"Error in price updater: {e}")
-#            time.sleep(UPDATE_INTERVAL_PRICE_UPDATER)
 
 
 async def add_crypto_to_general_db(crypto_name, crypto_id):
@@ -99,28 +87,6 @@ async def add_crypto_to_general_db(crypto_name, crypto_id):
     conn.commit()
     conn.close()
 
-#def start_price_updater_thread():
-#    logger.info("Initializing the price updater thread...")
-#    thread = threading.Thread(target=price_updater)
-#    thread.daemon = True
-#    thread.start()
-#    logger.info("Price updater thread initialized successfully.")
-#def update_prices():
-#    logger.info("Démarrage de la mise à jour des prix...")
-#    cryptos = get_crypto_list()
-#    logger.info(f"Cryptos à mettre à jour: {cryptos}")
-#    for crypto_id in cryptos:
-#        update_crypto_price(crypto_id)
-
-#def start_scheduler():
-#    schedule.every(UPDATE_INTERVAL_PRICE_UPDATER).minutes.do(update_prices)
-#    logger.info("Planificateur de mise à jour des prix démarré.")
-#    while True:
-#        schedule.run_pending()
-#        time.sleep(1)
-
-#if __name__ == "__main__":
-#    start_scheduler()
 
 
 async def update_crypto_prices():

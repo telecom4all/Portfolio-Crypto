@@ -14,7 +14,7 @@ from .const import DOMAIN, COINGECKO_API_URL, UPDATE_INTERVAL, RATE_LIMIT
 from .db import save_crypto, load_crypto_attributes, delete_crypto_db
 from .outils import send_req_backend
 from .coingecko import send_req_coingecko, fetch_crypto_id_from_coingecko
-from .price_updater import start_price_updater_thread, add_crypto_to_general_db
+from .price_updater import add_crypto_to_general_db
 
 _LOGGER = logging.getLogger(__name__)
 
