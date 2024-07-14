@@ -17,7 +17,7 @@ from .const import COINGECKO_API_URL, UPDATE_INTERVAL, RATE_LIMIT, PORT_APP
 from .coingecko import send_req_coingecko, fetch_crypto_id_from_coingecko, get_crypto_price, get_historical_price
 from .outils import send_req_backend
 import asyncio
-from .price_updater import start_price_updater_thread
+from .price_updater import start_scheduler
 
 
 # Configurer les logs
@@ -360,9 +360,9 @@ def start_flask_app():
     app.run(host="0.0.0.0", port=PORT_APP)
 
 def start_app():
-    logger.info("Starting the price updater thread...")
-    start_price_updater_thread()
-    logger.info("Price updater thread started successfully.")
+    logger.info("Starting the price updater scheduler...")
+    start_scheduler()
+    logger.info("Price updater scheduler started successfully.")
     start_flask_app()
 
 if __name__ == "__main__":
