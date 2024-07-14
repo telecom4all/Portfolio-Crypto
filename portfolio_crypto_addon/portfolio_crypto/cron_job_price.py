@@ -1,7 +1,8 @@
 import logging
 import asyncio
 import aiocron
-from .price_updater import update_crypto_prices
+from portfolio_crypto.price_updater import update_crypto_prices
+
 
 # Configurer les logs
 logging.basicConfig(level=logging.INFO, format='%(asctime)s %(levelname)s:%(name)s:%(message)s')
