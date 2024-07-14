@@ -2,7 +2,6 @@ import logging
 import asyncio
 import aiocron
 import sqlite3
-#import threading
 import requests
 from datetime import datetime
 
@@ -25,7 +24,7 @@ def get_crypto_list():
 
 def update_crypto_price(crypto_id):
     try:
-        url = f"{COINGECKO_API_URL}?ids={crypto_id}&vs_currencies=usd"
+        url = f"{COINGECKO_API_URL_PRICE}/simple/price?ids={crypto_id}&vs_currencies=usd"
         logging.info(f"URL PRICE UPDATER {url}")
         response = requests.get(url)
         if response.status_code == 200:
@@ -60,17 +59,16 @@ def save_crypto_price(crypto_id, price):
     conn.close()
 
 
-
 async def update_crypto_prices():
     logging.info("Starting to update crypto prices...")
-    cryptos = await get_crypto_list()
+    cryptos = get_crypto_list()  # No need to await here
     for crypto_id in cryptos:
         logging.info(f"Updating price for {crypto_id}")
-        await update_crypto_price(crypto_id)
+        update_crypto_price(crypto_id)  # No need to await here
         await asyncio.sleep(60)  # Sleep for 1 minute
     logging.info("Finished updating crypto prices")
 
-    
+
 @aiocron.crontab('*/5 * * * *')
 async def scheduled_task():
     logging.info("Tâche cron démarrée")
@@ -80,13 +78,11 @@ async def scheduled_task():
     except Exception as e:
         logging.error(f"Erreur lors de l'exécution de la tâche cron : {e}")
 
+
 async def main():
     logging.info("Starting scheduled tasks...")
-    # Start the cron job manually to avoid waiting for the first interval
-    await scheduled_task()
-    # Keep the script running to allow the cron job to run
     while True:
-        await asyncio.sleep(UPDATE_INTERVAL_PRICE_UPDATER)  # Sleep for 1 minute
+        await asyncio.sleep(UPDATE_INTERVAL_PRICE_UPDATER)  # Sleep for UPDATE_INTERVAL_PRICE_UPDATER seconds
 
 if __name__ == "__main__":
     asyncio.run(main())
