@@ -11,7 +11,6 @@ COINGECKO_API_URL_PRICE = "https://api.coingecko.com/api/v3/simple/price"
 # Configurer les logs
 logging.basicConfig(level=logging.INFO, format='%(asctime)s %(levelname)s:%(name)s:%(message)s')
 
-
 def get_crypto_list():
     conn = sqlite3.connect(f'{PATH_DB_BASE}/list_crypto.db')
     cursor = conn.cursor()
@@ -47,10 +46,22 @@ def save_crypto_price(crypto_id, price):
             timestamp TEXT
         )
     ''')
-    cursor.execute('''
-        INSERT OR REPLACE INTO prices (crypto_id, price, timestamp)
-        VALUES (?, ?, ?)
-    ''', (crypto_id, price, datetime.now().isoformat()))
+    # Check if the crypto_id already exists
+    cursor.execute('SELECT 1 FROM prices WHERE crypto_id = ?', (crypto_id,))
+    exists = cursor.fetchone() is not None
+
+    if exists:
+        cursor.execute('''
+            UPDATE prices
+            SET price = ?, timestamp = ?
+            WHERE crypto_id = ?
+        ''', (price, datetime.now().isoformat(), crypto_id))
+    else:
+        cursor.execute('''
+            INSERT INTO prices (crypto_id, price, timestamp)
+            VALUES (?, ?, ?)
+        ''', (crypto_id, price, datetime.now().isoformat()))
+
     conn.commit()
     conn.close()
 
