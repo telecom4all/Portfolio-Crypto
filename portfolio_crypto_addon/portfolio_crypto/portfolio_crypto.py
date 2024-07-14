@@ -18,7 +18,7 @@ from .coingecko import send_req_coingecko, fetch_crypto_id_from_coingecko, get_c
 from .outils import send_req_backend
 import asyncio
 import aiocron
-from .price_updater import start_scheduler
+from .price_updater import update_crypto_prices
 
 
 # Configurer les logs
