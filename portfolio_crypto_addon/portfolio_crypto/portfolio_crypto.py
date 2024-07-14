@@ -17,7 +17,7 @@ from .const import COINGECKO_API_URL, UPDATE_INTERVAL, RATE_LIMIT, PORT_APP
 from .coingecko import send_req_coingecko, fetch_crypto_id_from_coingecko, get_crypto_price, get_historical_price
 from .outils import send_req_backend
 import asyncio
-from threading import Thread
+import aiocron
 from .price_updater import start_scheduler
 
 
@@ -356,16 +356,17 @@ def import_database():
 
 
 
-def start_flask_app():
-    logger.info("Starting Flask app...")
-    app.run(host="0.0.0.0", port=PORT_APP)
+# Ajouter une tâche cron pour la mise à jour des prix
+@aiocron.crontab('*/5 * * * *')  # Tâche cron pour exécuter toutes les 5 minutes
+async def scheduled_task():
+    await update_crypto_prices()
 
 def start_app():
-    logger.info("Starting the price updater scheduler...")
-    scheduler_thread = Thread(target=start_scheduler)
-    scheduler_thread.start()
-    logger.info("Price updater scheduler started successfully.")
-    start_flask_app()
+    logging.info("Starting the price updater cron job...")
+    logging.info("Price updater cron job started successfully.")
+
+    # Démarrer l'application Flask
+    app.run(host="0.0.0.0", port=PORT_APP)
 
 if __name__ == "__main__":
     start_app()

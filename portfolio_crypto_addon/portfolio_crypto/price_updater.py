@@ -6,7 +6,6 @@ import time
 import requests
 import logging
 from datetime import datetime
-import schedule
 from .const import COINGECKO_API_URL, UPDATE_INTERVAL, RATE_LIMIT, PORT_APP, PATH_DB_BASE, UPDATE_INTERVAL_PRICE_UPDATER
 
 # Configurer un logger spécifique pour price_updater
@@ -68,18 +67,18 @@ def save_crypto_price(crypto_id, price):
     conn.commit()
     conn.close()
 
-def price_updater():
-    logger.info("Starting price updater...")
-    while True:
-        try:
-            cryptos = get_crypto_list()
-            logger.info(f"Cryptos to update: {cryptos}")
-            for crypto_id in cryptos:
-                update_crypto_price(crypto_id)
-            time.sleep(UPDATE_INTERVAL_PRICE_UPDATER)
-        except Exception as e:
-            logger.error(f"Error in price updater: {e}")
-            time.sleep(UPDATE_INTERVAL_PRICE_UPDATER)
+#def price_updater():
+#    logger.info("Starting price updater...")
+#    while True:
+#        try:
+#            cryptos = get_crypto_list()
+#            logger.info(f"Cryptos to update: {cryptos}")
+#            for crypto_id in cryptos:
+#                update_crypto_price(crypto_id)
+#            time.sleep(UPDATE_INTERVAL_PRICE_UPDATER)
+#        except Exception as e:
+#            logger.error(f"Error in price updater: {e}")
+#            time.sleep(UPDATE_INTERVAL_PRICE_UPDATER)
 
 
 async def add_crypto_to_general_db(crypto_name, crypto_id):
@@ -106,19 +105,28 @@ async def add_crypto_to_general_db(crypto_name, crypto_id):
 #    thread.daemon = True
 #    thread.start()
 #    logger.info("Price updater thread initialized successfully.")
-def update_prices():
-    logger.info("Démarrage de la mise à jour des prix...")
-    cryptos = get_crypto_list()
-    logger.info(f"Cryptos à mettre à jour: {cryptos}")
+#def update_prices():
+#    logger.info("Démarrage de la mise à jour des prix...")
+#    cryptos = get_crypto_list()
+#    logger.info(f"Cryptos à mettre à jour: {cryptos}")
+#    for crypto_id in cryptos:
+#        update_crypto_price(crypto_id)
+
+#def start_scheduler():
+#    schedule.every(UPDATE_INTERVAL_PRICE_UPDATER).minutes.do(update_prices)
+#    logger.info("Planificateur de mise à jour des prix démarré.")
+#    while True:
+#        schedule.run_pending()
+#        time.sleep(1)
+
+#if __name__ == "__main__":
+#    start_scheduler()
+
+
+async def update_crypto_prices():
+    logging.info("Starting to update crypto prices...")
+    cryptos = await get_crypto_list()
     for crypto_id in cryptos:
-        update_crypto_price(crypto_id)
-
-def start_scheduler():
-    schedule.every(UPDATE_INTERVAL_PRICE_UPDATER).minutes.do(update_prices)
-    logger.info("Planificateur de mise à jour des prix démarré.")
-    while True:
-        schedule.run_pending()
-        time.sleep(1)
-
-if __name__ == "__main__":
-    start_scheduler()
+        logging.info(f"Updating price for {crypto_id}")
+        await update_crypto_price(crypto_id)
+    logging.info("Finished updating crypto prices")
