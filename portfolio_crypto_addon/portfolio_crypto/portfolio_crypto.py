@@ -28,6 +28,10 @@ from .price_updater import start_price_updater_thread
 #    datefmt='%Y-%m-%d %H:%M:%S'
 #)
 
+# Configuration des logs
+logging.basicConfig(level=logging.INFO, format='%(asctime)s %(levelname)s:%(name)s:%(message)s')
+logger = logging.getLogger(__name__)
+
 
 # Configurer le cache
 expire_after = timedelta(minutes=RATE_LIMIT)
@@ -351,16 +355,15 @@ def import_database():
 
 
 
-def start_app():
-    logging.info("**********Starting the price updater thread...************")
-    
-    # Démarrer le thread de mise à jour des prix avant de démarrer Flask
-    start_price_updater_thread()
-    
-    logging.info("*************Price updater thread started successfully.**********")
-
-    # Démarrer l'application Flask
+def start_flask_app():
+    logger.info("Starting Flask app...")
     app.run(host="0.0.0.0", port=PORT_APP)
+
+def start_app():
+    logger.info("Starting the price updater thread...")
+    start_price_updater_thread()
+    logger.info("Price updater thread started successfully.")
+    start_flask_app()
 
 if __name__ == "__main__":
     start_app()

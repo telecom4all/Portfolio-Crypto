@@ -14,12 +14,12 @@ DB_LIST_CRYPTO="/config/portfolio_crypto/list_crypto.db"
 DB_CACHE_PRIX_CRYPTO="/config/portfolio_crypto/cache_prix_crypto.db"
 
 if [ ! -f "$DB_LIST_CRYPTO" ]; then
-    echo "Création de list_crypto.db"
+    echo $DB_LIST_CRYPTO
     sqlite3 $DB_LIST_CRYPTO "CREATE TABLE IF NOT EXISTS cryptos (id INTEGER PRIMARY KEY AUTOINCREMENT, crypto_name TEXT, crypto_id TEXT);"
 fi
 
 if [ ! -f "$DB_CACHE_PRIX_CRYPTO" ]; then
-    echo "Création de cache_prix_crypto.db"
+    echo $DB_CACHE_PRIX_CRYPTO
     sqlite3 $DB_CACHE_PRIX_CRYPTO "CREATE TABLE IF NOT EXISTS prices (id INTEGER PRIMARY KEY AUTOINCREMENT, crypto_id TEXT, price REAL, timestamp TEXT);"
 fi
 
