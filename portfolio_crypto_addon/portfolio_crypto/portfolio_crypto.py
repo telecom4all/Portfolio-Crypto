@@ -44,6 +44,9 @@ app = Flask(__name__, template_folder='/config/custom_components/portfolio_crypt
 
 CORS(app, resources={r"/*": {"origins": "*"}})  # Permettre toutes les origines pour toutes les routes
 
+
+
+
 @app.route('/')
 def index():
     try:
@@ -330,6 +333,7 @@ def delete_crypto(entry_id, crypto_id):
 @app.route('/export_db/<entry_id>', methods=['GET'])
 def export_database(entry_id):
     try:
+       
         return export_db(entry_id)
     except Exception as e:
         return jsonify({"error": "Erreur Interne"}), 500
@@ -356,10 +360,13 @@ def import_database():
 
 
 
-# Ajouter une tâche cron pour la mise à jour des prix
-@aiocron.crontab('*/5 * * * *')  # Tâche cron pour exécuter toutes les 5 minutes
+# Définir la tâche cron pour mettre à jour les prix toutes les 5 minutes
+@aiocron.crontab('*/5 * * * *')
 async def scheduled_task():
+    logging.info("Tâche cron démarrée")
     await update_crypto_prices()
+    logging.info("Tâche cron terminée")
+
 
 def start_app():
     logging.info("Starting the price updater cron job...")
