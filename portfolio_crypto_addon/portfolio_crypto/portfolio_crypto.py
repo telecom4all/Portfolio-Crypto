@@ -18,7 +18,7 @@ from .coingecko import send_req_coingecko, fetch_crypto_id_from_coingecko, get_c
 from .outils import send_req_backend
 import asyncio
 import aiocron
-from .price_updater import update_crypto_prices
+from .price_updater import get_crypto_list, update_crypto_price
 
 
 # Configurer les logs
@@ -361,11 +361,27 @@ def import_database():
 
 
 # Définir la tâche cron pour mettre à jour les prix toutes les 5 minutes
+
 @aiocron.crontab('*/5 * * * *')
 async def scheduled_task():
     logging.info("Tâche cron démarrée")
-    await update_crypto_prices()
-    logging.info("Tâche cron terminée")
+    try:
+        await update_crypto_prices()
+        logging.info("Tâche cron terminée avec succès")
+    except Exception as e:
+        logging.error(f"Erreur lors de l'exécution de la tâche cron : {e}")
+
+async def update_crypto_prices():
+    logging.info("Starting to update crypto prices...")
+    try:
+        cryptos = await get_crypto_list()
+        for crypto_id in cryptos:
+            logging.info(f"Updating price for {crypto_id}")
+            await update_crypto_price(crypto_id)
+        logging.info("Finished updating crypto prices")
+    except Exception as e:
+        logging.error(f"Erreur lors de la mise à jour des prix des cryptos : {e}")
+
 
 
 def start_app():
