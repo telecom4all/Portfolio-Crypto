@@ -352,12 +352,12 @@ def import_database():
 
 
 def start_app():
-    logging.info("Starting the price updater thread...")
+    logging.info("**********Starting the price updater thread...************")
     
     # Démarrer le thread de mise à jour des prix avant de démarrer Flask
     start_price_updater_thread()
     
-    logging.info("Price updater thread started successfully.")
+    logging.info("*************Price updater thread started successfully.**********")
 
     # Démarrer l'application Flask
     app.run(host="0.0.0.0", port=PORT_APP)

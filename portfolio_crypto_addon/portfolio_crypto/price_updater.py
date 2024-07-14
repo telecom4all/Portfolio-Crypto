@@ -7,7 +7,23 @@ import logging
 from datetime import datetime
 from .const import COINGECKO_API_URL, UPDATE_INTERVAL, RATE_LIMIT, PORT_APP, PATH_DB_BASE
 
-logging.basicConfig(level=logging.INFO)
+#logging.basicConfig(level=logging.INFO)
+
+# Configurer un logger spécifique pour price_updater
+logger = logging.getLogger('price_updater')
+logger.setLevel(logging.INFO)
+
+# Créer un gestionnaire de fichiers pour enregistrer les logs
+file_handler = logging.FileHandler('/config/portfolio_crypto/price_updater.log')
+file_handler.setLevel(logging.INFO)
+
+# Créer un formatteur et l'ajouter au gestionnaire
+formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s')
+file_handler.setFormatter(formatter)
+
+# Ajouter le gestionnaire au logger
+logger.addHandler(file_handler)
+
 
 COINGECKO_API_URL = "https://api.coingecko.com/api/v3/simple/price"
 
