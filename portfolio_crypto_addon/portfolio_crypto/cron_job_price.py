@@ -81,7 +81,7 @@ async def main():
             await update_crypto_prices()
         except Exception as e:
             logging.error(f"Unhandled error occurred: {e}")
-            await asyncio.sleep(10)  # Wait a bit before restarting in case of error
+            await asyncio.sleep(60)  # Wait a bit before restarting in case of error
 
 if __name__ == "__main__":
     asyncio.run(main())

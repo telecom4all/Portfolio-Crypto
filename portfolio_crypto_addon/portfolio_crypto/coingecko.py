@@ -53,23 +53,32 @@ async def fetch_crypto_id_from_coingecko(crypto_name_or_id):
     
 async def get_crypto_price(crypto_id):
     """Récupérer le prix actuel d'une crypto-monnaie"""
-    url = f"{COINGECKO_API_URL_PRICE}/simple/price?ids={crypto_id}&vs_currencies=usd"
-    _LOGGER.error(f"url  {url }")
-    response = await send_req_coingecko(url, "Get Crypto Price")
-    if response and response.status == 200:
-        try:
-            data = await response.json()
-            if crypto_id in data:
-                return data[crypto_id]['usd']
-            else:
-                _LOGGER.error(f"Données de prix pour {crypto_id} introuvables.")
-                return 0
-        except Exception as e:
-            _LOGGER.error(f"Erreur lors du traitement des données de l'API CoinGecko: {e}")
-            return 0
+    conn = sqlite3.connect(f'{PATH_DB_BASE}/cache_prix_crypto.db')
+    cursor = conn.cursor()
+    cursor.execute('SELECT price FROM prices WHERE crypto_id = ?', (crypto_id,))
+    row = cursor.fetchone()
+    conn.close()
+
+    if row:
+        return row[0]
     else:
-        _LOGGER.error(f"Erreur lors de la récupération du prix pour {crypto_id}")
-        return 0
+        url = f"{COINGECKO_API_URL_PRICE}?ids={crypto_id}&vs_currencies=usd"
+        logging.info(f"url {url}")
+        response = await send_req_coingecko(url, "Get Crypto Price")
+        if response and response.status_code == 200:
+            try:
+                data = response.json()
+                if crypto_id in data:
+                    return data[crypto_id]['usd']
+                else:
+                    logging.error(f"Données de prix pour {crypto_id} introuvables.")
+                    return 0
+            except Exception as e:
+                logging.error(f"Erreur lors du traitement des données de l'API CoinGecko: {e}")
+                return 0
+        else:
+            logging.error(f"Erreur lors de la récupération du prix pour {crypto_id}")
+            return 0
 
 async def get_historical_price(crypto_id, date):
     """Récupérer le prix historique d'une crypto-monnaie pour une date donnée"""
