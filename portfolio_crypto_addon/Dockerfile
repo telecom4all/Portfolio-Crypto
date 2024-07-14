@@ -30,7 +30,7 @@ RUN pip install --no-cache-dir -r requirements.txt
 RUN pip list
 
 # Installer Nginx
-RUN apt-get update && apt-get install -y nginx sqlite3 && mkdir -p /run/nginx && rm -rf /var/lib/apt/lists/*
+RUN apt-get update && apt-get install -y nginx sqlite3 nano && mkdir -p /run/nginx && rm -rf /var/lib/apt/lists/*
 
 # Copier le fichier de configuration Nginx
 COPY portfolio_crypto_addon/ingress.conf /etc/nginx/http.d/

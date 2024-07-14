@@ -17,6 +17,7 @@ from .const import COINGECKO_API_URL, UPDATE_INTERVAL, RATE_LIMIT, PORT_APP
 from .coingecko import send_req_coingecko, fetch_crypto_id_from_coingecko, get_crypto_price, get_historical_price
 from .outils import send_req_backend
 import asyncio
+from apscheduler.schedulers.background import BackgroundScheduler
 from .price_updater import start_scheduler
 
 
