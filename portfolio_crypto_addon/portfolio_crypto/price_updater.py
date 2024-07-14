@@ -7,7 +7,6 @@ import requests
 import logging
 from datetime import datetime
 from apscheduler.schedulers.background import BackgroundScheduler
-from apscheduler.triggers.interval import IntervalTrigger
 from .const import COINGECKO_API_URL, UPDATE_INTERVAL, RATE_LIMIT, PORT_APP, PATH_DB_BASE, UPDATE_INTERVAL_PRICE_UPDATER
 
 # Configurer un logger spécifique pour price_updater
@@ -113,12 +112,11 @@ def update_prices():
     logger.info(f"Cryptos à mettre à jour: {cryptos}")
     for crypto_id in cryptos:
         update_crypto_price(crypto_id)
-        
+
 
 def start_scheduler():
     scheduler = BackgroundScheduler()
-    trigger = IntervalTrigger(seconds=UPDATE_INTERVAL)
-    scheduler.add_job(update_prices, trigger)
+    scheduler.add_job(update_prices, 'interval', minutes=UPDATE_INTERVAL)
     scheduler.start()
     logger.info("Planificateur de mise à jour des prix démarré.")
 
