@@ -119,7 +119,8 @@ def post_fork(server, worker):
     logging.config.dictConfig(logging_config)
 EOL
 
-
+export GUNICORN_CONF=/app/gunicorn_config.py
+export PYTHONPATH=/app
 # Set environment variables
 #export GUNICORN_CONF=/app/gunicorn_config.py
 
