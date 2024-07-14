@@ -38,19 +38,19 @@ def get_crypto_list():
 def update_crypto_price(crypto_id):
     try:
         url = f"{COINGECKO_API_URL}?ids={crypto_id}&vs_currencies=usd"
-        logger.info(f"URL PRICE UPDATER {url}")
+        logging.info(f"URL PRICE UPDATER {url}")
         response = requests.get(url)
         if response.status_code == 200:
             price = response.json().get(crypto_id, {}).get('usd', 0)
             if price:
-                logger.info(f"Prix récupéré pour {crypto_id}: {price}")
+                logging.info(f"Prix récupéré pour {crypto_id}: {price}")
                 save_crypto_price(crypto_id, price)
             else:
-                logger.error(f"Prix non trouvé dans la réponse pour {crypto_id}: {response.json()}")
+                logging.error(f"Prix non trouvé dans la réponse pour {crypto_id}: {response.json()}")
         else:
-            logger.error(f"Échec de la récupération du prix pour {crypto_id}: {response.status_code}")
+            logging.error(f"Échec de la récupération du prix pour {crypto_id}: {response.status_code}")
     except Exception as e:
-        logger.error(f"Erreur lors de la mise à jour du prix pour {crypto_id}: {e}")
+        logging.error(f"Erreur lors de la mise à jour du prix pour {crypto_id}: {e}")
 
 
 def save_crypto_price(crypto_id, price):
