@@ -24,53 +24,53 @@ L'intégration "Portfolio Crypto" permet de gérer et surveiller vos investissem
 1. Accédez à votre interface Home Assistant.
 2. Cliquez sur `Paramètres` dans le menu de gauche.
 3. Sélectionnez `Modules complémentaires` puis cliquez sur `Boutique des modules complémentaires` et cliquez sur l'icone avec les 3 point en haut à droite, puis cliquez sur `Dépots`.
-   ![Modules complémentaires](images/1.png)
+   ![Modules complémentaires](https://raw.githubusercontent.com/telecom4all/Portfolio-Crypto/main/images/1.png)
 3. Ajoutez l'adresse :  `https://github.com/telecom4all/Portfolio-Crypto` et cliquez sur `Ajouter`.
-   ![Installer Repo Portfolio Crypto](images/2.png)   
+   ![Installer Repo Portfolio Crypto](https://raw.githubusercontent.com/telecom4all/Portfolio-Crypto/main/images/2.png)   
 4. Rafraîchissez le cache du navigateur `CTRL-F5`.
 5. Recherchez `Portfolio Crypto` et cliquez sur `Installer`.
-   ![Rechercher Portfolio Crypto](images/4.png)
-   ![Installer Portfolio Crypto](images/5.png)
+   ![Rechercher Portfolio Crypto](https://raw.githubusercontent.com/telecom4all/Portfolio-Crypto/main/images/4.png)
+   ![Installer Portfolio Crypto](https://raw.githubusercontent.com/telecom4all/Portfolio-Crypto/main/images/5.png)
 6. Démarez `Portfolio Crypto` et cliquez sur `Chien de Garde`.
-   ![Rechercher Portfolio Crypto](images/6.png)
+   ![Rechercher Portfolio Crypto](https://raw.githubusercontent.com/telecom4all/Portfolio-Crypto/main/images/6.png)
 7. Aller dans  `Journal`, actualisez jusqu'au moment ou vous verrez `Insatallation est terminée ...` 
-   ![Rechercher Portfolio Crypto](images/8.png)
+   ![Rechercher Portfolio Crypto](https://raw.githubusercontent.com/telecom4all/Portfolio-Crypto/main/images/8.png)
 8. Redémarrez `Homeassisant`
-   ![Rechercher Portfolio Crypto](images/9.png)
+   ![Rechercher Portfolio Crypto](https://raw.githubusercontent.com/telecom4all/Portfolio-Crypto/main/images/9.png)
 
 
 ### Étapes d'installation Intégration
 
 1. Accédez à `Paramètres` - `Appareils et Services`.
-   ![Rechercher Portfolio Crypto](images/10.png)
+   ![Rechercher Portfolio Crypto](https://raw.githubusercontent.com/telecom4all/Portfolio-Crypto/main/images/10.png)
 2. Cliquez sur `Ajouter une intégration` et recherchez `Portfolio Crypto` cliquez dessus pour l'installer.
-   ![Rechercher Portfolio Crypto](images/12.png)
+   ![Rechercher Portfolio Crypto](https://raw.githubusercontent.com/telecom4all/Portfolio-Crypto/main/images/12.png)
 3. Donner un nom a votre `Portefeuille` 
-   ![Rechercher Portfolio Crypto](images/13.png)
+   ![Rechercher Portfolio Crypto](https://raw.githubusercontent.com/telecom4all/Portfolio-Crypto/main/images/13.png)
 4. Vous verrez l'intégration `Portfolio Crypto` la liste et un nouveau panel dans la sidebar
-   ![Rechercher Portfolio Crypto](images/15.png)
+   ![Rechercher Portfolio Crypto](https://raw.githubusercontent.com/telecom4all/Portfolio-Crypto/main/images/15.png)
 
 
 ## Configuration
 ### Ajouter une Cryptomonnaie
 
 1. Une Fois dans votre `Portefeuille` cliquer sur `configurer` pour ajouter une `crypto`
-   ![Rechercher Portfolio Crypto](images/16.png)
+   ![Rechercher Portfolio Crypto](https://raw.githubusercontent.com/telecom4all/Portfolio-Crypto/main/images/16.png)
 
 2. Rentrez `l'id coingecko` ou le `nom de la crypto` que vous voulez ajouter puis  `Portefeuille` cliquer sur `Valider` pour rechercher le bon id sur coingecko
-   ![Rechercher Portfolio Crypto](images/17.png)
+   ![Rechercher Portfolio Crypto](https://raw.githubusercontent.com/telecom4all/Portfolio-Crypto/main/images/17.png)
 
 3. Vérifiez que le `nom` et l'`id` a bien été trouvé et cliquez sur `valider` pour ajouter la crypto
-   ![Rechercher Portfolio Crypto](images/18.png)
+   ![Rechercher Portfolio Crypto](https://raw.githubusercontent.com/telecom4all/Portfolio-Crypto/main/images/18.png)
 
 4. cliquez sur l'icone avec les 3 point du `portefeuille` pour recharger l'intégration (a faire a chaque fois que l'on ajoute une crypto)
-   ![Rechercher Portfolio Crypto](images/20.png)
+   ![Rechercher Portfolio Crypto](https://raw.githubusercontent.com/telecom4all/Portfolio-Crypto/main/images/20.png)
 
 5. Vous pourrez voir les `entités` qui on été crée
-   ![Rechercher Portfolio Crypto](images/29.png)
+   ![Rechercher Portfolio Crypto](https://raw.githubusercontent.com/telecom4all/Portfolio-Crypto/main/images/29.png)
 
 6. Vous pourrez voir les `appareils` qui on été crée
-   ![Rechercher Portfolio Crypto](images/31.png)
+   ![Rechercher Portfolio Crypto](https://raw.githubusercontent.com/telecom4all/Portfolio-Crypto/main/images/31.png)
 
 ### Configurer l'ingress et l'url externe
 
@@ -85,7 +85,7 @@ L'intégration "Portfolio Crypto" permet de gérer et surveiller vos investissem
     
 
 5. Redémarez `homeassistant` pour prendre en compte les modification 
-   ![Rechercher Portfolio Crypto](images/40.png)
+   ![Rechercher Portfolio Crypto](https://raw.githubusercontent.com/telecom4all/Portfolio-Crypto/main/images/40.png)
 
 
 ## Utilisation
@@ -105,9 +105,9 @@ L'intégration "Portfolio Crypto" permet de suivre toutes vos transactions d'ach
     - Lieu
     - Date
 
-    ![Rechercher Portfolio Crypto](images/41.png)
-    ![Rechercher Portfolio Crypto](images/42.png)
-    ![Rechercher Portfolio Crypto](images/44.png)
+    ![Rechercher Portfolio Crypto](https://raw.githubusercontent.com/telecom4all/Portfolio-Crypto/main/images/41.png)
+    ![Rechercher Portfolio Crypto](https://raw.githubusercontent.com/telecom4all/Portfolio-Crypto/main/images/42.png)
+    ![Rechercher Portfolio Crypto](https://raw.githubusercontent.com/telecom4all/Portfolio-Crypto/main/images/44.png)
 
 - **Modifier une Transaction** :
 
@@ -120,12 +120,12 @@ L'intégration "Portfolio Crypto" permet de suivre toutes vos transactions d'ach
 - **Exportez votre fichier de base de donnée sql** :
 
     Cliquez sur le boutton `Exporter Db` cela téléchargera cotre db sur votre ordinateur.
-    ![Rechercher Portfolio Crypto](images/46.png)
+    ![Rechercher Portfolio Crypto](https://raw.githubusercontent.com/telecom4all/Portfolio-Crypto/main/images/46.png)
 
 - **Importez votre fichier de base de donnée sql** :
 
     Cliquez sur le boutton `Importer Db` et aller chercher votre fichier sur l'ordinateur.
-    ![Rechercher Portfolio Crypto](images/47.png)
+    ![Rechercher Portfolio Crypto](https://raw.githubusercontent.com/telecom4all/Portfolio-Crypto/main/images/47.png)
 
 ### Calcul des Profits et Pertes
 
@@ -146,7 +146,7 @@ Les informations suivantes sont disponibles pour le portefeuille:
 - Nombre de transactions
 - prix d'achat moyen
 
-![Rechercher Portfolio Crypto](images/49.png)
+![Rechercher Portfolio Crypto](https://raw.githubusercontent.com/telecom4all/Portfolio-Crypto/main/images/49.png)
 
 ## Dépannage
 
