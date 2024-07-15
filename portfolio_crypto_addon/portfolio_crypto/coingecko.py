@@ -17,6 +17,9 @@ async def send_req_coingecko(url, title, params=None):
                 if response.status == 200:
                     #_LOGGER.info(f"Réponse 200 pour {title} : {response_text}")
                     return response
+                elif response.status == 429:
+                    _LOGGER.warning("Limitation Api Coingecko reessayez dans 1 min")
+                    return None  # or you can return a specific error object or code
                 else:
                     _LOGGER.error(f"Échec pour la requete CoinGecko : {title}, code de statut: {response.status}, texte de la réponse: {response_text}")
                     return False

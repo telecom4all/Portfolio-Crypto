@@ -59,12 +59,16 @@ class PortfolioCryptoOptionsFlowHandler(config_entries.OptionsFlow):
                     errors={},
                 )
             else:
+                errors = {"base": "crypto_not_found"}
+                # Check if the API limit has been reached
+                if crypto_id is None:
+                    errors["base"] = "Limite API CoinGecko atteinte. Réessayez dans 1 minute."
                 return self.async_show_form(
                     step_id="init",
                     data_schema=vol.Schema({
                         vol.Required("crypto_name_or_id", description="Nom ou ID de la cryptomonnaie"): str,
                     }),
-                    errors={"base": "crypto_not_found"},
+                    errors=errors,
                 )
             
             
