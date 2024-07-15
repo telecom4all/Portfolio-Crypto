@@ -22,7 +22,7 @@ def get_crypto_list():
 def update_crypto_price(crypto_id):
     try:
         url = f"{COINGECKO_API_URL_PRICE}?ids={crypto_id}&vs_currencies=usd"
-        #logging.info(f"URL PRICE UPDATER {url}")
+        logging.info(f"URL PRICE UPDATER {url}")
         response = requests.get(url)
         if response.status_code == 200:
             price = response.json().get(crypto_id, {}).get('usd', 0)

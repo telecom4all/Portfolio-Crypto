@@ -1,5 +1,5 @@
 # Portfolio Crypto
-
+![Portfolio Crypto](https://raw.githubusercontent.com/telecom4all/Portfolio-Crypto/main/images/1.png)
 ## Introduction
 
 L'intégration "Portfolio Crypto" permet de gérer et surveiller vos investissements en cryptomonnaie directement depuis Home Assistant. Cette intégration utilise l'API CoinGecko pour récupérer les informations sur les cryptomonnaies et fournit une interface simple pour suivre vos investissements.
