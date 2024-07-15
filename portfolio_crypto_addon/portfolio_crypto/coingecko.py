@@ -10,10 +10,11 @@ async def send_req_coingecko(url, title, params=None):
     try:
         async with aiohttp.ClientSession() as session:
             #_LOGGER.info(f"Appel de l'URL CoinGecko {url} avec params : {params}")
-
+            
             async with session.get(url, params=params) as response:
                 response_text = await response.text()
                 #_LOGGER.info(f"Statut de la réponse: {response.status}, Texte de la réponse: {response_text}")
+                _LOGGER.info(f"response.statu =  {response.status}")
                 if response.status == 200:
                     #_LOGGER.info(f"Réponse 200 pour {title} : {response_text}")
                     return response
@@ -69,17 +70,18 @@ async def get_crypto_price(crypto_id):
         return 0
 
 async def get_historical_price(crypto_id, date):
-    """Récupérer le prix historique d'une crypto-monnaie pour une date donnée"""
-    url = f"{COINGECKO_API_URL}/coins/{crypto_id}/history?date={date}"
-    
-    response = await send_req_coingecko(url, "Get Historical Price")
-    if response and response.status == 200:
-        try:
-            data = await response.json()
-            return data['market_data']['current_price']['usd']
-        except (KeyError, Exception) as e:
-            _LOGGER.error(f"Erreur lors de la récupération du prix historique pour {crypto_id} à la date {date}: {e}")
-            return None
-    else:
-        _LOGGER.error(f"Erreur lors de la récupération du prix historique pour {crypto_id} à la date {date}")
-        return None
+    return None
+#    """Récupérer le prix historique d'une crypto-monnaie pour une date donnée"""
+#    url = f"{COINGECKO_API_URL}/coins/{crypto_id}/history?date={date}"
+#    
+#    response = await send_req_coingecko(url, "Get Historical Price")
+#    if response and response.status == 200:
+#        try:
+#            data = await response.json()
+#            return data['market_data']['current_price']['usd']
+#        except (KeyError, Exception) as e:
+#            _LOGGER.error(f"Erreur lors de la récupération du prix historique pour {crypto_id} à la date {date}: {e}")
+#            return None
+#    else:
+#        _LOGGER.error(f"Erreur lors de la récupération du prix historique pour {crypto_id} à la date {date}")
+#        return None
