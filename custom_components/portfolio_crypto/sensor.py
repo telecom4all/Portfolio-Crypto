@@ -325,9 +325,10 @@ class PortfolioCryptoSensor(CoordinatorEntity, SensorEntity):
         self.coordinator = coordinator
         self.config_entry = config_entry
         self._sensor_type = sensor_type
-        self._name = f"{config_entry.title} {sensor_type}"
-        self._attr_name = f"{config_entry.title} {sensor_type.replace('_', ' ').title()}"
-        self._attr_unique_id = f"{config_entry.entry_id}_{sensor_type}"
+        portfolio_name = config_entry.title.replace(" ", "_")  # Replace spaces with underscores
+        self._name = f"{portfolio_name} {sensor_type}"
+        self._attr_name = f"{portfolio_name} {sensor_type.replace('_', ' ').title()}"
+        self._attr_unique_id = f"{portfolio_name}_{sensor_type}"
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, config_entry.entry_id)},
             name=config_entry.title,
@@ -349,7 +350,7 @@ class PortfolioCryptoSensor(CoordinatorEntity, SensorEntity):
 
     @property
     def unique_id(self):
-        return f"{self.config_entry.entry_id}_{self._sensor_type}"
+        return self._attr_unique_id
 
     @property
     def device_info(self):
@@ -384,16 +385,9 @@ class CryptoSensor(CoordinatorEntity, SensorEntity):
         self.config_entry = config_entry
         self._crypto = crypto
         self._sensor_type = sensor_type
-        self._name = f"{crypto['name']} {sensor_type}"
-        #self._attr_name = f"{config_entry.title} {crypto['name']} {sensor_type.replace('_', ' ').title()}"
-        #self._attr_unique_id = f"{config_entry.entry_id}_{crypto['id']}_{sensor_type}"
-        
         portfolio_name = config_entry.title.replace(" ", "_")  # Replace spaces with underscores
         self._attr_unique_id = f"{portfolio_name}_{crypto['id']}_{sensor_type}"
         self._attr_name = f"{portfolio_name} {crypto['name']} {sensor_type.replace('_', ' ').title()}"
-        
-        
-        
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, f"{config_entry.entry_id}_{crypto['id']}")},
             name=f"{config_entry.title} {crypto['name']}",
@@ -413,7 +407,7 @@ class CryptoSensor(CoordinatorEntity, SensorEntity):
     
     @property
     def name(self):
-        return self._name
+        return self._attr_name
 
     @property
     def state(self):
@@ -424,7 +418,7 @@ class CryptoSensor(CoordinatorEntity, SensorEntity):
 
     @property
     def unique_id(self):
-        return f"{self.config_entry.entry_id}_{self._crypto['id']}_{self._sensor_type}"
+        return self._attr_unique_id
 
     @property
     def device_info(self):

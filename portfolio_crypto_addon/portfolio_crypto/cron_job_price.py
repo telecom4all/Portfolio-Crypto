@@ -75,7 +75,7 @@ async def update_crypto_prices():
         else:
             for crypto_id in cryptos:
                 logging.info(f"Updating price for {crypto_id}")
-                update_crypto_price(crypto_id)
+                update_crypto_price(UPDATE_INTERVAL_PRICE_UPDATER)
                 await asyncio.sleep(60)  # Sleep for the defined interval
         logging.info("Finished updating crypto prices. Restarting loop...")
 
