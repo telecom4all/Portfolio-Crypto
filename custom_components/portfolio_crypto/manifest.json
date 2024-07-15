@@ -14,7 +14,7 @@
   "codeowners": ["@AngelZ"],
   "iot_class": "cloud_polling",
   "config_flow": true,
-  "icon": "mdi:wallet-outline",
-  "logo": "mdi:wallet-outline"
+  "icon": "/config/www/icon_portfolio_crypto.png",
+  "logo": "/config/www/icon_portfolio_crypto.png"
 }
 
