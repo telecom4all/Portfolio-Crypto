@@ -349,6 +349,12 @@ class PortfolioCryptoSensor(CoordinatorEntity, SensorEntity):
         return self._format_value(value)
 
     @property
+    def icon(self):
+        icon_value = "mdi:wallet"  # Icône globale pour tous les appareils
+        _LOGGER.debug(f"Setting icon for {self._name} to {icon_value}")
+        return icon_value
+    
+    @property
     def unique_id(self):
         return self._attr_unique_id
 
@@ -401,7 +407,7 @@ class CryptoSensor(CoordinatorEntity, SensorEntity):
         
     @property
     def icon(self):
-        icon_value = "mdi:currency-usd-circle"  # Icône globale pour tous les appareils
+        icon_value = "mdi:currency-usd"  # Icône globale pour tous les appareils
         _LOGGER.debug(f"Setting icon for {self._name} to {icon_value}")
         return icon_value
     
