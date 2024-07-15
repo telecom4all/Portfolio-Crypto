@@ -22,7 +22,7 @@ def get_crypto_list():
 def update_crypto_price(crypto_id):
     try:
         url = f"{COINGECKO_API_URL_PRICE}?ids={crypto_id}&vs_currencies=usd"
-        logging.info(f"URL PRICE UPDATER {url}")
+        #logging.info(f"URL PRICE UPDATER {url}")
         response = requests.get(url)
         if response.status_code == 200:
             price = response.json().get(crypto_id, {}).get('usd', 0)
@@ -73,11 +73,11 @@ async def update_crypto_prices():
             logging.info("No cryptos found in the database. Waiting before retrying...")
             await asyncio.sleep(UPDATE_INTERVAL_PRICE_UPDATER)
         else:
-            logging.info(f"cryptos : {cryptos}")
+            #logging.info(f"cryptos : {cryptos}")
             for crypto_id in cryptos:
                 logging.info(f"Updating price for {crypto_id}")
-                update_crypto_price(UPDATE_INTERVAL_PRICE_UPDATER)
-                await asyncio.sleep(60)  # Sleep for the defined interval
+                update_crypto_price(crypto_id)
+                await asyncio.sleep(UPDATE_INTERVAL_PRICE_UPDATER)  # Sleep for the defined interval
         logging.info("Finished updating crypto prices. Restarting loop...")
 
 
