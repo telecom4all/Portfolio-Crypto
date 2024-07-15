@@ -5,7 +5,7 @@ import requests
 from datetime import datetime
 
 PATH_DB_BASE = "/config/portfolio_crypto"
-UPDATE_INTERVAL_PRICE_UPDATER = 180  # 3 minutes en secondes
+UPDATE_INTERVAL_PRICE_UPDATER = 320  # 6 minutes en secondes
 COINGECKO_API_URL_PRICE = "https://api.coingecko.com/api/v3/simple/price"
 
 # Configurer les logs

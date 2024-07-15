@@ -1,6 +1,6 @@
 {
   "name": "Portfolio Crypto",
-  "version": "1.0.12",
+  "version": "1.0.16",
   "slug": "portfolio_crypto",
   "description": "An addon to manage and monitor your crypto investments.",
   "arch": ["armhf", "armv7", "aarch64", "amd64", "i386"],
