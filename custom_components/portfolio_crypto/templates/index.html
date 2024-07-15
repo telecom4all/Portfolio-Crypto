@@ -73,6 +73,8 @@
         <select id="walletSelect">
             <option value="">Sélectionner un portefeuille</option>
         </select>
+        <button id="refreshWallets">Rafraîchir les portefeuilles</button>
+        
         <div id="portfolioContainer" style="display:none;">
             <div class="info">
                 <button id="exportDb">Exporter la DB</button>
@@ -156,6 +158,8 @@
             const myModal = document.getElementById('myModal');
             const editModal = document.getElementById('editModal');
 
+            const refreshWalletsButton = document.getElementById('refreshWallets');
+            
             async function fetchWallets() {
                 try {
                     const baseUrl = window.location.origin + window.location.pathname.replace(/\/$/, '');
@@ -175,6 +179,9 @@
                 }
             }
 
+            refreshWalletsButton.addEventListener('click', fetchWallets);
+
+            
             async function fetchCryptos(entryId) {
                 try {
                     const baseUrl = window.location.origin + window.location.pathname.replace(/\/$/, '');
