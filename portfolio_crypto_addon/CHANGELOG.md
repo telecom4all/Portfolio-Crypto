@@ -1,6 +1,6 @@
 # Changelog
 
-## [1.0.11] - 2024-07-15
+## [1.0.12] - 2024-07-15
 ### Added
 - Ajout des logs pour les limitation api de coingecko
 - Ajout des icones
