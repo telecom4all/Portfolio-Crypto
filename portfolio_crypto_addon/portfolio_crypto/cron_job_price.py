@@ -73,6 +73,7 @@ async def update_crypto_prices():
             logging.info("No cryptos found in the database. Waiting before retrying...")
             await asyncio.sleep(UPDATE_INTERVAL_PRICE_UPDATER)
         else:
+            logging.info(f"cryptos : {cryptos}")
             for crypto_id in cryptos:
                 logging.info(f"Updating price for {crypto_id}")
                 update_crypto_price(UPDATE_INTERVAL_PRICE_UPDATER)
