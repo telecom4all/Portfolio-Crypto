@@ -7,7 +7,7 @@
   "startup": "services",
   "url": "https://github.com/telecom4all/Portfolio-Crypto",
   "boot": "auto",
-  "panel_icon": "https://raw.githubusercontent.com/telecom4all/Portfolio-Crypto/main/custom_components/portfolio_crypto/icon.png",
+  "panel_icon": "/config/custom_components/portfolio_crypto/icon.png",
   "host_network": true,
   "options": {},
   "schema": {},
