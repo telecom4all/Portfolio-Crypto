@@ -69,11 +69,16 @@ async def update_crypto_prices():
     while True:
         logging.info("Starting to update crypto prices...")
         cryptos = get_crypto_list()
-        for crypto_id in cryptos:
-            logging.info(f"Updating price for {crypto_id}")
-            update_crypto_price(crypto_id)
-            await asyncio.sleep(UPDATE_INTERVAL_PRICE_UPDATER)  # Sleep for the defined interval
+        if not cryptos:
+            logging.info("No cryptos found in the database. Waiting before retrying...")
+            await asyncio.sleep(UPDATE_INTERVAL_PRICE_UPDATER)
+        else:
+            for crypto_id in cryptos:
+                logging.info(f"Updating price for {crypto_id}")
+                update_crypto_price(crypto_id)
+                await asyncio.sleep(60)  # Sleep for the defined interval
         logging.info("Finished updating crypto prices. Restarting loop...")
+
 
 async def main():
     while True:

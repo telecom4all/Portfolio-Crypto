@@ -9,7 +9,7 @@ _LOGGER = logging.getLogger(__name__)
 async def send_req_coingecko(url, title, params=None):
     try:
         async with aiohttp.ClientSession() as session:
-            _LOGGER.info(f"Appel de l'URL CoinGecko {url} avec params : {params}")
+            #_LOGGER.info(f"Appel de l'URL CoinGecko {url} avec params : {params}")
 
             async with session.get(url, params=params) as response:
                 response_text = await response.text()
@@ -26,7 +26,7 @@ async def send_req_coingecko(url, title, params=None):
     
 async def fetch_crypto_id_from_coingecko(crypto_name_or_id):
     url = f"{COINGECKO_API_URL}?query={crypto_name_or_id}"
-    _LOGGER.error(f"url  {url }")
+    
     response = await send_req_coingecko(url, "Fetch Crypto ID")
     if response and response.status == 200:
         try:
@@ -68,7 +68,7 @@ async def get_crypto_price(crypto_id):
 async def get_historical_price(crypto_id, date):
     """Récupérer le prix historique d'une crypto-monnaie pour une date donnée"""
     url = f"{COINGECKO_API_URL}/coins/{crypto_id}/history?date={date}"
-    _LOGGER.error(f"url  {url }")
+    
     response = await send_req_coingecko(url, "Get Historical Price")
     if response and response.status == 200:
         try:
