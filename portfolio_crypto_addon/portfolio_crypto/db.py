@@ -2,6 +2,7 @@ import sqlite3
 import os
 import logging
 import requests
+import asyncio 
 from flask import Flask, jsonify, request, send_file
 from .const import COINGECKO_API_URL, UPDATE_INTERVAL, RATE_LIMIT, PORT_APP, PATH_DB_BASE
 from .coingecko import get_crypto_price
@@ -203,7 +204,7 @@ def calculate_crypto_profit_loss(entry_id, crypto_id):
     """Calculer le profit/perte pour une crypto-monnaie spécifique et un ID d'entrée donné"""
     transactions = get_crypto_transactions(entry_id, crypto_id)
     #crypto_id = get_crypto_id(crypto_id)
-    current_price = get_crypto_price(crypto_id)
+    current_price = asyncio.run(get_crypto_price(crypto_id))
     logging.info(f"Crypto avec ID: {crypto_id} current_price {current_price}")
     investment = 0
     quantity_held = 0
