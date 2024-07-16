@@ -83,7 +83,10 @@ class PortfolioCryptoCoordinator(DataUpdateCoordinator):
         data["total_profit_loss_percent"] = await self.fetch_total_profit_loss_percent()
         data["total_value"] = await self.fetch_total_value()
 
+        _LOGGER.info(f"+++++++++++++++++++++++++++++++++++++++++++")
+        
         for crypto in self.config_entry.options.get("cryptos", []):
+            _LOGGER.info(f"crypto: {crypto} ")
             if isinstance(crypto, dict) and "id" in crypto:
                 crypto_id = crypto["id"]
                 crypto_name = crypto["name"]
@@ -101,6 +104,7 @@ class PortfolioCryptoCoordinator(DataUpdateCoordinator):
             total_quantity = 0
             total_cost = 0
             for transaction in crypto_transactions:
+                _LOGGER.info(f"transaction: {transaction} ")
                 if transaction[5] == 'buy':
                     quantity = transaction[3]
                     price = transaction[4]
@@ -116,11 +120,21 @@ class PortfolioCryptoCoordinator(DataUpdateCoordinator):
                 average_price = 0
 
             current_price = await get_crypto_price(crypto_id)
+            _LOGGER.info(f"current_price: {current_price} ")
 
             crypto_data["transactions_count"] = len(crypto_transactions)
+            _LOGGER.info(f"transactions_count: { len(crypto_transactions)} ")
+
             crypto_data["average_price"] = average_price
+            _LOGGER.info(f"average_price: {average_price} ")
+
             crypto_data["current_price"] = current_price
+            _LOGGER.info(f"current_price: {current_price} ")
+
             crypto_data["total_tokens"] = total_quantity
+            _LOGGER.info(f"total_tokens: {total_quantity} ")
+
+            
 
 
             data[crypto_id] = {
@@ -135,8 +149,12 @@ class PortfolioCryptoCoordinator(DataUpdateCoordinator):
                 "current_price": crypto_data.get("current_price"),
                 "total_tokens": crypto_data.get("total_tokens")
             }
+            _LOGGER.info(f"data[crypto_id]: {data[crypto_id]}")
+            
         _LOGGER.info(f"Fetched data: {data}")
         _LOGGER.info("New data fetched successfully")
+
+        _LOGGER.info(f"*****************************************************")
         return data
 
 
