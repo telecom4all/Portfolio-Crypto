@@ -84,7 +84,7 @@ class PortfolioCryptoCoordinator(DataUpdateCoordinator):
         data["total_value"] = await self.fetch_total_value()
 
         _LOGGER.info(f"+++++++++++++++++++++++++++++++++++++++++++")
-        
+
         for crypto in self.config_entry.options.get("cryptos", []):
             _LOGGER.info(f"crypto: {crypto} ")
             if isinstance(crypto, dict) and "id" in crypto:
@@ -112,6 +112,10 @@ class PortfolioCryptoCoordinator(DataUpdateCoordinator):
                     total_cost += price
                 elif transaction[5] == 'sell':
                     quantity = transaction[3]
+                    # Calculer le coût des tokens vendus basé sur le prix moyen des tokens achetés
+                    if total_quantity != 0:
+                        average_cost_per_token = total_cost / total_quantity
+                        total_cost -= average_cost_per_token * quantity
                     total_quantity -= quantity
 
             if total_quantity > 0:
@@ -120,6 +124,9 @@ class PortfolioCryptoCoordinator(DataUpdateCoordinator):
                 average_price = 0
 
             current_price = await get_crypto_price(crypto_id)
+            if current_price is None:
+                _LOGGER.error(f"Le prix actuel pour {crypto_name} (ID: {crypto_id}) est introuvable.")
+                current_price = 0  # Défaut à 0 si le prix est introuvable
             _LOGGER.info(f"current_price: {current_price} ")
 
             crypto_data["transactions_count"] = len(crypto_transactions)
@@ -134,8 +141,15 @@ class PortfolioCryptoCoordinator(DataUpdateCoordinator):
             crypto_data["total_tokens"] = total_quantity
             _LOGGER.info(f"total_tokens: {total_quantity} ")
 
-            
+            current_value = total_quantity * current_price
+            investment = total_cost
+            profit_loss = current_value - investment
+            profit_loss_percent = (profit_loss / investment) * 100 if investment != 0 else 0
 
+            crypto_data["investment"] = investment
+            crypto_data["current_value"] = current_value
+            crypto_data["profit_loss"] = profit_loss
+            crypto_data["profit_loss_percent"] = profit_loss_percent
 
             data[crypto_id] = {
                 "crypto_id": crypto_id,
@@ -150,12 +164,105 @@ class PortfolioCryptoCoordinator(DataUpdateCoordinator):
                 "total_tokens": crypto_data.get("total_tokens")
             }
             _LOGGER.info(f"data[crypto_id]: {data[crypto_id]}")
-            
+
         _LOGGER.info(f"Fetched data: {data}")
         _LOGGER.info("New data fetched successfully")
 
         _LOGGER.info(f"*****************************************************")
         return data
+
+    
+    #async def _async_update_data(self):
+    #    now = datetime.now()
+    #    if self._last_update is not None:
+    #        elapsed = now - self._last_update
+    #        _LOGGER.info(f"Data updated. {elapsed.total_seconds() / 60:.2f} minutes elapsed since last update.")
+    #    self._last_update = now
+    #
+    #    _LOGGER.info("Fetching new data from API/database")
+    #
+    #    # Fetch data from API or database
+    #    data = {}
+    #    transactions = await self.fetch_transactions()
+    #    data["transactions"] = len(transactions)
+    #    data["total_investment"] = await self.fetch_total_investment()
+    #    data["total_profit_loss"] = await self.fetch_total_profit_loss()
+    #    data["total_profit_loss_percent"] = await self.fetch_total_profit_loss_percent()
+    #    data["total_value"] = await self.fetch_total_value()
+#
+    #    _LOGGER.info(f"+++++++++++++++++++++++++++++++++++++++++++")
+    #    
+    #    for crypto in self.config_entry.options.get("cryptos", []):
+    #        _LOGGER.info(f"crypto: {crypto} ")
+    #        if isinstance(crypto, dict) and "id" in crypto:
+    #            crypto_id = crypto["id"]
+    #            crypto_name = crypto["name"]
+    #        elif isinstance(crypto, list) and len(crypto) > 1:
+    #            crypto_id = crypto[1]
+    #            crypto_name = crypto[0]
+    #        else:
+    #            _LOGGER.error(f"Le format de 'crypto' est incorrect: {crypto}")
+    #            continue
+
+    #        crypto_data = await self.fetch_crypto_profit_loss(crypto_id)
+    #        crypto_transactions = await self.fetch_crypto_transactions(crypto_id)
+
+    #        # Calcul du prix moyen
+    #        total_quantity = 0
+    #        total_cost = 0
+    #        for transaction in crypto_transactions:
+    #            _LOGGER.info(f"transaction: {transaction} ")
+    #            if transaction[5] == 'buy':
+    #                quantity = transaction[3]
+    #                price = transaction[4]
+    #                total_quantity += quantity
+    #                total_cost += price
+    #            elif transaction[5] == 'sell':
+    #                quantity = transaction[3]
+    #                total_quantity -= quantity
+
+    #        if total_quantity > 0:
+    #            average_price = total_cost / total_quantity
+    #        else:
+    #            average_price = 0
+
+    #        current_price = await get_crypto_price(crypto_id)
+    #        _LOGGER.info(f"current_price: {current_price} ")
+
+    #        crypto_data["transactions_count"] = len(crypto_transactions)
+    #        _LOGGER.info(f"transactions_count: { len(crypto_transactions)} ")
+
+    #        crypto_data["average_price"] = average_price
+    #        _LOGGER.info(f"average_price: {average_price} ")
+
+    #        crypto_data["current_price"] = current_price
+    #        _LOGGER.info(f"current_price: {current_price} ")
+
+    #        crypto_data["total_tokens"] = total_quantity
+    #        _LOGGER.info(f"total_tokens: {total_quantity} ")
+
+            
+
+
+    #        data[crypto_id] = {
+    #            "crypto_id": crypto_id,
+    #            "crypto_name": crypto_name,
+    #            "investment": crypto_data.get("investment"),
+    #            "current_value": crypto_data.get("current_value"),
+    #            "profit_loss": crypto_data.get("profit_loss"),
+    #            "profit_loss_percent": crypto_data.get("profit_loss_percent"),
+    #            "transactions_count": crypto_data.get("transactions_count"),
+    #            "average_price": crypto_data.get("average_price"),
+    #            "current_price": crypto_data.get("current_price"),
+    #            "total_tokens": crypto_data.get("total_tokens")
+    #        }
+    #        _LOGGER.info(f"data[crypto_id]: {data[crypto_id]}")
+            
+    #    _LOGGER.info(f"Fetched data: {data}")
+    #    _LOGGER.info("New data fetched successfully")
+
+    #    _LOGGER.info(f"*****************************************************")
+    #    return data
 
 
 

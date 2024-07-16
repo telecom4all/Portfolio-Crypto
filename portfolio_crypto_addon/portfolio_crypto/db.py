@@ -198,38 +198,75 @@ def get_crypto_id(name):
             return coin['id']
     return None
 
-def calculate_crypto_profit_loss(entry_id, crypto_id):
-    """Calculer le profit/perte pour une crypto-monnaie spécifique et un ID d'entrée donné"""
-    transactions = get_crypto_transactions(entry_id, crypto_id)
-    #crypto_id = get_crypto_id(crypto_id)
-    current_price = get_crypto_price(crypto_id)
-    #logging.info(f"Crypto avec ID: {crypto_id} current_price {current_price}")
-    investment = 0
-    quantity_held = 0
-    for transaction in transactions:
-        logging.info(f"++++++++++++++++++++++++++++++++++++")
-        logging.info(f"transaction: {transaction}")
-        if transaction[5] == 'buy':
-            investment += transaction[4]
-            quantity_held += transaction[3]
-        elif transaction[5] == 'sell':
-            investment -= transaction[4]
-            quantity_held -= transaction[3]
+#def calculate_crypto_profit_loss(entry_id, crypto_id):
+#    """Calculer le profit/perte pour une crypto-monnaie spécifique et un ID d'entrée donné"""
+#    transactions = get_crypto_transactions(entry_id, crypto_id)
+#    #crypto_id = get_crypto_id(crypto_id)
+#    current_price = get_crypto_price(crypto_id)
+#    #logging.info(f"Crypto avec ID: {crypto_id} current_price {current_price}")
+#    investment = 0
+#    quantity_held = 0
+#    for transaction in transactions:
+#        logging.info(f"++++++++++++++++++++++++++++++++++++")
+#        logging.info(f"transaction: {transaction}")
+#        if transaction[5] == 'buy':
+#            investment += transaction[4]
+#            quantity_held += transaction[3]
+#        elif transaction[5] == 'sell':
+#            investment -= transaction[4]
+#            quantity_held -= transaction[3]
+#
+#    current_value = quantity_held * current_price
+#    logging.info(f"current_value: {current_value}")
+#    profit_loss = current_value - investment
+#    logging.info(f"profit_loss: {profit_loss}")
+#    profit_loss_percent = (profit_loss / investment) * 100 if investment != 0 else 0
+#
+#    logging.info(f"profit_loss_percent: {profit_loss_percent}")
+#    logging.info(f"**************************************")
+#    return {
+#        "investment": investment,
+#        "current_value": current_value,
+#        "profit_loss": profit_loss,
+#        "profit_loss_percent": profit_loss_percent
+#    }
 
-    current_value = quantity_held * current_price
-    logging.info(f"current_value: {current_value}")
+def calculate_crypto_profit_loss(entry_id, crypto_id):
+    transactions = get_crypto_transactions(entry_id, crypto_id)
+    current_price = get_crypto_price(crypto_id)
+    total_quantity = 0
+    total_cost = 0
+
+    for transaction in transactions:
+        if transaction[5] == 'buy':
+            quantity = transaction[3]
+            price = transaction[4]
+            total_quantity += quantity
+            total_cost += price
+        elif transaction[5] == 'sell':
+            quantity = transaction[3]
+            # Calculer le coût des tokens vendus basé sur le prix moyen des tokens achetés
+            if total_quantity != 0:
+                average_cost_per_token = total_cost / total_quantity
+                total_cost -= average_cost_per_token * quantity
+            total_quantity -= quantity
+
+    average_price = total_cost / total_quantity if total_quantity != 0 else 0
+    current_value = total_quantity * current_price
+    investment = total_cost
     profit_loss = current_value - investment
-    logging.info(f"profit_loss: {profit_loss}")
     profit_loss_percent = (profit_loss / investment) * 100 if investment != 0 else 0
 
-    logging.info(f"profit_loss_percent: {profit_loss_percent}")
-    logging.info(f"**************************************")
     return {
         "investment": investment,
         "current_value": current_value,
         "profit_loss": profit_loss,
-        "profit_loss_percent": profit_loss_percent
+        "profit_loss_percent": profit_loss_percent,
+        "average_price": average_price,
+        "total_tokens": total_quantity
     }
+
+
 
 def load_crypto_attributes(entry_id):
     """Charger les attributs des cryptos depuis la base de données pour un ID d'entrée donné"""
