@@ -1,5 +1,5 @@
 # Changelog
 
-## [1.0.22] - 2024-07-16
+## [1.0.24] - 2024-07-16
 ### Added
 - modification db
